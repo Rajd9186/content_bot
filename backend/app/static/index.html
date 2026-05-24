@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verified AI Research Writer — API</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+  }
+  .hero {
+    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+    color: #fff;
+    padding: 48px 24px 40px;
+    text-align: center;
+  }
+  .hero h1 { font-size: 28px; margin-bottom: 6px; }
+  .hero p { opacity: .85; font-size: 15px; }
+  .hero .badge {
+    display: inline-block;
+    background: rgba(255,255,255,.15);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    margin-top: 12px;
+  }
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+
+  .group { margin-bottom: 32px; }
+  .group h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1e3a8a;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .group h2 .count {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 12px;
+    padding: 1px 10px;
+    border-radius: 12px;
+    font-weight: 500;
+  }
+  .endpoint {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    transition: box-shadow .15s;
+  }
+  .endpoint:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .endpoint-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .method {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    min-width: 52px;
+    text-align: center;
+  }
+  .method.get { background: #dbeafe; color: #1d4ed8; }
+  .method.post { background: #dcfce7; color: #15803d; }
+  .method.delete { background: #fce7f3; color: #be123c; }
+  .path {
+    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: #0f172a;
+    word-break: break-all;
+  }
+  .desc {
+    font-size: 14px;
+    color: #64748b;
+    margin-top: 6px;
+    padding-left: 64px;
+  }
+  .details {
+    margin-top: 10px;
+    padding-left: 64px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    font-size: 11px;
+    background: #f1f5f9;
+    color: #475569;
+    padding: 2px 10px;
+    border-radius: 12px;
+  }
+  .section-title {
+    margin-top: 48px;
+    padding: 20px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #475569;
+  }
+  .section-title strong { color: #0f172a; }
+  .footer {
+    text-align: center;
+    padding: 32px 16px;
+    color: #94a3b8;
+    font-size: 13px;
+  }
+  .footer a { color: #3b82f6; text-decoration: none; }
+  @media (max-width: 640px) {
+    .desc, .details { padding-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>Verified AI Research Writer</h1>
+  <p>API Reference — v1.0.0</p>
+  <span class="badge">Base URL: http://localhost:8000/api/v1</span>
+</div>
+
+<div class="container">
+
+  <!-- ============================== -->
+  <!-- HEALTH                         -->
+  <!-- ============================== -->
+  <div class="group">
+    <h2><span>&#9889;</span> Health <span class="count">1</span></h2>
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/health</span>
+      </div>
+      <div class="desc">Check if the API server is running. Returns status and version.</div>
+      <div class="details">
+        <span class="tag">no auth</span>
+        <span class="tag">no project required</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- PROJECTS                       -->
+  <!-- ============================== -->
+  <div class="group">
+    <h2><span>&#128203;</span> Projects <span class="count">4</span></h2>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method post">POST</span>
+        <span class="path">/api/v1/projects</span>
+      </div>
+      <div class="desc">Create a new content project. Provide topic, title, tone, content type, SEO keywords, and points to cover. Returns the created project with a UUID.</div>
+      <div class="details">
+        <span class="tag">request body: ProjectCreate</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects</span>
+      </div>
+      <div class="desc">List all projects ordered by creation date (newest first). Supports <code>?skip=0&amp;limit=100</code> pagination.</div>
+      <div class="details">
+        <span class="tag">query: skip, limit</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}</span>
+      </div>
+      <div class="desc">Get a single project by its UUID. Returns full project details including outline, status, and metadata.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method delete">DELETE</span>
+        <span class="path">/api/v1/projects/{project_id}</span>
+      </div>
+      <div class="desc">Delete a project and all its associated content, claims, evidence, and sources.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+        <span class="tag">returns 204</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- CONTENT                        -->
+  <!-- ============================== -->
+  <div class="group">
+    <h2><span>&#9997;&#65039;</span> Content <span class="count">3</span></h2>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method post">POST</span>
+        <span class="path">/api/v1/projects/{project_id}/content/generate</span>
+      </div>
+      <div class="desc"><strong>Core pipeline endpoint.</strong> Triggers the full multi-agent content generation pipeline: topic planning → web research → evidence retrieval → claim extraction → fact verification → content writing → self-verification. Returns generated markdown, citations, claims, and a verification summary.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+        <span class="tag">no request body</span>
+        <span class="tag">pipeline runs async</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/content</span>
+      </div>
+      <div class="desc">Get all generated content versions for a project, ordered newest first.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/content/latest</span>
+      </div>
+      <div class="desc">Get the most recently generated content for a project. Returns markdown, citations, SEO metadata, and confidence score.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- EVIDENCE                       -->
+  <!-- ============================== -->
+  <div class="group">
+    <h2><span>&#128270;</span> Evidence <span class="count">2</span></h2>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/evidence</span>
+      </div>
+      <div class="desc">Get all evidence items collected during research. Each item includes a snippet, source URL, domain, relevance score, and source trust score. Returns average relevance across all evidence.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/evidence/claims/{claim_id}</span>
+      </div>
+      <div class="desc">Get evidence items specifically linked to a single claim. Useful for drilling into what sources support a particular claim.</div>
+      <div class="details">
+        <span class="tag">path: project_id, claim_id (UUID)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- VERIFICATION                   -->
+  <!-- ============================== -->
+  <div class="group">
+    <h2><span>&#9989;</span> Verification <span class="count">3</span></h2>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/verification/claims</span>
+      </div>
+      <div class="desc">Get all extracted claims with their verification status, confidence scores, and explanations. Returns aggregate counts: total, verified, unverified, contradicted, unsupported.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/verification/sources</span>
+      </div>
+      <div class="desc">Get source trust metrics. Lists every source URL with its domain, title, and computed trust score. Includes average trust score across all sources.</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <div class="endpoint-header">
+        <span class="method get">GET</span>
+        <span class="path">/api/v1/projects/{project_id}/verification/dashboard</span>
+      </div>
+      <div class="desc"><strong>Full dashboard endpoint.</strong> Returns a comprehensive snapshot: project metadata, all claims with statuses and confidence, source trust scores, evidence counts with relevance, and content metrics (word count, overall confidence, citation count).</div>
+      <div class="details">
+        <span class="tag">path: project_id (UUID)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== -->
+  <!-- PIPELINE OVERVIEW              -->
+  <!-- ============================== -->
+  <div class="section-title">
+    <strong>&#9881;&#65039; Pipeline Flow</strong>
+    <br><br>
+    When you call <code>POST /api/v1/projects/{id}/content/generate</code>, the system runs 5 stages in sequence:
+    <br><br>
+    1. <strong>Topic Planner</strong> &mdash; generates a structured outline with sections and research queries<br>
+    2. <strong>Research</strong> &mdash; searches web sources (Tavily API or mock), stores evidence, computes trust scores<br>
+    3. <strong>Verification</strong> &mdash; extracts factual claims from evidence, cross-references sources, assigns confidence scores<br>
+    4. <strong>Content Writer</strong> &mdash; writes markdown using only verified claims (&gt;0.70 confidence), adds inline citations<br>
+    5. <strong>Self-Verification</strong> &mdash; audits for hallucination risks, unsupported claims, citation mismatches
+    <br><br>
+    Each stage updates the project status so you can poll <code>GET /api/v1/projects/{id}</code> for progress.
+  </div>
+
+</div>
+
+<div class="footer">
+  Powered by <strong>Verified AI Research Writer</strong> &middot;
+  <a href="/docs">Swagger UI</a> &middot;
+  <a href="/redoc">ReDoc</a>
+</div>
+
+</body>
+</html>
