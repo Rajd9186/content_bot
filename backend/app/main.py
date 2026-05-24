@@ -43,8 +43,8 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://frontend:3000"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -83,7 +83,7 @@ if __name__ == "__main__":
     print(f"SERVER START: app has {_wf_counts} workflow routes out of {len([r for r in app.routes if hasattr(r, 'path')])} total", flush=True)
     uvicorn.run(
         app,
-        host="127.0.0.1",
+        host="0.0.0.0",
         port=8000,
         reload=False,
     )
