@@ -81,8 +81,13 @@ class WorkflowNode:
 
 
 class PlannerNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, planner_agent, **kwargs):
         super().__init__("planner", **kwargs)
+=======
+    def __init__(self, planner_agent):
+        super().__init__("planner")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.planner = planner_agent
 
     async def execute(self, state: dict) -> dict:
@@ -125,8 +130,13 @@ class PlannerNode(WorkflowNode):
 
 
 class ParallelResearchCoordinator(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, research_service, memory_service, vector_store=None, **kwargs):
         super().__init__("research_coordinator", **kwargs)
+=======
+    def __init__(self, research_service, memory_service, vector_store=None):
+        super().__init__("research_coordinator")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.research_service = research_service
         self.memory = memory_service
         self.vector_store = vector_store
@@ -206,8 +216,13 @@ def queries_for(agent: str, tasks: list[dict]) -> str:
 
 
 class ClaimExtractionNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, verifier_agent, **kwargs):
         super().__init__("claim_extraction", **kwargs)
+=======
+    def __init__(self, verifier_agent):
+        super().__init__("claim_extraction")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.verifier = verifier_agent
 
     async def execute(self, state: dict) -> dict:
@@ -240,8 +255,13 @@ class ClaimExtractionNode(WorkflowNode):
 
 
 class ContradictionDetectionNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, contradiction_agent, vector_store=None, **kwargs):
         super().__init__("contradiction_detection", **kwargs)
+=======
+    def __init__(self, contradiction_agent, vector_store=None):
+        super().__init__("contradiction_detection")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.contradiction_agent = contradiction_agent
         self.vector_store = vector_store
 
@@ -283,8 +303,13 @@ class ContradictionDetectionNode(WorkflowNode):
 
 
 class ContentWritingNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, writer_agent, vector_store=None, **kwargs):
         super().__init__("content_writer", **kwargs)
+=======
+    def __init__(self, writer_agent, vector_store=None):
+        super().__init__("content_writer")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.writer = writer_agent
         self.vector_store = vector_store
 
@@ -316,8 +341,13 @@ class ContentWritingNode(WorkflowNode):
 
 
 class CritiqueNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, critique_agent, **kwargs):
         super().__init__("critique", **kwargs)
+=======
+    def __init__(self, critique_agent):
+        super().__init__("critique")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.critique_agent = critique_agent
 
     async def execute(self, state: dict) -> dict:
@@ -334,8 +364,13 @@ class CritiqueNode(WorkflowNode):
 
 
 class RevisionNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, revision_agent, **kwargs):
         super().__init__("revision", **kwargs)
+=======
+    def __init__(self, revision_agent):
+        super().__init__("revision")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.revision_agent = revision_agent
 
     async def execute(self, state: dict) -> dict:
@@ -350,8 +385,13 @@ class RevisionNode(WorkflowNode):
 
 
 class SelfVerificationNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, self_verifier_agent, **kwargs):
         super().__init__("self_verification", **kwargs)
+=======
+    def __init__(self, self_verifier_agent):
+        super().__init__("self_verification")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.self_verifier = self_verifier_agent
 
     async def execute(self, state: dict) -> dict:
@@ -373,8 +413,13 @@ class SelfVerificationNode(WorkflowNode):
 
 
 class HyperlinkValidationNode(WorkflowNode):
+<<<<<<< HEAD
     def __init__(self, hyperlink_agent, **kwargs):
         super().__init__("hyperlink_validation", **kwargs)
+=======
+    def __init__(self, hyperlink_agent):
+        super().__init__("hyperlink_validation")
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.hyperlink_agent = hyperlink_agent
 
     async def execute(self, state: dict) -> dict:

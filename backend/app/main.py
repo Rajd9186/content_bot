@@ -19,7 +19,10 @@ if _backend_dir not in sys.path:
 from app.config import settings
 from app.database import init_db
 from app.routes import projects, content, evidence, verification, chat
+<<<<<<< HEAD
 from app.routes.health import router as health_router
+=======
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 from app.routes.workflow import register_workflow_routes
 
 from app.log_config.logger import setup_logging
@@ -44,15 +47,23 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+<<<<<<< HEAD
     allow_origins=["http://localhost:3000", "http://frontend:3000"],
     allow_credentials=True,
+=======
+    allow_origins=["*"],
+    allow_credentials=False,
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 register_workflow_routes(projects.router)
 
+<<<<<<< HEAD
 app.include_router(health_router, prefix=settings.api_v1_prefix)
+=======
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 app.include_router(projects.router, prefix=settings.api_v1_prefix)
 app.include_router(content.router, prefix=settings.api_v1_prefix)
 app.include_router(evidence.router, prefix=settings.api_v1_prefix)
@@ -85,7 +96,11 @@ if __name__ == "__main__":
     print(f"SERVER START: app has {_wf_counts} workflow routes out of {len([r for r in app.routes if hasattr(r, 'path')])} total", flush=True)
     uvicorn.run(
         app,
+<<<<<<< HEAD
         host="127.0.0.1",
+=======
+        host="0.0.0.0",
+>>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         port=8000,
         reload=False,
     )
