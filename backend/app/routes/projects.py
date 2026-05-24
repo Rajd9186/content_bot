@@ -123,9 +123,10 @@ async def create_project(
     session: AsyncSession = Depends(get_session),
 ):
     repo = ProjectRepository(session)
+    title = payload.title or payload.topic
     project = await repo.create(
         topic=payload.topic,
-        title=payload.title,
+        title=title,
         points_to_cover=payload.points_to_cover,
         tone=payload.tone,
         content_type=payload.content_type,

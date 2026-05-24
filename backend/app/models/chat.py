@@ -1,5 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, JSON, ForeignKey, Float
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Column, String, Text, DateTime, JSON, ForeignKey
 from datetime import datetime
 import uuid
 

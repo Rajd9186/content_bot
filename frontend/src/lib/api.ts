@@ -107,7 +107,7 @@ export const api = {
       resolveContradiction: (projectId: string, contradictionId: string, resolution: string) =>
         request<Contradiction>(`/projects/${projectId}/workflow/contradictions/${contradictionId}/resolve`, {
           method: 'POST',
-          body: { resolution },
+          body: JSON.stringify({ resolution }),
         }),
 
       getHyperlinks: (projectId: string) =>

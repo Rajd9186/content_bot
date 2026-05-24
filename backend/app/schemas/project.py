@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field, field_validator
 
 class ProjectCreate(BaseModel):
     topic: str = Field(..., min_length=3, max_length=500)
-    title: str = Field(..., min_length=3, max_length=500)
+    title: str | None = Field(default=None, min_length=3, max_length=500)
     points_to_cover: list[str] = Field(default_factory=list)
     tone: str = Field(default="professional")
     content_type: str = Field(default="article")

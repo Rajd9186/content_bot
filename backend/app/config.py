@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     database_url: str = "sqlite+aiosqlite:///./verified_ai.db"
-    ollama_base_url: str = "https://ollama.com"
+    ollama_base_url: str = "http://localhost:11434"
     ollama_api_key: str = ""
     ollama_model: str = "nemotron-3-super:cloud"
     
