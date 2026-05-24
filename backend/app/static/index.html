@@ -3,346 +3,2355 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Verified AI Research Writer — API</title>
+<title>Verified AI Research Writer — Enterprise Platform</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f8fafc;
-    color: #1e293b;
-    line-height: 1.6;
-  }
-  .hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    color: #fff;
-    padding: 48px 24px 40px;
-    text-align: center;
-  }
-  .hero h1 { font-size: 28px; margin-bottom: 6px; }
-  .hero p { opacity: .85; font-size: 15px; }
-  .hero .badge {
-    display: inline-block;
-    background: rgba(255,255,255,.15);
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    margin-top: 12px;
-  }
-  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
 
-  .group { margin-bottom: 32px; }
-  .group h2 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e3a8a;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .group h2 .count {
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 12px;
-    padding: 1px 10px;
-    border-radius: 12px;
-    font-weight: 500;
-  }
-  .endpoint {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    transition: box-shadow .15s;
-  }
-  .endpoint:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-  .endpoint-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .method {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    min-width: 52px;
-    text-align: center;
-  }
-  .method.get { background: #dbeafe; color: #1d4ed8; }
-  .method.post { background: #dcfce7; color: #15803d; }
-  .method.delete { background: #fce7f3; color: #be123c; }
-  .path {
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 14px;
-    font-weight: 500;
-    color: #0f172a;
-    word-break: break-all;
-  }
-  .desc {
-    font-size: 14px;
-    color: #64748b;
-    margin-top: 6px;
-    padding-left: 64px;
-  }
-  .details {
-    margin-top: 10px;
-    padding-left: 64px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .tag {
-    font-size: 11px;
-    background: #f1f5f9;
-    color: #475569;
-    padding: 2px 10px;
-    border-radius: 12px;
-  }
-  .section-title {
-    margin-top: 48px;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    color: #475569;
-  }
-  .section-title strong { color: #0f172a; }
-  .footer {
-    text-align: center;
-    padding: 32px 16px;
-    color: #94a3b8;
-    font-size: 13px;
-  }
-  .footer a { color: #3b82f6; text-decoration: none; }
-  @media (max-width: 640px) {
-    .desc, .details { padding-left: 0; }
-  }
+/* ===================== RESET & BASE ===================== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060810;--bg1:#0a0d18;--bg2:#0e1120;--bg3:#131728;--bg4:#181d30;
+  --glass:rgba(255,255,255,0.03);--glass2:rgba(255,255,255,0.06);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--border3:rgba(255,255,255,0.2);
+  --text:#e8edf8;--text2:#8b92a8;--text3:#4a5168;--text4:#2a2f45;
+  --blue:#4f8fff;--blue2:#2563eb;--blue-glow:rgba(79,143,255,0.15);--blue-glow2:rgba(79,143,255,0.3);
+  --cyan:#00d4ff;--cyan-glow:rgba(0,212,255,0.15);
+  --purple:#8b5cf6;--purple2:#7c3aed;--purple-glow:rgba(139,92,246,0.2);
+  --teal:#00e5c3;--teal-glow:rgba(0,229,195,0.15);
+  --amber:#f59e0b;--amber-glow:rgba(245,158,11,0.15);
+  --red:#ef4444;--red-glow:rgba(239,68,68,0.15);
+  --green:#10b981;--green-glow:rgba(16,185,129,0.15);
+  --sidebar:240px;--sidebar-sm:60px;--topbar:56px;
+  --r:8px;--r2:12px;--r3:16px;--r4:20px;
+  --font:'Inter',sans-serif;--font-head:'Syne',sans-serif;--font-mono:'JetBrains Mono',monospace;
+  --shadow:0 4px 24px rgba(0,0,0,0.4);--shadow2:0 8px 48px rgba(0,0,0,0.6);
+  --transition:.2s cubic-bezier(.4,0,.2,1);
+}
+html{height:100%;scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100%;overflow:hidden;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* ===================== SCROLLBAR ===================== */
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:2px}
+::-webkit-scrollbar-thumb:hover{background:var(--border2)}
+
+/* ===================== PARTICLES BG ===================== */
+#particles-canvas{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4}
+
+/* ===================== LAYOUT ===================== */
+.app{display:grid;grid-template-columns:var(--sidebar) 1fr;grid-template-rows:var(--topbar) 1fr;height:100vh;position:relative;z-index:1}
+.app.sidebar-collapsed{grid-template-columns:var(--sidebar-sm) 1fr}
+
+/* ===================== TOPBAR ===================== */
+.topbar{grid-column:1/-1;background:rgba(6,8,16,0.8);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;position:sticky;top:0;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:10px;font-family:var(--font-head);font-size:16px;font-weight:800;background:linear-gradient(135deg,var(--blue),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.topbar-logo svg{flex-shrink:0}
+.topbar-divider{width:1px;height:24px;background:var(--border2);margin:0 4px}
+.topbar-project-select{display:flex;align-items:center;gap:8px;padding:6px 12px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);cursor:pointer;font-size:13px;color:var(--text2);transition:var(--transition);position:relative;min-width:200px}
+.topbar-project-select:hover{border-color:var(--border2);color:var(--text)}
+.proj-select-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);flex-shrink:0;animation:pulse-dot 2s infinite}
+@keyframes pulse-dot{0%,100%{opacity:1;box-shadow:0 0 8px var(--green)}50%{opacity:.6;box-shadow:0 0 4px var(--green)}}
+.topbar-status{display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--font-mono);color:var(--text3)}
+.status-live{color:var(--teal);display:flex;align-items:center;gap:5px}
+.status-live::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:pulse-dot 1.5s infinite}
+.topbar-search{flex:1;max-width:360px;margin-left:auto;position:relative}
+.topbar-search input{width:100%;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:7px 12px 7px 34px;font-size:13px;color:var(--text);outline:none;font-family:var(--font);transition:var(--transition)}
+.topbar-search input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.topbar-search input::placeholder{color:var(--text3)}
+.topbar-search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:14px;pointer-events:none}
+.topbar-actions{display:flex;align-items:center;gap:6px}
+.icon-btn{width:34px;height:34px;border-radius:var(--r);background:transparent;border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:var(--transition);position:relative}
+.icon-btn:hover{background:var(--glass2);border-color:var(--border2);color:var(--text)}
+.icon-btn .badge{position:absolute;top:-2px;right:-2px;width:16px;height:16px;border-radius:50%;background:var(--red);border:2px solid var(--bg);font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff}
+.avatar-btn{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue),var(--purple));border:2px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;transition:var(--transition)}
+.avatar-btn:hover{border-color:var(--blue)}
+
+/* ===================== SIDEBAR ===================== */
+.sidebar{grid-column:1;grid-row:2;background:rgba(10,13,24,0.95);backdrop-filter:blur(20px);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:12px 8px;overflow:hidden;transition:var(--transition);position:relative;z-index:50}
+.app.sidebar-collapsed .sidebar{padding:12px 4px}
+.sidebar-toggle{width:100%;display:flex;align-items:center;justify-content:flex-end;padding:4px 4px 12px;cursor:pointer}
+.sidebar-toggle-btn{width:28px;height:28px;border-radius:6px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--text3);font-size:14px;transition:var(--transition);cursor:pointer}
+.sidebar-toggle-btn:hover{background:var(--glass2);color:var(--text2);border-color:var(--border2)}
+.nav-section{font-size:10px;font-weight:600;color:var(--text4);text-transform:uppercase;letter-spacing:.1em;padding:12px 10px 6px;white-space:nowrap;overflow:hidden;transition:opacity var(--transition)}
+.app.sidebar-collapsed .nav-section{opacity:0;height:0;padding:0}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r);cursor:pointer;color:var(--text3);transition:var(--transition);white-space:nowrap;position:relative;overflow:hidden;margin-bottom:2px}
+.nav-item:hover{color:var(--text2);background:var(--glass)}
+.nav-item.active{color:var(--blue);background:var(--blue-glow)}
+.nav-item.active::before{content:'';position:absolute;left:0;top:20%;height:60%;width:2px;background:linear-gradient(to bottom,var(--blue),var(--cyan));border-radius:0 2px 2px 0}
+.nav-icon{font-size:16px;flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center}
+.nav-label{font-size:13px;font-weight:500;transition:opacity var(--transition),width var(--transition);overflow:hidden}
+.app.sidebar-collapsed .nav-label{opacity:0;width:0}
+.nav-badge{margin-left:auto;font-size:10px;font-family:var(--font-mono);background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:1px 6px;white-space:nowrap;transition:opacity var(--transition)}
+.app.sidebar-collapsed .nav-badge{opacity:0;width:0;overflow:hidden}
+.sidebar-bottom{margin-top:auto}
+.system-health-mini{padding:8px 10px;border-radius:var(--r);background:var(--glass);border:1px solid var(--border);font-size:11px;margin-top:8px;overflow:hidden}
+.app.sidebar-collapsed .system-health-mini{display:none}
+.health-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;font-family:var(--font-mono)}
+.health-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+
+/* ===================== MAIN ===================== */
+.main{grid-column:2;grid-row:2;overflow:auto;background:var(--bg);position:relative}
+.page{display:none;padding:28px;animation:page-in .25s ease}
+.page.active{display:block}
+@keyframes page-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ===================== PAGE HEADER ===================== */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+.page-title{font-family:var(--font-head);font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--text),var(--text2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.page-subtitle{font-size:13px;color:var(--text3);margin-top:3px}
+.hstack{display:flex;align-items:center;gap:8px}
+.vstack{display:flex;flex-direction:column;gap:6px}
+
+/* ===================== BUTTONS ===================== */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-family:var(--font);font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);text-decoration:none;border:none;white-space:nowrap}
+.btn-primary{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;box-shadow:0 0 20px var(--blue-glow2)}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 0 32px var(--blue-glow2)}
+.btn-secondary{background:var(--glass);border:1px solid var(--border2);color:var(--text2)}
+.btn-secondary:hover{background:var(--glass2);color:var(--text);border-color:var(--border3)}
+.btn-danger{background:var(--red-glow);border:1px solid rgba(239,68,68,.3);color:var(--red)}
+.btn-danger:hover{background:rgba(239,68,68,.2)}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text3)}
+.btn-ghost:hover{border-color:var(--border2);color:var(--text2);background:var(--glass)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-icon{width:34px;height:34px;padding:0;justify-content:center}
+
+/* ===================== CARDS ===================== */
+.card{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:var(--r3);padding:20px;transition:var(--transition)}
+.card:hover{border-color:var(--border2)}
+.card-glow{position:relative;overflow:hidden}
+.card-glow::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,var(--blue-glow) 0%,transparent 60%);pointer-events:none}
+.card-sm{background:var(--glass);border:1px solid var(--border);border-radius:var(--r2);padding:16px}
+.stat-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);padding:20px;position:relative;overflow:hidden;transition:var(--transition);cursor:default}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px}
+.stat-card.blue::after{background:linear-gradient(to right,var(--blue),var(--cyan))}
+.stat-card.purple::after{background:linear-gradient(to right,var(--purple),var(--blue))}
+.stat-card.teal::after{background:linear-gradient(to right,var(--teal),var(--cyan))}
+.stat-card.amber::after{background:linear-gradient(to right,var(--amber),var(--red))}
+.stat-card.green::after{background:linear-gradient(to right,var(--green),var(--teal))}
+.stat-card.red::after{background:linear-gradient(to right,var(--red),var(--amber))}
+.stat-bg-icon{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:42px;opacity:.06}
+.stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.stat-value{font-family:var(--font-head);font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.stat-delta{font-size:11px;margin-top:6px;color:var(--green);display:flex;align-items:center;gap:4px}
+.stat-delta.neg{color:var(--red)}
+
+/* ===================== GRIDS ===================== */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid-auto{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+@media(max-width:1200px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:900px){.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:600px){.grid-4,.grid-3,.grid-2,.grid-auto{grid-template-columns:1fr}}
+
+/* ===================== TAGS ===================== */
+.tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500;font-family:var(--font-mono)}
+.tag-blue{background:var(--blue-glow);color:var(--blue);border:1px solid rgba(79,143,255,.2)}
+.tag-green{background:var(--green-glow);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.tag-amber{background:var(--amber-glow);color:var(--amber);border:1px solid rgba(245,158,11,.2)}
+.tag-red{background:var(--red-glow);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.tag-teal{background:var(--teal-glow);color:var(--teal);border:1px solid rgba(0,229,195,.2)}
+.tag-purple{background:var(--purple-glow);color:var(--purple);border:1px solid rgba(139,92,246,.2)}
+.tag-gray{background:rgba(255,255,255,.05);color:var(--text2);border:1px solid var(--border)}
+
+/* ===================== INPUTS ===================== */
+.input{width:100%;background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:9px 12px;font-family:var(--font);font-size:13px;color:var(--text);outline:none;transition:var(--transition)}
+.input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.input::placeholder{color:var(--text3)}
+.input-group{margin-bottom:14px}
+.input-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:6px;display:block}
+textarea.input{resize:vertical;min-height:80px;line-height:1.6}
+select.input{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%234a5168'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+
+/* ===================== PROGRESS ===================== */
+.progress{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;border-radius:2px;transition:width 1s cubic-bezier(.4,0,.2,1)}
+.progress-blue{background:linear-gradient(to right,var(--blue2),var(--blue))}
+.progress-green{background:linear-gradient(to right,var(--green),var(--teal))}
+.progress-amber{background:linear-gradient(to right,var(--amber),var(--red))}
+.progress-teal{background:linear-gradient(to right,var(--teal),var(--cyan))}
+.progress-purple{background:linear-gradient(to right,var(--purple),var(--blue))}
+.progress-lg{height:8px}
+
+/* ===================== DIVIDER ===================== */
+.divider{height:1px;background:var(--border);margin:16px 0}
+
+/* ===================== MODALS ===================== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;animation:modal-in .2s ease}
+.modal-overlay.open{display:flex}
+@keyframes modal-in{from{opacity:0}to{opacity:1}}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r4);padding:28px;max-width:580px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow2);animation:modal-slide .25s ease}
+@keyframes modal-slide{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.modal-title{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--text)}
+.modal-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px;border-radius:var(--r);transition:var(--transition)}
+.modal-close:hover{color:var(--text);background:var(--glass)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ===================== TOASTS ===================== */
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.toast{background:var(--bg3);border:1px solid var(--border2);border-radius:var(--r2);padding:12px 16px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);animation:toast-in .3s ease;pointer-events:all;max-width:340px;box-shadow:var(--shadow)}
+.toast.success{border-left:3px solid var(--green)}
+.toast.error{border-left:3px solid var(--red)}
+.toast.warn{border-left:3px solid var(--amber)}
+.toast.info{border-left:3px solid var(--blue)}
+@keyframes toast-in{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:translateX(0)}}
+@keyframes toast-out{to{opacity:0;transform:translateX(24px)}}
+.toast-icon{font-size:16px;flex-shrink:0}
+.toast-msg{flex:1;line-height:1.4}
+.toast-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:2px;flex-shrink:0}
+
+/* ===================== LOADING ===================== */
+.skeleton{background:linear-gradient(90deg,var(--bg3) 25%,var(--bg4) 50%,var(--bg3) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:var(--r)}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.loading-spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-overlay{position:absolute;inset:0;background:rgba(6,8,16,.8);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:10;border-radius:inherit}
+
+/* ===================== FEED ITEMS ===================== */
+.feed-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.feed-item:last-child{border-bottom:none}
+.feed-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.feed-text{font-size:13px;color:var(--text2);line-height:1.5;flex:1}
+.feed-time{font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+
+/* ===================== PROJECT CARDS ===================== */
+.project-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);padding:20px;cursor:pointer;transition:var(--transition);position:relative;overflow:hidden}
+.project-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,var(--blue-glow) 0%,transparent 60%);opacity:0;transition:var(--transition);pointer-events:none}
+.project-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:var(--shadow)}
+.project-card:hover::before{opacity:1}
+.project-card.selected{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),0 0 24px var(--blue-glow2)}
+.project-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px}
+.project-title{font-size:14px;font-weight:600;color:var(--text);line-height:1.4}
+.project-topic{font-size:12px;color:var(--text3);margin-top:3px;line-height:1.4}
+.project-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.project-actions{display:flex;gap:6px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+
+/* ===================== CONFIDENCE RING ===================== */
+.ring-container{position:relative;display:inline-flex;align-items:center;justify-content:center}
+.ring-svg{transform:rotate(-90deg)}
+.ring-track{fill:none;stroke:var(--bg4)}
+.ring-fill{fill:none;stroke-linecap:round;transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)}
+.ring-label{position:absolute;text-align:center}
+.ring-value{font-family:var(--font-head);font-weight:700;font-size:16px;line-height:1;color:var(--text)}
+.ring-sub{font-size:9px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+
+/* ===================== CLAIM ROWS ===================== */
+.claim-row{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:var(--r2);border:1px solid var(--border);background:var(--glass);margin-bottom:8px;transition:var(--transition)}
+.claim-row:hover{border-color:var(--border2)}
+.claim-text{flex:1;font-size:13px;color:var(--text2);line-height:1.5}
+.claim-status{flex-shrink:0}
+
+/* ===================== WORKFLOW NODES ===================== */
+.wf-pipeline{display:flex;align-items:center;gap:0;overflow-x:auto;padding:8px 0;margin-bottom:20px}
+.wf-node{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:100px;flex-shrink:0}
+.wf-node-circle{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:var(--transition);position:relative}
+.wf-node-circle.done{background:var(--green-glow);border:2px solid var(--green)}
+.wf-node-circle.active{background:var(--blue-glow);border:2px solid var(--blue);box-shadow:0 0 16px var(--blue-glow2);animation:node-pulse 2s infinite}
+@keyframes node-pulse{0%,100%{box-shadow:0 0 16px var(--blue-glow2)}50%{box-shadow:0 0 32px var(--blue-glow2)}}
+.wf-node-circle.queued{background:var(--glass);border:2px solid var(--border)}
+.wf-node-circle.error{background:var(--red-glow);border:2px solid var(--red)}
+.wf-node-label{font-size:10px;font-family:var(--font-mono);color:var(--text3);text-align:center;line-height:1.3}
+.wf-connector{flex:1;height:2px;background:linear-gradient(to right,var(--border),var(--border));position:relative;overflow:hidden;min-width:24px}
+.wf-connector.active{background:linear-gradient(to right,var(--green),var(--blue))}
+.wf-connector::after{content:'';position:absolute;inset:0;background:linear-gradient(to right,transparent,rgba(255,255,255,.3),transparent);animation:flow 1.5s linear infinite;transform:translateX(-100%)}
+.wf-connector.active::after{animation:flow 1s linear infinite}
+@keyframes flow{to{transform:translateX(100%)}}
+
+/* ===================== EVIDENCE CARDS ===================== */
+.evidence-card{background:var(--glass);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:10px;transition:var(--transition);cursor:pointer}
+.evidence-card:hover{border-color:var(--border2);transform:translateX(2px)}
+.evidence-card.expanded{border-color:var(--blue);background:var(--blue-glow)}
+.evidence-title{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;line-height:1.4}
+.evidence-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text3);font-family:var(--font-mono);flex-wrap:wrap}
+.evidence-body{font-size:12px;color:var(--text3);line-height:1.7;margin-top:10px;display:none;border-top:1px solid var(--border);padding-top:10px}
+.evidence-card.expanded .evidence-body{display:block}
+.trust-bar{flex:1;max-width:80px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.trust-fill{height:100%;border-radius:2px;background:linear-gradient(to right,var(--green),var(--teal))}
+
+/* ===================== CONTRADICTION CARDS ===================== */
+.contra-card{border-radius:var(--r2);border:1px solid var(--border);background:var(--glass);margin-bottom:12px;overflow:hidden;transition:var(--transition)}
+.contra-header{padding:14px 16px;display:flex;align-items:center;gap:10px;justify-content:space-between;cursor:pointer}
+.contra-header:hover{background:var(--glass2)}
+.contra-body{padding:0 16px 16px;display:none}
+.contra-card.expanded .contra-body{display:block}
+.contra-sources{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.contra-source{background:var(--bg3);border-radius:var(--r);padding:12px;font-size:12px;line-height:1.6;color:var(--text2)}
+.contra-source-label{font-size:10px;font-family:var(--font-mono);font-weight:600;margin-bottom:6px}
+
+/* ===================== HYPERLINK TABLE ===================== */
+.table-wrap{overflow-x:auto;border-radius:var(--r2);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead tr{background:var(--bg3)}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;border-bottom:1px solid var(--border)}
+tbody tr{border-bottom:1px solid var(--border);transition:var(--transition)}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--glass)}
+tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
+.url-cell{font-family:var(--font-mono);font-size:11px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ===================== CHAT ===================== */
+.chat-container{display:flex;flex-direction:column;height:calc(100vh - var(--topbar) - 120px)}
+.chat-messages{flex:1;overflow-y:auto;padding:0 4px}
+.chat-msg{display:flex;gap:12px;margin-bottom:20px;animation:msg-in .2s ease}
+@keyframes msg-in{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg.user{flex-direction:row-reverse}
+.chat-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-weight:700}
+.chat-avatar.ai{background:linear-gradient(135deg,var(--blue2),var(--purple));color:#fff}
+.chat-avatar.user{background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff;font-size:13px}
+.chat-bubble{max-width:72%;padding:12px 16px;border-radius:var(--r3);font-size:13px;line-height:1.7;position:relative}
+.chat-bubble.ai{background:var(--bg3);border:1px solid var(--border);border-radius:4px var(--r3) var(--r3) var(--r3);color:var(--text2)}
+.chat-bubble.user{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;border-radius:var(--r3) 4px var(--r3) var(--r3)}
+.chat-input-area{padding:16px 0 0;border-top:1px solid var(--border);flex-shrink:0}
+.chat-input-wrap{display:flex;gap:10px;background:var(--glass);border:1px solid var(--border2);border-radius:var(--r2);padding:10px 12px;transition:var(--transition)}
+.chat-input-wrap:focus-within{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-glow)}
+.chat-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:13px;resize:none;min-height:22px;max-height:120px;line-height:1.6}
+.chat-input::placeholder{color:var(--text3)}
+.chat-send{background:linear-gradient(135deg,var(--blue2),var(--blue));border:none;border-radius:var(--r);width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;font-size:15px;transition:var(--transition);flex-shrink:0}
+.chat-send:hover{transform:scale(1.05);box-shadow:0 0 16px var(--blue-glow2)}
+.typing-indicator{display:flex;align-items:center;gap:4px;padding:12px 16px;background:var(--bg3);border:1px solid var(--border);border-radius:4px var(--r3) var(--r3) var(--r3);width:fit-content}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);animation:typing .8s ease infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes typing{0%,100%{transform:translateY(0);opacity:.4}50%{transform:translateY(-4px);opacity:1}}
+.chat-suggestions{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chat-suggest{font-size:11px;padding:5px 10px;border-radius:20px;background:var(--glass);border:1px solid var(--border);color:var(--text3);cursor:pointer;transition:var(--transition);font-family:var(--font-mono)}
+.chat-suggest:hover{border-color:var(--blue);color:var(--blue)}
+.streaming-cursor{display:inline-block;width:2px;height:14px;background:var(--blue);animation:blink .8s infinite;vertical-align:middle;margin-left:2px;border-radius:1px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* ===================== CONTENT STUDIO ===================== */
+.studio-layout{display:grid;grid-template-columns:1fr 360px;gap:16px;height:calc(100vh - var(--topbar) - 120px)}
+.editor-area{background:var(--glass);border:1px solid var(--border);border-radius:var(--r3);display:flex;flex-direction:column;overflow:hidden}
+.editor-toolbar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.editor-content{flex:1;overflow:auto;padding:24px;font-size:14px;line-height:1.8;color:var(--text2)}
+.editor-content h1,.editor-content h2,.editor-content h3{font-family:var(--font-head);color:var(--text);margin:20px 0 10px}
+.editor-content h1{font-size:22px;font-weight:800}
+.editor-content h2{font-size:18px;font-weight:700}
+.editor-content p{margin-bottom:14px}
+.editor-content blockquote{border-left:3px solid var(--blue);padding-left:16px;color:var(--text3);font-style:italic;margin:14px 0}
+.citation-inline{color:var(--blue);font-size:10px;font-family:var(--font-mono);vertical-align:super;cursor:pointer}
+.citation-inline:hover{color:var(--cyan)}
+.studio-sidebar{display:flex;flex-direction:column;gap:12px}
+@media(max-width:1100px){.studio-layout{grid-template-columns:1fr}}
+
+/* ===================== TELEMETRY CHARTS ===================== */
+.bar-chart{display:flex;align-items:flex-end;gap:4px;height:80px;padding:4px 0}
+.bar{flex:1;background:linear-gradient(to top,var(--blue2),var(--blue));border-radius:2px 2px 0 0;min-height:3px;transition:height .5s cubic-bezier(.4,0,.2,1);cursor:pointer;position:relative}
+.bar:hover{background:linear-gradient(to top,var(--blue),var(--cyan));box-shadow:0 0 12px var(--blue-glow2)}
+.bar.amber{background:linear-gradient(to top,var(--amber),rgba(245,158,11,.4))}
+.bar.green{background:linear-gradient(to top,var(--green),rgba(16,185,129,.4))}
+.bar.purple{background:linear-gradient(to top,var(--purple),rgba(139,92,246,.4))}
+.bar-label{font-size:9px;color:var(--text3);text-align:center;margin-top:4px;font-family:var(--font-mono)}
+
+/* ===================== TIMELINE ===================== */
+.timeline{position:relative;padding-left:28px}
+.timeline::before{content:'';position:absolute;left:10px;top:0;bottom:0;width:1px;background:linear-gradient(to bottom,var(--blue),var(--border),transparent)}
+.tl-event{position:relative;margin-bottom:18px}
+.tl-dot{position:absolute;left:-22px;top:4px;width:10px;height:10px;border-radius:50%;border:2px solid}
+.tl-dot.done{background:var(--green);border-color:var(--green);box-shadow:0 0 8px var(--green)}
+.tl-dot.active{background:var(--blue);border-color:var(--blue);box-shadow:0 0 12px var(--blue-glow2);animation:node-pulse 2s infinite}
+.tl-dot.queued{background:var(--bg4);border-color:var(--border2)}
+.tl-dot.error{background:var(--red);border-color:var(--red)}
+.tl-label{font-size:13px;font-weight:500;color:var(--text2)}
+.tl-sub{font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
+.tl-time{font-size:10px;color:var(--text4);font-family:var(--font-mono);margin-top:2px}
+
+/* ===================== VERIFICATION ===================== */
+.verif-score-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--glass);margin-bottom:8px}
+.verif-score-label{flex:1;font-size:12px;color:var(--text2)}
+.verif-score-bar{width:120px;flex-shrink:0}
+.verif-score-val{font-size:12px;font-family:var(--font-mono);color:var(--text2);width:36px;text-align:right;flex-shrink:0}
+
+/* ===================== RESPONSIVE MOBILE ===================== */
+@media(max-width:768px){
+  .app{grid-template-columns:0 1fr}
+  .app.sidebar-mobile-open{grid-template-columns:var(--sidebar) 1fr}
+  .sidebar{position:fixed;left:-var(--sidebar);top:var(--topbar);bottom:0;width:var(--sidebar);z-index:200;transform:translateX(-100%);transition:transform var(--transition)}
+  .app.sidebar-mobile-open .sidebar{transform:translateX(0)}
+  .page{padding:16px}
+  .page-header{flex-direction:column}
+  .studio-layout{grid-template-columns:1fr;height:auto}
+  .chat-container{height:auto;min-height:500px}
+}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <h1>Verified AI Research Writer</h1>
-  <p>API Reference — v1.0.0</p>
-  <span class="badge">Base URL: http://localhost:8000/api/v1</span>
+<canvas id="particles-canvas"></canvas>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-create-project">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create New Project</div>
+      <button class="modal-close" onclick="closeModal('modal-create-project')">✕</button>
+    </div>
+    <div class="input-group">
+      <label class="input-label">Project Title *</label>
+      <input class="input" id="proj-title" placeholder="e.g., AI in Healthcare 2024">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Research Topic *</label>
+      <input class="input" id="proj-topic" placeholder="e.g., Future of AI diagnostics in oncology">
+    </div>
+    <div class="input-group">
+      <label class="input-label">Description</label>
+      <textarea class="input" id="proj-desc" placeholder="Describe the research scope and objectives..."></textarea>
+    </div>
+    <div class="grid-2" style="gap:10px">
+      <div class="input-group" style="margin:0">
+        <label class="input-label">Tone</label>
+        <select class="input" id="proj-tone">
+          <option value="academic">Academic</option>
+          <option value="professional">Professional</option>
+          <option value="journalistic">Journalistic</option>
+          <option value="executive">Executive Brief</option>
+        </select>
+      </div>
+      <div class="input-group" style="margin:0">
+        <label class="input-label">Content Type</label>
+        <select class="input" id="proj-content-type">
+          <option value="research_article">Research Article</option>
+          <option value="blog_post">Blog Post</option>
+          <option value="executive_summary">Executive Summary</option>
+          <option value="whitepaper">Whitepaper</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="handleCreateProject()">
+        <span id="create-proj-btn-text">Create Project</span>
+      </button>
+    </div>
+  </div>
 </div>
 
-<div class="container">
-
-  <!-- ============================== -->
-  <!-- HEALTH                         -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9889;</span> Health <span class="count">1</span></h2>
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/health</span>
-      </div>
-      <div class="desc">Check if the API server is running. Returns status and version.</div>
-      <div class="details">
-        <span class="tag">no auth</span>
-        <span class="tag">no project required</span>
-      </div>
+<div class="modal-overlay" id="modal-quick-project">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Quick Create</div>
+      <button class="modal-close" onclick="closeModal('modal-quick-project')">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px">Enter a topic and we'll auto-configure everything.</p>
+    <div class="input-group">
+      <label class="input-label">Research Topic *</label>
+      <input class="input" id="quick-topic" placeholder="e.g., Future of quantum computing">
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-quick-project')">Cancel</button>
+      <button class="btn btn-primary" onclick="handleQuickCreate()">⚡ Quick Create</button>
     </div>
   </div>
-
-  <!-- ============================== -->
-  <!-- PROJECTS                       -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#128203;</span> Projects <span class="count">4</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method post">POST</span>
-        <span class="path">/api/v1/projects</span>
-      </div>
-      <div class="desc">Create a new content project. Provide topic, title, tone, content type, SEO keywords, and points to cover. Returns the created project with a UUID.</div>
-      <div class="details">
-        <span class="tag">request body: ProjectCreate</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects</span>
-      </div>
-      <div class="desc">List all projects ordered by creation date (newest first). Supports <code>?skip=0&amp;limit=100</code> pagination.</div>
-      <div class="details">
-        <span class="tag">query: skip, limit</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}</span>
-      </div>
-      <div class="desc">Get a single project by its UUID. Returns full project details including outline, status, and metadata.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method delete">DELETE</span>
-        <span class="path">/api/v1/projects/{project_id}</span>
-      </div>
-      <div class="desc">Delete a project and all its associated content, claims, evidence, and sources.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-        <span class="tag">returns 204</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- CONTENT                        -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9997;&#65039;</span> Content <span class="count">3</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method post">POST</span>
-        <span class="path">/api/v1/projects/{project_id}/content/generate</span>
-      </div>
-      <div class="desc"><strong>Core pipeline endpoint.</strong> Triggers the full multi-agent content generation pipeline: topic planning → web research → evidence retrieval → claim extraction → fact verification → content writing → self-verification. Returns generated markdown, citations, claims, and a verification summary.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-        <span class="tag">no request body</span>
-        <span class="tag">pipeline runs async</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/content</span>
-      </div>
-      <div class="desc">Get all generated content versions for a project, ordered newest first.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/content/latest</span>
-      </div>
-      <div class="desc">Get the most recently generated content for a project. Returns markdown, citations, SEO metadata, and confidence score.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- EVIDENCE                       -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#128270;</span> Evidence <span class="count">2</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/evidence</span>
-      </div>
-      <div class="desc">Get all evidence items collected during research. Each item includes a snippet, source URL, domain, relevance score, and source trust score. Returns average relevance across all evidence.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/evidence/claims/{claim_id}</span>
-      </div>
-      <div class="desc">Get evidence items specifically linked to a single claim. Useful for drilling into what sources support a particular claim.</div>
-      <div class="details">
-        <span class="tag">path: project_id, claim_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- VERIFICATION                   -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9989;</span> Verification <span class="count">3</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/claims</span>
-      </div>
-      <div class="desc">Get all extracted claims with their verification status, confidence scores, and explanations. Returns aggregate counts: total, verified, unverified, contradicted, unsupported.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/sources</span>
-      </div>
-      <div class="desc">Get source trust metrics. Lists every source URL with its domain, title, and computed trust score. Includes average trust score across all sources.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/dashboard</span>
-      </div>
-      <div class="desc"><strong>Full dashboard endpoint.</strong> Returns a comprehensive snapshot: project metadata, all claims with statuses and confidence, source trust scores, evidence counts with relevance, and content metrics (word count, overall confidence, citation count).</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- PIPELINE OVERVIEW              -->
-  <!-- ============================== -->
-  <div class="section-title">
-    <strong>&#9881;&#65039; Pipeline Flow</strong>
-    <br><br>
-    When you call <code>POST /api/v1/projects/{id}/content/generate</code>, the system runs 5 stages in sequence:
-    <br><br>
-    1. <strong>Topic Planner</strong> &mdash; generates a structured outline with sections and research queries<br>
-    2. <strong>Research</strong> &mdash; searches web sources (Tavily API or mock), stores evidence, computes trust scores<br>
-    3. <strong>Verification</strong> &mdash; extracts factual claims from evidence, cross-references sources, assigns confidence scores<br>
-    4. <strong>Content Writer</strong> &mdash; writes markdown using only verified claims (&gt;0.70 confidence), adds inline citations<br>
-    5. <strong>Self-Verification</strong> &mdash; audits for hallucination risks, unsupported claims, citation mismatches
-    <br><br>
-    Each stage updates the project status so you can poll <code>GET /api/v1/projects/{id}</code> for progress.
-  </div>
-
 </div>
 
-<div class="footer">
-  Powered by <strong>Verified AI Research Writer</strong> &middot;
-  <a href="/docs">Swagger UI</a> &middot;
-  <a href="/redoc">ReDoc</a>
+<div class="modal-overlay" id="modal-confirm-delete">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <div class="modal-title" style="color:var(--red)">Delete Project</div>
+      <button class="modal-close" onclick="closeModal('modal-confirm-delete')">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text2)">Are you sure you want to delete <strong id="delete-proj-name" style="color:var(--text)"></strong>? This cannot be undone.</p>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">Cancel</button>
+      <button class="btn btn-danger" onclick="handleDeleteProject()">Delete Project</button>
+    </div>
+  </div>
 </div>
 
+<!-- APP SHELL -->
+<div class="app" id="app">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-logo">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M13 2L23 7.5V18.5L13 24L3 18.5V7.5L13 2Z" stroke="url(#grad1)" stroke-width="1.5" fill="rgba(79,143,255,.1)"/>
+        <circle cx="13" cy="13" r="4" fill="url(#grad1)" opacity=".9"/>
+        <defs><linearGradient id="grad1" x1="3" y1="2" x2="23" y2="24" gradientUnits="userSpaceOnUse"><stop stop-color="#4f8fff"/><stop offset="1" stop-color="#00d4ff"/></linearGradient></defs>
+      </svg>
+      ARCOS
+    </div>
+    <div class="topbar-divider"></div>
+    <div class="topbar-project-select" id="topbar-project-select" onclick="showProjectDropdown()">
+      <span class="proj-select-dot"></span>
+      <span id="topbar-project-name" style="flex:1">Select a project...</span>
+      <span style="color:var(--text3);font-size:11px">▾</span>
+    </div>
+    <div class="topbar-status">
+      <div class="status-live">System Online</div>
+    </div>
+    <div class="topbar-search">
+      <span class="topbar-search-icon">⌕</span>
+      <input type="text" placeholder="Search projects, evidence, claims..." id="global-search">
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" onclick="navigate('notifications')" title="Notifications">
+        🔔<span class="badge" id="notif-badge" style="display:none">3</span>
+      </button>
+      <button class="icon-btn" title="Help">?</button>
+      <div class="avatar-btn" title="Profile">RP</div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-toggle">
+      <button class="sidebar-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">⟷</button>
+    </div>
+    <div class="nav-section">Core</div>
+    <div class="nav-item active" onclick="navigate('dashboard')" id="nav-dashboard">
+      <span class="nav-icon">▦</span><span class="nav-label">Dashboard</span>
+    </div>
+    <div class="nav-item" onclick="navigate('projects')" id="nav-projects">
+      <span class="nav-icon">◫</span><span class="nav-label">Projects</span>
+    </div>
+    <div class="nav-section">Research</div>
+    <div class="nav-item" onclick="navigate('content-studio')" id="nav-content-studio">
+      <span class="nav-icon">✦</span><span class="nav-label">Content Studio</span>
+    </div>
+    <div class="nav-item" onclick="navigate('verification')" id="nav-verification">
+      <span class="nav-icon">✓</span><span class="nav-label">Verification Center</span>
+    </div>
+    <div class="nav-item" onclick="navigate('evidence')" id="nav-evidence">
+      <span class="nav-icon">◈</span><span class="nav-label">Evidence Explorer</span>
+    </div>
+    <div class="nav-section">Analysis</div>
+    <div class="nav-item" onclick="navigate('workflow')" id="nav-workflow">
+      <span class="nav-icon">⬡</span><span class="nav-label">Workflow Monitor</span>
+    </div>
+    <div class="nav-item" onclick="navigate('contradictions')" id="nav-contradictions">
+      <span class="nav-icon">⚡</span><span class="nav-label">Contradictions</span>
+      <span class="nav-badge" id="contra-badge">0</span>
+    </div>
+    <div class="nav-item" onclick="navigate('hyperlinks')" id="nav-hyperlinks">
+      <span class="nav-icon">⊕</span><span class="nav-label">Hyperlink Health</span>
+    </div>
+    <div class="nav-section">Assistant</div>
+    <div class="nav-item" onclick="navigate('copilot')" id="nav-copilot">
+      <span class="nav-icon">◉</span><span class="nav-label">Research Copilot</span>
+    </div>
+    <div class="nav-item" onclick="navigate('telemetry')" id="nav-telemetry">
+      <span class="nav-icon">◎</span><span class="nav-label">Telemetry</span>
+    </div>
+    <div class="nav-item" onclick="navigate('settings')" id="nav-settings">
+      <span class="nav-icon">⚙</span><span class="nav-label">Settings</span>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="system-health-mini" id="sidebar-health">
+        <div class="health-row">
+          <span style="color:var(--text3);font-size:11px">API Status</span>
+          <span class="health-dot" style="background:var(--text4)" id="health-dot-api"></span>
+        </div>
+        <div class="health-row">
+          <span style="color:var(--text3);font-size:11px">Latency</span>
+          <span id="health-latency" style="font-size:11px;color:var(--text3)">—</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+
+    <!-- DASHBOARD PAGE -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Research Command Center</div>
+          <div class="page-subtitle">Enterprise AI research platform — real-time monitoring</div>
+        </div>
+        <div class="hstack">
+          <button class="btn btn-secondary" onclick="checkSystemHealth()">↻ Refresh</button>
+          <button class="btn btn-primary" onclick="openModal('modal-create-project')">+ New Project</button>
+        </div>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="grid-4" style="margin-bottom:16px" id="dashboard-stats">
+        <div class="stat-card blue card-glow">
+          <div class="stat-bg-icon">◫</div>
+          <div class="stat-label">Total Projects</div>
+          <div class="stat-value" id="stat-projects">—</div>
+          <div class="stat-delta">↑ All time</div>
+        </div>
+        <div class="stat-card teal card-glow">
+          <div class="stat-bg-icon">◈</div>
+          <div class="stat-label">Evidence Items</div>
+          <div class="stat-value" id="stat-evidence">—</div>
+          <div class="stat-delta">↑ This session</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-bg-icon">⚡</div>
+          <div class="stat-label">Contradictions</div>
+          <div class="stat-value" id="stat-contras" style="color:var(--amber)">—</div>
+          <div class="stat-delta neg">⚡ Review needed</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-bg-icon">✓</div>
+          <div class="stat-label">Verification Score</div>
+          <div class="stat-value" id="stat-verif" style="color:var(--green)">—</div>
+          <div class="stat-delta">↑ Avg across projects</div>
+        </div>
+      </div>
+
+      <div class="grid-2" style="margin-bottom:16px">
+        <!-- System Health -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <span style="font-size:14px;font-weight:600;color:var(--text)">System Health</span>
+            <span class="tag tag-green" id="health-tag">Checking...</span>
+          </div>
+          <div id="health-details">
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--text4)"></div>
+              <div><div class="feed-text">Loading health status...</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Live Activity</div>
+          <div id="activity-feed">
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--text4)"></div>
+              <div><div class="feed-text skeleton" style="height:13px;width:80%"></div></div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--text4)"></div>
+              <div><div class="feed-text skeleton" style="height:13px;width:60%"></div></div>
+            </div>
+            <div class="feed-item">
+              <div class="feed-dot" style="background:var(--text4)"></div>
+              <div><div class="feed-text skeleton" style="height:13px;width:70%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent projects -->
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <span style="font-size:14px;font-weight:600;color:var(--text)">Recent Projects</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigate('projects')">View All →</button>
+        </div>
+        <div id="dashboard-recent-projects" class="grid-auto">
+          <div class="skeleton" style="height:140px;border-radius:var(--r2)"></div>
+          <div class="skeleton" style="height:140px;border-radius:var(--r2)"></div>
+          <div class="skeleton" style="height:140px;border-radius:var(--r2)"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECTS PAGE -->
+    <div class="page" id="page-projects">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Projects</div>
+          <div class="page-subtitle" id="projects-count-label">Loading projects...</div>
+        </div>
+        <div class="hstack">
+          <input class="input" style="width:200px" placeholder="Search projects..." id="project-search" oninput="filterProjects()">
+          <button class="btn btn-secondary" onclick="openModal('modal-quick-project')">⚡ Quick Create</button>
+          <button class="btn btn-primary" onclick="openModal('modal-create-project')">+ New Project</button>
+        </div>
+      </div>
+      <div class="grid-auto" id="projects-grid">
+        <div class="skeleton" style="height:200px;border-radius:var(--r3)"></div>
+        <div class="skeleton" style="height:200px;border-radius:var(--r3)"></div>
+        <div class="skeleton" style="height:200px;border-radius:var(--r3)"></div>
+      </div>
+    </div>
+
+    <!-- CONTENT STUDIO PAGE -->
+    <div class="page" id="page-content-studio">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Content Studio</div>
+          <div class="page-subtitle">AI-powered research writing with multi-agent verification</div>
+        </div>
+        <div class="hstack">
+          <select class="input" id="gen-mode" style="width:160px">
+            <option value="standard">Standard Mode</option>
+            <option value="v2">Multi-Agent v2</option>
+          </select>
+          <button class="btn btn-primary" onclick="generateContent()" id="gen-btn">✦ Generate</button>
+        </div>
+      </div>
+      <div id="no-project-studio" style="text-align:center;padding:60px 20px">
+        <div style="font-size:48px;margin-bottom:16px;opacity:.3">✦</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text2);margin-bottom:8px">Select a project first</div>
+        <p style="color:var(--text3);font-size:13px;margin-bottom:20px">Choose a project from the sidebar or create a new one to start generating content.</p>
+        <button class="btn btn-primary" onclick="navigate('projects')">Browse Projects →</button>
+      </div>
+      <div class="studio-layout" id="studio-layout" style="display:none">
+        <div class="editor-area">
+          <div class="editor-toolbar">
+            <span class="tag tag-blue" id="studio-project-tag">No Project</span>
+            <span class="tag tag-gray" id="studio-mode-tag">Standard</span>
+            <div style="margin-left:auto;display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="copyContent()">⎘ Copy</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportContent('md')">⬇ MD</button>
+              <button class="btn btn-ghost btn-sm" onclick="exportContent('txt')">⬇ TXT</button>
+            </div>
+          </div>
+          <div class="editor-content" id="editor-content">
+            <div style="text-align:center;padding:60px 20px;opacity:.4">
+              <div style="font-size:36px;margin-bottom:12px">✦</div>
+              <div style="font-size:15px;font-weight:600;color:var(--text2)">Ready to generate</div>
+              <p style="color:var(--text3);font-size:13px;margin-top:6px">Click Generate to start AI research writing</p>
+            </div>
+          </div>
+        </div>
+        <div class="studio-sidebar">
+          <div class="card">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">⬡ Agent Pipeline</div>
+            <div id="studio-pipeline">
+              <div class="wf-pipeline">
+                <div class="wf-node"><div class="wf-node-circle queued">◎</div><div class="wf-node-label">Research</div></div>
+                <div class="wf-connector"></div>
+                <div class="wf-node"><div class="wf-node-circle queued">✓</div><div class="wf-node-label">Verify</div></div>
+                <div class="wf-connector"></div>
+                <div class="wf-node"><div class="wf-node-circle queued">✦</div><div class="wf-node-label">Write</div></div>
+              </div>
+              <div style="font-size:12px;color:var(--text3);text-align:center">Click Generate to start</div>
+            </div>
+          </div>
+          <div class="card" id="studio-citations" style="display:none">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">⊕ Citations</div>
+            <div id="citations-list"></div>
+          </div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">📚 Version History</div>
+            <div id="version-history">
+              <div style="font-size:12px;color:var(--text3)">No versions yet. Generate content to create the first version.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VERIFICATION CENTER PAGE -->
+    <div class="page" id="page-verification">
+      <div class="page-header">
+        <div><div class="page-title">Verification Center</div><div class="page-subtitle">Claim verification and source authority analysis</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadVerification()">↻ Refresh</button>
+      </div>
+      <div id="verification-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">✓</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to view verification data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVIDENCE EXPLORER PAGE -->
+    <div class="page" id="page-evidence">
+      <div class="page-header">
+        <div><div class="page-title">Evidence Explorer</div><div class="page-subtitle">Browse, inspect, and analyze research evidence</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadEvidence()">↻ Refresh</button>
+      </div>
+      <div id="evidence-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">◈</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to explore evidence</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WORKFLOW MONITOR PAGE -->
+    <div class="page" id="page-workflow">
+      <div class="page-header">
+        <div><div class="page-title">Workflow Monitor</div><div class="page-subtitle">Multi-agent pipeline visualization and telemetry</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadWorkflow()">↻ Refresh</button>
+      </div>
+      <div id="workflow-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">⬡</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to view workflow</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTRADICTIONS PAGE -->
+    <div class="page" id="page-contradictions">
+      <div class="page-header">
+        <div><div class="page-title">Contradictions Center</div><div class="page-subtitle">AI-detected claim conflicts and resolution workflow</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadContradictions()">↻ Refresh</button>
+      </div>
+      <div id="contradictions-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">⚡</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to view contradictions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HYPERLINK HEALTH PAGE -->
+    <div class="page" id="page-hyperlinks">
+      <div class="page-header">
+        <div><div class="page-title">Hyperlink Health</div><div class="page-subtitle">Link validation, domain trust, and URL statistics</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadHyperlinks()">↻ Refresh</button>
+      </div>
+      <div id="hyperlinks-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">⊕</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to view hyperlink health</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESEARCH COPILOT PAGE -->
+    <div class="page" id="page-copilot">
+      <div class="page-header">
+        <div><div class="page-title">Research Copilot</div><div class="page-subtitle">AI assistant with full project context and real-time streaming</div></div>
+      </div>
+      <div id="no-project-copilot" style="text-align:center;padding:60px 20px">
+        <div style="font-size:48px;margin-bottom:16px;opacity:.3">◉</div>
+        <div style="font-size:16px;font-weight:600;color:var(--text2);margin-bottom:8px">Select a project first</div>
+        <button class="btn btn-primary" onclick="navigate('projects')">Browse Projects →</button>
+      </div>
+      <div class="chat-container" id="chat-container" style="display:none">
+        <div class="chat-messages" id="chat-messages">
+          <div class="chat-msg">
+            <div class="chat-avatar ai">⬡</div>
+            <div class="chat-bubble ai">Hello! I'm your Research Copilot. I'm connected to your project and can help you analyze evidence, explain contradictions, summarize findings, and guide your research. What would you like to explore?</div>
+          </div>
+        </div>
+        <div class="chat-input-area">
+          <div class="chat-suggestions" id="chat-suggestions">
+            <div class="chat-suggest" onclick="sendSuggestion('Summarize the key findings')">Summarize findings</div>
+            <div class="chat-suggest" onclick="sendSuggestion('List the main contradictions found')">List contradictions</div>
+            <div class="chat-suggest" onclick="sendSuggestion('What are the most trusted evidence sources?')">Top sources</div>
+            <div class="chat-suggest" onclick="sendSuggestion('Explain the verification methodology')">Verification method</div>
+            <div class="chat-suggest" onclick="sendSuggestion('What is the overall confidence score?')">Confidence score</div>
+          </div>
+          <div class="chat-input-wrap">
+            <textarea class="chat-input" id="chat-input" placeholder="Ask about your research, evidence, or workflow..." rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage()}"></textarea>
+            <button class="chat-send" onclick="sendChatMessage()">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TELEMETRY PAGE -->
+    <div class="page" id="page-telemetry">
+      <div class="page-header">
+        <div><div class="page-title">System Telemetry</div><div class="page-subtitle">Enterprise observability — tokens, latency, and agent metrics</div></div>
+        <button class="btn btn-secondary btn-sm" onclick="loadTelemetry()">↻ Refresh</button>
+      </div>
+      <div id="telemetry-content">
+        <div style="text-align:center;padding:60px">
+          <div style="opacity:.3;font-size:36px;margin-bottom:12px">◎</div>
+          <div style="color:var(--text3);font-size:14px">Select a project to view telemetry data</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div><div class="page-title">Settings</div></div>
+      </div>
+      <div style="max-width:600px">
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">API Configuration</div>
+          <div class="input-group">
+            <label class="input-label">Backend Base URL</label>
+            <input class="input" id="settings-base-url" value="https://verified-ai-research-writer.onrender.com">
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">System Information</div>
+          <div id="settings-health-info" style="font-size:13px;color:var(--text2)">Loading...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ============================================================
+   APP STATE
+============================================================ */
+const state = {
+  baseUrl: 'https://verified-ai-research-writer.onrender.com/api/v1',
+  currentProject: null,
+  projects: [],
+  chatHistory: [],
+  deleteTarget: null,
+  generatedContent: null,
+  sidebarCollapsed: false,
+};
+
+/* ============================================================
+   CORS DETECTION & DIAGNOSTIC BANNER
+============================================================ */
+function isCorsError(e) {
+  // "Failed to fetch" / "NetworkError" / "Load failed" = CORS or network block
+  const msg = (e.message || '').toLowerCase();
+  return msg.includes('failed to fetch') ||
+         msg.includes('networkerror') ||
+         msg.includes('load failed') ||
+         msg.includes('network request failed') ||
+         msg.includes('cors');
+}
+
+function showCorsBanner() {
+  if (document.getElementById('cors-banner')) return; // already shown
+  const origin = window.location.protocol + '//' + window.location.host;
+  const isFile = window.location.protocol === 'file:';
+  const banner = document.createElement('div');
+  banner.id = 'cors-banner';
+  banner.style.cssText = [
+    'position:fixed;top:56px;left:0;right:0;z-index:9999',
+    'background:linear-gradient(135deg,#1a0a00,#2a1200)',
+    'border-bottom:2px solid #f59e0b',
+    'padding:14px 24px',
+    'display:flex;align-items:flex-start;gap:14px',
+    'font-family:var(--font);font-size:13px',
+    'box-shadow:0 4px 24px rgba(245,158,11,.3)',
+  ].join(';');
+
+  const steps = isFile
+    ? `<b>You opened this as a local file (file://)</b> — browsers block cross-origin requests from file:// pages.<br>
+       <b>Fix (pick one):</b><br>
+       &nbsp;①&nbsp; <b>Python</b>: open a terminal in the folder containing this file and run:<br>
+       &nbsp;&nbsp;&nbsp;&nbsp;<code style="background:#0006;padding:2px 6px;border-radius:4px">python -m http.server 8080</code>&nbsp; then open <a href="http://localhost:8080" target="_blank" style="color:#fbbf24">http://localhost:8080</a><br>
+       &nbsp;②&nbsp; <b>Node</b>: <code style="background:#0006;padding:2px 6px;border-radius:4px">npx serve .</code>&nbsp; then open the printed URL<br>
+       &nbsp;③&nbsp; <b>VS Code</b>: install the <em>Live Server</em> extension → right-click this file → <em>Open with Live Server</em>`
+    : `The backend at <b>verified-ai-research-writer.onrender.com</b> is blocking requests from <b>${origin}</b>.<br>
+       Ask the backend owner to add <code style="background:#0006;padding:2px 6px;border-radius:4px">Access-Control-Allow-Origin: ${origin}</code> (or <code>*</code>) to the API responses, OR serve this file from the same domain.`;
+
+  banner.innerHTML = `
+    <div style="font-size:22px;flex-shrink:0;margin-top:2px">⚠</div>
+    <div style="flex:1;color:#fcd34d;line-height:1.7">
+      <div style="font-weight:700;font-size:14px;margin-bottom:4px;color:#fbbf24">CORS / Network Error — API calls are being blocked</div>
+      ${steps}
+    </div>
+    <button onclick="document.getElementById('cors-banner').remove()" style="background:none;border:1px solid #f59e0b55;border-radius:6px;color:#f59e0b;cursor:pointer;padding:4px 10px;font-size:13px;flex-shrink:0;margin-top:2px">✕ Dismiss</button>
+  `;
+  document.body.appendChild(banner);
+
+  // Also shift the main content down so it's not hidden behind the banner
+  const main = document.getElementById('main');
+  if (main) main.style.paddingTop = '90px';
+}
+
+function hideCorsBanner() {
+  const b = document.getElementById('cors-banner');
+  if (b) b.remove();
+  const main = document.getElementById('main');
+  if (main) main.style.paddingTop = '';
+}
+
+/* ============================================================
+   API LAYER
+============================================================ */
+async function api(method, path, body = null, signal = null) {
+  // state.baseUrl already ends with /api/v1
+  // Special sentinel '__root__' hits the bare host for GET /
+  const url = path === '__root__'
+    ? 'https://verified-ai-research-writer.onrender.com/'
+    : state.baseUrl + path;
+
+  const opts = {
+    method,
+    mode: 'cors',
+    credentials: 'omit',
+    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+    signal,
+  };
+  if (body) opts.body = JSON.stringify(body);
+
+  const t0 = Date.now();
+  let res;
+  try {
+    res = await fetch(url, opts);
+  } catch (networkErr) {
+    if (isCorsError(networkErr)) {
+      showCorsBanner();
+      throw new Error('Network/CORS error — see the banner at the top of the page for how to fix this.');
+    }
+    throw networkErr;
+  }
+
+  const latency = Date.now() - t0;
+  updateLatencyDisplay(latency);
+
+  if (!res.ok) {
+    let detail = res.statusText;
+    try { const j = await res.json(); detail = j.detail || j.message || j.error || detail; } catch {}
+    throw new Error(detail || `HTTP ${res.status}`);
+  }
+
+  // If we got a successful response, CORS is fine — hide the banner
+  hideCorsBanner();
+
+  // Some endpoints return 204 No Content
+  const ct = res.headers.get('content-type') || '';
+  if (res.status === 204 || !ct.includes('json')) return {};
+  return res.json();
+}
+
+async function apiStream(path, body) {
+  // Raw streaming fetch — same CORS headers
+  const url = state.baseUrl + path;
+  try {
+    return await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+      body: JSON.stringify(body),
+    });
+  } catch (networkErr) {
+    if (isCorsError(networkErr)) showCorsBanner();
+    throw networkErr;
+  }
+}
+
+// Project endpoints
+const apiGetProjects = () => api('GET', '/projects');
+const apiGetProject = id => api('GET', `/projects/${id}`);
+const apiCreateProject = body => api('POST', '/projects', body);
+const apiCreateProjectQuick = body => api('POST', '/projects/quick', body);
+const apiDeleteProject = id => api('DELETE', `/projects/${id}`);
+
+// Content endpoints
+const apiGenerateContent = (id, body, mode) => {
+  const qs = mode && mode !== 'standard' ? `?mode=${encodeURIComponent(mode)}` : '';
+  return api('POST', `/projects/${id}/content/generate${qs}`, body);
+};
+const apiGetContent = id => api('GET', `/projects/${id}/content`);
+const apiGetContentLatest = id => api('GET', `/projects/${id}/content/latest`);
+
+// Verification
+const apiGetVerificationClaims = id => api('GET', `/projects/${id}/verification/claims`);
+const apiGetVerificationSources = id => api('GET', `/projects/${id}/verification/sources`);
+const apiGetVerificationDashboard = id => api('GET', `/projects/${id}/verification/dashboard`);
+
+// Evidence
+const apiGetEvidence = id => api('GET', `/projects/${id}/evidence`);
+const apiGetEvidenceClaim = (pid, cid) => api('GET', `/projects/${pid}/evidence/claims/${cid}`);
+
+// Workflow
+const apiGetWorkflow = id => api('GET', `/projects/${id}/workflow`);
+const apiGetWorkflowTelemetry = id => api('GET', `/projects/${id}/workflow/telemetry`);
+
+// Contradictions
+const apiGetContradictions = id => api('GET', `/projects/${id}/workflow/contradictions`);
+const apiResolveContradiction = (pid, cid) => api('POST', `/projects/${pid}/workflow/contradictions/${cid}/resolve`);
+
+// Hyperlinks
+const apiGetHyperlinks = id => api('GET', `/projects/${id}/workflow/hyperlinks`);
+const apiGetHyperlinksSummary = id => api('GET', `/projects/${id}/workflow/hyperlinks/summary`);
+
+// Chat
+const apiPostChat = (id, body) => api('POST', `/projects/${id}/chat`, body);
+const apiGetChatEvents = id => api('GET', `/projects/${id}/chat/events`);
+
+// System — GET /health and GET /
+const apiCheckHealth = () => api('GET', '/health');
+const apiGetRoot = () => api('GET', '__root__');
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const pg = document.getElementById('page-' + page);
+  if (pg) pg.classList.add('active');
+  const nv = document.getElementById('nav-' + page);
+  if (nv) nv.classList.add('active');
+
+  // Page-specific load triggers
+  if (page === 'dashboard') loadDashboard();
+  if (page === 'projects') loadProjects();
+  if (page === 'content-studio') initStudio();
+  if (page === 'verification' && state.currentProject) loadVerification();
+  if (page === 'evidence' && state.currentProject) loadEvidence();
+  if (page === 'workflow' && state.currentProject) loadWorkflow();
+  if (page === 'contradictions' && state.currentProject) loadContradictions();
+  if (page === 'hyperlinks' && state.currentProject) loadHyperlinks();
+  if (page === 'telemetry' && state.currentProject) loadTelemetry();
+  if (page === 'copilot') initCopilot();
+  if (page === 'settings') loadSettings();
+}
+
+/* ============================================================
+   SIDEBAR
+============================================================ */
+function toggleSidebar() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  document.getElementById('app').classList.toggle('sidebar-collapsed', state.sidebarCollapsed);
+}
+
+/* ============================================================
+   MODAL MANAGEMENT
+============================================================ */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o => {
+  o.addEventListener('click', e => { if (e.target === o) o.classList.remove('open'); });
+});
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+============================================================ */
+function toast(msg, type = 'info', duration = 4000) {
+  const icons = { success: '✓', error: '✕', warn: '⚡', info: 'ℹ' };
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span><span class="toast-msg">${msg}</span><button class="toast-close" onclick="this.parentElement.remove()">✕</button>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'toast-out .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, duration);
+}
+
+/* ============================================================
+   PARTICLES BACKGROUND
+============================================================ */
+(function initParticles() {
+  const canvas = document.getElementById('particles-canvas');
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  resize();
+  window.addEventListener('resize', resize);
+  for (let i = 0; i < 60; i++) {
+    particles.push({
+      x: Math.random() * window.innerWidth,
+      y: Math.random() * window.innerHeight,
+      r: Math.random() * 1.5 + .3,
+      vx: (Math.random() - .5) * .3,
+      vy: (Math.random() - .5) * .3,
+      opacity: Math.random() * .5 + .1,
+    });
+  }
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < 0) p.x = canvas.width;
+      if (p.x > canvas.width) p.x = 0;
+      if (p.y < 0) p.y = canvas.height;
+      if (p.y > canvas.height) p.y = 0;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(79,143,255,${p.opacity})`;
+      ctx.fill();
+    });
+    // Draw connections
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if (dist < 120) {
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(79,143,255,${.06 * (1 - dist/120)})`;
+          ctx.lineWidth = .5;
+          ctx.stroke();
+        }
+      }
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ============================================================
+   SYSTEM HEALTH
+============================================================ */
+async function checkSystemHealth() {
+  const dot = document.getElementById('health-dot-api');
+  const tag = document.getElementById('health-tag');
+  try {
+    const t0 = Date.now();
+    const data = await apiCheckHealth();
+    const latency = Date.now() - t0;
+    if (dot) { dot.style.background = 'var(--green)'; dot.style.boxShadow = '0 0 8px var(--green)'; }
+    if (tag) { tag.textContent = 'Operational'; tag.className = 'tag tag-green'; }
+    const details = document.getElementById('health-details');
+    if (details) {
+      details.innerHTML = renderHealthFeed(data, latency);
+    }
+    updateLatencyDisplay(latency);
+    return data;
+  } catch (e) {
+    if (dot) { dot.style.background = 'var(--red)'; dot.style.boxShadow = '0 0 8px var(--red)'; }
+    if (tag) { tag.textContent = 'Degraded'; tag.className = 'tag tag-red'; }
+    const details = document.getElementById('health-details');
+    if (details) {
+      details.innerHTML = `<div class="feed-item"><div class="feed-dot" style="background:var(--red)"></div><div class="feed-text">${e.message}</div></div>`;
+    }
+  }
+}
+
+function renderHealthFeed(data, latency) {
+  const status = data?.status || 'unknown';
+  const color = status === 'healthy' || status === 'ok' ? 'var(--green)' : 'var(--amber)';
+  let html = `<div class="feed-item"><div class="feed-dot" style="background:${color}"></div><div><div class="feed-text">Status: ${status}</div></div></div>`;
+  html += `<div class="feed-item"><div class="feed-dot" style="background:var(--blue)"></div><div><div class="feed-text">Latency: ${latency}ms</div></div></div>`;
+  if (data?.version) html += `<div class="feed-item"><div class="feed-dot" style="background:var(--teal)"></div><div><div class="feed-text">Version: ${data.version}</div></div></div>`;
+  if (data?.agents) html += `<div class="feed-item"><div class="feed-dot" style="background:var(--purple)"></div><div><div class="feed-text">Agents: ${Array.isArray(data.agents) ? data.agents.join(', ') : JSON.stringify(data.agents)}</div></div></div>`;
+  return html;
+}
+
+function updateLatencyDisplay(ms) {
+  const el = document.getElementById('health-latency');
+  if (el) {
+    el.textContent = `${ms}ms`;
+    el.style.color = ms < 300 ? 'var(--green)' : ms < 800 ? 'var(--amber)' : 'var(--red)';
+  }
+}
+
+/* ============================================================
+   DASHBOARD
+============================================================ */
+async function loadDashboard() {
+  await checkSystemHealth();
+  await loadProjects(true);
+
+  const feed = document.getElementById('activity-feed');
+  if (feed && state.projects.length > 0) {
+    const items = state.projects.slice(0, 5);
+    feed.innerHTML = items.map((p, i) => `
+      <div class="feed-item">
+        <div class="feed-dot" style="background:var(--blue)"></div>
+        <div>
+          <div class="feed-text">Project: <strong>${p.title || p.topic || 'Untitled'}</strong></div>
+          <div class="feed-time">${formatDate(p.created_at || p.createdAt)}</div>
+        </div>
+      </div>
+    `).join('');
+  } else if (feed) {
+    feed.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:12px 0">No recent activity. Create a project to get started.</div>`;
+  }
+
+  // Update stat cards
+  setEl('stat-projects', state.projects.length);
+  setEl('stat-evidence', '—');
+  setEl('stat-contras', '—');
+  setEl('stat-verif', '—');
+
+  // Recent projects
+  renderRecentProjects();
+}
+
+function renderRecentProjects() {
+  const el = document.getElementById('dashboard-recent-projects');
+  if (!el) return;
+  const recent = state.projects.slice(0, 6);
+  if (recent.length === 0) {
+    el.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--text3);font-size:13px">No projects yet. <a href="#" onclick="openModal('modal-create-project')" style="color:var(--blue)">Create your first project →</a></div>`;
+    return;
+  }
+  el.innerHTML = recent.map(p => renderProjectCard(p, true)).join('');
+}
+
+/* ============================================================
+   PROJECTS
+============================================================ */
+async function loadProjects(dashboardMode = false) {
+  try {
+    const data = await apiGetProjects();
+    state.projects = Array.isArray(data) ? data : (data.projects || []);
+    if (!dashboardMode) renderProjectsGrid();
+    const lbl = document.getElementById('projects-count-label');
+    if (lbl) lbl.textContent = `${state.projects.length} project${state.projects.length !== 1 ? 's' : ''}`;
+    return state.projects;
+  } catch (e) {
+    toast('Failed to load projects: ' + e.message, 'error');
+    return [];
+  }
+}
+
+function renderProjectsGrid() {
+  const grid = document.getElementById('projects-grid');
+  if (!grid) return;
+  const q = (document.getElementById('project-search')?.value || '').toLowerCase();
+  const filtered = state.projects.filter(p =>
+    (p.title || '').toLowerCase().includes(q) ||
+    (p.topic || '').toLowerCase().includes(q)
+  );
+  if (filtered.length === 0) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text3)">No projects found. <a href="#" onclick="openModal('modal-create-project')" style="color:var(--blue)">Create one →</a></div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(p => renderProjectCard(p)).join('');
+}
+
+function renderProjectCard(p, mini = false) {
+  const id = p.id || p._id || p.project_id || '';
+  const title = p.title || p.topic || 'Untitled Project';
+  const topic = p.topic || '';
+  const status = p.status || 'draft';
+  const statusTag = statusTagHTML(status);
+  const trustScore = p.trust_score || p.verification_score || p.confidence_score;
+  const created = formatDate(p.created_at || p.createdAt || p.created);
+  const isSelected = state.currentProject?.id === id || state.currentProject?._id === id;
+
+  return `
+    <div class="project-card${isSelected ? ' selected' : ''}" onclick="selectProject(${JSON.stringify(p).replace(/"/g, '&quot;')})">
+      <div class="project-card-header">
+        <div>
+          <div class="project-title">${esc(title)}</div>
+          ${topic && topic !== title ? `<div class="project-topic">${esc(topic)}</div>` : ''}
+        </div>
+        ${statusTag}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px">
+        ${trustScore != null ? `<span class="tag tag-${trustScore > 0.7 ? 'green' : trustScore > 0.4 ? 'amber' : 'red'}">${Math.round(trustScore * 100)}% trust</span>` : ''}
+        <span class="tag tag-gray">${created}</span>
+      </div>
+      ${!mini ? `
+      <div class="project-actions">
+        <button class="btn btn-primary btn-sm" onclick="event.stopPropagation();selectProjectAndGo(${JSON.stringify(p).replace(/"/g, '&quot;')}, 'content-studio')">✦ Generate</button>
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();selectProjectAndGo(${JSON.stringify(p).replace(/"/g, '&quot;')}, 'verification')">✓ Verify</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();confirmDelete(${JSON.stringify(p).replace(/"/g, '&quot;')})">✕</button>
+      </div>` : ''}
+    </div>
+  `;
+}
+
+function statusTagHTML(status) {
+  const map = {
+    active: 'tag-green', running: 'tag-blue', complete: 'tag-teal', draft: 'tag-gray',
+    error: 'tag-red', verifying: 'tag-purple', generating: 'tag-amber',
+  };
+  const cls = map[status] || 'tag-gray';
+  return `<span class="tag ${cls}">${status}</span>`;
+}
+
+function filterProjects() { renderProjectsGrid(); }
+
+function selectProject(p) {
+  state.currentProject = p;
+  const name = p.title || p.topic || 'Untitled';
+  setEl('topbar-project-name', esc(name));
+  // Re-render project cards to show selection
+  renderProjectsGrid();
+  renderRecentProjects();
+  toast(`Project selected: ${name}`, 'success');
+}
+
+function selectProjectAndGo(p, page) {
+  selectProject(p);
+  navigate(page);
+}
+
+/* ============================================================
+   CREATE / DELETE PROJECT
+============================================================ */
+async function handleCreateProject() {
+  const title = document.getElementById('proj-title').value.trim();
+  const topic = document.getElementById('proj-topic').value.trim();
+  if (!title || !topic) { toast('Title and topic are required', 'warn'); return; }
+  const btnText = document.getElementById('create-proj-btn-text');
+  if (btnText) btnText.innerHTML = '<span class="loading-spinner"></span> Creating...';
+  try {
+    const desc = document.getElementById('proj-desc').value;
+    const tone = document.getElementById('proj-tone').value;
+    const contentType = document.getElementById('proj-content-type').value;
+    const project = await apiCreateProject({ title, topic, description: desc, tone, content_type: contentType });
+    state.projects.unshift(project);
+    selectProject(project);
+    closeModal('modal-create-project');
+    toast('Project created successfully!', 'success');
+    ['proj-title','proj-topic','proj-desc'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+    renderProjectsGrid();
+    renderRecentProjects();
+    setEl('stat-projects', state.projects.length);
+  } catch (e) {
+    toast('Failed to create project: ' + e.message, 'error');
+  } finally {
+    if (btnText) btnText.textContent = 'Create Project';
+  }
+}
+
+async function handleQuickCreate() {
+  const topic = document.getElementById('quick-topic').value.trim();
+  if (!topic) { toast('Topic is required', 'warn'); return; }
+  try {
+    const project = await apiCreateProjectQuick({ topic });
+    state.projects.unshift(project);
+    selectProject(project);
+    closeModal('modal-quick-project');
+    document.getElementById('quick-topic').value = '';
+    toast('Project quick-created!', 'success');
+    renderProjectsGrid();
+    renderRecentProjects();
+    setEl('stat-projects', state.projects.length);
+  } catch (e) {
+    toast('Failed: ' + e.message, 'error');
+  }
+}
+
+function confirmDelete(p) {
+  state.deleteTarget = p;
+  setEl('delete-proj-name', esc(p.title || p.topic || 'this project'));
+  openModal('modal-confirm-delete');
+}
+
+async function handleDeleteProject() {
+  if (!state.deleteTarget) return;
+  const id = state.deleteTarget.id || state.deleteTarget._id;
+  try {
+    await apiDeleteProject(id);
+    state.projects = state.projects.filter(p => (p.id || p._id) !== id);
+    if ((state.currentProject?.id || state.currentProject?._id) === id) {
+      state.currentProject = null;
+      setEl('topbar-project-name', 'Select a project...');
+    }
+    closeModal('modal-confirm-delete');
+    toast('Project deleted', 'warn');
+    renderProjectsGrid();
+    renderRecentProjects();
+    setEl('stat-projects', state.projects.length);
+  } catch (e) {
+    toast('Failed to delete: ' + e.message, 'error');
+  }
+}
+
+/* ============================================================
+   CONTENT STUDIO
+============================================================ */
+function initStudio() {
+  const noProj = document.getElementById('no-project-studio');
+  const layout = document.getElementById('studio-layout');
+  if (!state.currentProject) {
+    if (noProj) noProj.style.display = 'block';
+    if (layout) layout.style.display = 'none';
+    return;
+  }
+  if (noProj) noProj.style.display = 'none';
+  if (layout) layout.style.display = 'grid';
+  const tag = document.getElementById('studio-project-tag');
+  if (tag) tag.textContent = state.currentProject.title || state.currentProject.topic;
+  loadLatestContent();
+}
+
+async function loadLatestContent() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  try {
+    const data = await apiGetContentLatest(id);
+    if (data && (data.content || data.article || data.text)) {
+      renderContent(data);
+    }
+  } catch (e) { /* no content yet */ }
+}
+
+function renderContent(data) {
+  const el = document.getElementById('editor-content');
+  if (!el) return;
+  const text = data.content || data.article || data.text || '';
+  const formatted = text
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^### (.+)$/gm, '<h3>$3</h3>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[(\d+)\]/g, '<sup class="citation-inline">[$1]</sup>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^/, '<p>').replace(/$/, '</p>');
+  el.innerHTML = formatted;
+  state.generatedContent = text;
+
+  // Citations panel
+  const citations = data.citations || data.sources || [];
+  if (citations.length > 0) {
+    const panel = document.getElementById('studio-citations');
+    if (panel) {
+      panel.style.display = 'block';
+      const list = document.getElementById('citations-list');
+      if (list) {
+        list.innerHTML = citations.slice(0, 8).map((c, i) => `
+          <div style="display:flex;align-items:flex-start;gap:8px;padding:8px;border-radius:var(--r);border:1px solid var(--border);margin-bottom:6px;font-size:12px">
+            <span class="tag tag-blue" style="min-width:24px;justify-content:center">${i+1}</span>
+            <div>
+              <div style="color:var(--text2);line-height:1.4">${esc(c.title || c.url || c.source || 'Source')}</div>
+              ${c.trust_score ? `<div style="color:var(--text3);font-family:var(--font-mono);margin-top:3px">${Math.round(c.trust_score*100)}% trust</div>` : ''}
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+  }
+
+  // Version history
+  const vh = document.getElementById('version-history');
+  if (vh) {
+    const ts = data.generated_at || data.created_at || new Date().toISOString();
+    vh.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--r);border:1px solid var(--blue);background:var(--blue-glow);font-size:12px">
+        <span class="tag tag-blue">Latest</span>
+        <div style="flex:1">
+          <div style="color:var(--text2)">${formatDate(ts)}</div>
+          <div style="color:var(--text3);font-family:var(--font-mono)">${countWords(text)} words</div>
+        </div>
+      </div>
+    `;
+  }
+}
+
+async function generateContent() {
+  if (!state.currentProject) { toast('Please select a project first', 'warn'); navigate('projects'); return; }
+  const id = state.currentProject.id || state.currentProject._id;
+  const mode = document.getElementById('gen-mode')?.value || 'standard';
+  const btn = document.getElementById('gen-btn');
+  const editor = document.getElementById('editor-content');
+  const modeTag = document.getElementById('studio-mode-tag');
+
+  if (btn) { btn.innerHTML = '<span class="loading-spinner"></span> Generating...'; btn.disabled = true; }
+  if (modeTag) modeTag.textContent = mode === 'v2' ? 'Multi-Agent v2' : 'Standard';
+
+  // Animate pipeline
+  animatePipeline(['active', 'queued', 'queued']);
+
+  if (editor) {
+    editor.innerHTML = `
+      <div style="padding:20px 0">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">
+          <div class="loading-spinner"></div>
+          <span style="color:var(--text2);font-size:14px">AI agents are researching and writing...</span>
+        </div>
+        <div id="stream-output" style="font-size:14px;line-height:1.8;color:var(--text3)"></div>
+        <span class="streaming-cursor" id="gen-cursor"></span>
+      </div>
+    `;
+  }
+
+  try {
+    // state.baseUrl already includes /api/v1
+    const qs = mode && mode !== 'standard' ? `?mode=${encodeURIComponent(mode)}` : '';
+    let res;
+    try {
+      res = await fetch(`${state.baseUrl}/projects/${id}/content/generate${qs}`, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'omit',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
+        body: JSON.stringify({ mode }),
+      });
+    } catch (networkErr) {
+      if (isCorsError(networkErr)) {
+        showCorsBanner();
+        throw new Error('Network/CORS error — see the banner at the top of the page.');
+      }
+      throw networkErr;
+    }
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({ detail: res.statusText }));
+      throw new Error(errBody.detail || `HTTP ${res.status}`);
+    }
+    hideCorsBanner();
+
+    const ct = res.headers.get('content-type') || '';
+    let data;
+
+    if (ct.includes('event-stream') || ct.includes('text/plain')) {
+      // Handle SSE / chunked streaming
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      const streamEl = document.getElementById('stream-output');
+      let fullText = '';
+      animatePipeline(['done', 'active', 'queued']);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const chunk = line.slice(6).trim();
+            if (chunk === '[DONE]') continue;
+            try {
+              const parsed = JSON.parse(chunk);
+              const text = parsed.content || parsed.text || parsed.chunk || parsed.delta || '';
+              if (text && streamEl) {
+                fullText += text;
+                streamEl.innerHTML += esc(text).replace(/\n/g, '<br>');
+                streamEl.parentElement.scrollTop = streamEl.parentElement.scrollHeight;
+              }
+            } catch {
+              if (streamEl && chunk) {
+                fullText += chunk;
+                streamEl.innerHTML += esc(chunk).replace(/\n/g, '<br>');
+              }
+            }
+          }
+        }
+      }
+      animatePipeline(['done', 'done', 'active']);
+      setTimeout(() => {
+        animatePipeline(['done', 'done', 'done']);
+        if (fullText) renderContent({ content: fullText });
+        else loadLatestContent();
+      }, 800);
+      data = { content: fullText };
+    } else {
+      // Standard JSON response
+      data = await res.json();
+      animatePipeline(['done', 'done', 'done']);
+      renderContent(data);
+    }
+
+    toast('Content generated successfully!', 'success');
+    state.generatedContent = data.content || data.article || data.text;
+  } catch (e) {
+    toast('Generation failed: ' + e.message, 'error');
+    animatePipeline(['error', 'queued', 'queued']);
+    if (editor) editor.innerHTML = `<div style="color:var(--red);padding:20px;font-size:13px">Generation failed: ${esc(e.message)}<br><br><span style="color:var(--text3)">Make sure a project is selected and the backend is reachable.</span></div>`;
+  } finally {
+    if (btn) { btn.innerHTML = '✦ Generate'; btn.disabled = false; }
+    const cursor = document.getElementById('gen-cursor');
+    if (cursor) cursor.remove();
+  }
+}
+
+function animatePipeline(states) {
+  const nodes = document.querySelectorAll('#studio-pipeline .wf-node-circle');
+  const connectors = document.querySelectorAll('#studio-pipeline .wf-connector');
+  const icons = ['🔬', '✓', '✦'];
+  const stateMap = { done: icons, active: icons, queued: ['◎','◎','◎'], error: ['✕','✕','✕'] };
+  nodes.forEach((n, i) => {
+    n.className = 'wf-node-circle ' + (states[i] || 'queued');
+    n.textContent = states[i] === 'done' ? '✓' : states[i] === 'active' ? icons[i] : states[i] === 'error' ? '✕' : '◎';
+  });
+  connectors.forEach((c, i) => {
+    c.classList.toggle('active', states[i] === 'done');
+  });
+}
+
+function copyContent() {
+  if (!state.generatedContent) { toast('No content to copy', 'warn'); return; }
+  navigator.clipboard.writeText(state.generatedContent).then(() => toast('Copied to clipboard!', 'success'));
+}
+
+function exportContent(format) {
+  if (!state.generatedContent) { toast('No content to export', 'warn'); return; }
+  const blob = new Blob([state.generatedContent], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `research-${Date.now()}.${format}`;
+  a.click();
+  toast(`Exported as .${format}`, 'success');
+}
+
+/* ============================================================
+   VERIFICATION CENTER
+============================================================ */
+async function loadVerification() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('verification-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const [dashboard, claims, sources] = await Promise.allSettled([
+      apiGetVerificationDashboard(id),
+      apiGetVerificationClaims(id),
+      apiGetVerificationSources(id),
+    ]);
+
+    const db = dashboard.value || {};
+    const claimsData = Array.isArray(claims.value) ? claims.value : (claims.value?.claims || []);
+    const sourcesData = Array.isArray(sources.value) ? sources.value : (sources.value?.sources || []);
+
+    if (el) el.innerHTML = `
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="stat-card blue">
+          <div class="stat-label">Total Claims</div>
+          <div class="stat-value">${db.total_claims || claimsData.length || '—'}</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-label">Verified</div>
+          <div class="stat-value" style="color:var(--green)">${db.verified_claims || '—'}</div>
+        </div>
+        <div class="stat-card amber">
+          <div class="stat-label">Disputed</div>
+          <div class="stat-value" style="color:var(--amber)">${db.disputed_claims || '—'}</div>
+        </div>
+        <div class="stat-card teal">
+          <div class="stat-label">Trust Score</div>
+          <div class="stat-value" style="color:var(--teal)">${db.trust_score != null ? Math.round(db.trust_score * 100) + '%' : '—'}</div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Verification Breakdown</div>
+          ${renderVerificationBreakdown(db)}
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Source Authority</div>
+          ${renderSourceAuthority(sourcesData)}
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Claims (${claimsData.length})</div>
+        <div>${claimsData.slice(0, 20).map(c => renderClaimRow(c)).join('') || '<div style="color:var(--text3);font-size:13px">No claims found.</div>'}</div>
+      </div>
+    `;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+    toast('Verification load failed: ' + e.message, 'error');
+  }
+}
+
+function renderVerificationBreakdown(db) {
+  const items = [
+    { label: 'Fully Verified', val: db.verified_claims || 0, total: db.total_claims || 1, color: 'progress-green' },
+    { label: 'Partially True', val: db.partial_claims || 0, total: db.total_claims || 1, color: 'progress-amber' },
+    { label: 'Disputed', val: db.disputed_claims || 0, total: db.total_claims || 1, color: 'progress-amber' },
+    { label: 'Unsupported', val: db.unsupported_claims || 0, total: db.total_claims || 1, color: '' },
+  ];
+  return items.map(item => `
+    <div class="verif-score-row">
+      <div class="verif-score-label">${item.label}</div>
+      <div class="verif-score-bar"><div class="progress"><div class="progress-fill ${item.color}" style="width:${Math.round((item.val/item.total)*100)}%"></div></div></div>
+      <div class="verif-score-val">${item.val}</div>
+    </div>
+  `).join('');
+}
+
+function renderSourceAuthority(sources) {
+  if (!sources.length) return '<div style="color:var(--text3);font-size:13px">No sources found.</div>';
+  return sources.slice(0, 5).map(s => {
+    const score = s.authority_score || s.trust_score || s.reliability_score || 0;
+    const pct = Math.round(score * 100);
+    return `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--text2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:8px">${esc(s.domain || s.url || s.source || 'Unknown')}</span>
+          <span style="font-size:12px;font-family:var(--font-mono);color:${pct>70?'var(--green)':pct>40?'var(--amber)':'var(--red)'}">${pct}%</span>
+        </div>
+        <div class="progress"><div class="progress-fill ${pct>70?'progress-green':pct>40?'progress-amber':''}" style="width:${pct}%"></div></div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderClaimRow(c) {
+  const status = c.status || c.verification_status || 'unknown';
+  const statusMap = {
+    verified: 'tag-green', true: 'tag-green', partially_true: 'tag-amber',
+    disputed: 'tag-amber', false: 'tag-red', unsupported: 'tag-gray',
+  };
+  const cls = statusMap[status] || 'tag-gray';
+  return `
+    <div class="claim-row">
+      <div class="claim-text">${esc(c.claim || c.text || c.content || 'Claim text unavailable')}</div>
+      <div class="claim-status"><span class="tag ${cls}">${status}</span></div>
+      ${c.confidence != null ? `<div style="font-size:11px;font-family:var(--font-mono);color:var(--text3)">${Math.round(c.confidence*100)}%</div>` : ''}
+    </div>
+  `;
+}
+
+/* ============================================================
+   EVIDENCE EXPLORER
+============================================================ */
+async function loadEvidence() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('evidence-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const data = await apiGetEvidence(id);
+    const items = Array.isArray(data) ? data : (data.evidence || data.items || []);
+
+    if (el) el.innerHTML = `
+      <div style="margin-bottom:16px;display:flex;align-items:center;gap:10px">
+        <span class="tag tag-blue">${items.length} evidence items</span>
+        <input class="input" style="max-width:240px" placeholder="Filter evidence..." id="evidence-filter" oninput="filterEvidence()">
+      </div>
+      <div id="evidence-list">
+        ${items.length ? items.map(e => renderEvidenceCard(e)).join('') : '<div style="color:var(--text3);font-size:13px;padding:20px">No evidence found for this project.</div>'}
+      </div>
+    `;
+    window._evidenceItems = items;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderEvidenceCard(e) {
+  const title = e.title || e.url || e.source || e.content?.slice(0, 80) || 'Evidence Item';
+  const trust = e.trust_score || e.reliability || e.confidence;
+  const id = e.id || e._id || '';
+  return `
+    <div class="evidence-card" onclick="toggleEvidence(this)">
+      <div class="evidence-title">${esc(title)}</div>
+      <div class="evidence-meta">
+        ${e.source || e.domain ? `<span>${esc(e.source || e.domain)}</span>` : ''}
+        ${e.date || e.published_at ? `<span>${formatDate(e.date || e.published_at)}</span>` : ''}
+        ${trust != null ? `<div class="trust-bar"><div class="trust-fill" style="width:${Math.round(trust*100)}%"></div></div><span style="color:var(--teal)">${Math.round(trust*100)}%</span>` : ''}
+        ${e.type ? `<span class="tag tag-gray">${esc(e.type)}</span>` : ''}
+      </div>
+      <div class="evidence-body">
+        ${e.content || e.text || e.excerpt || e.summary ? `<p>${esc((e.content || e.text || e.excerpt || e.summary || '').slice(0, 400))}${((e.content || e.text || '').length > 400) ? '...' : ''}</p>` : ''}
+        ${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener" style="color:var(--blue);font-size:12px;text-decoration:none">↗ View Source</a>` : ''}
+        ${e.claims && e.claims.length ? `<div style="margin-top:8px"><span style="font-size:11px;color:var(--text3)">${e.claims.length} extracted claims</span></div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function toggleEvidence(el) { el.classList.toggle('expanded'); }
+function filterEvidence() {
+  const q = document.getElementById('evidence-filter')?.value.toLowerCase() || '';
+  const list = document.getElementById('evidence-list');
+  if (!list || !window._evidenceItems) return;
+  const filtered = window._evidenceItems.filter(e =>
+    (e.title || '').toLowerCase().includes(q) ||
+    (e.content || e.text || '').toLowerCase().includes(q) ||
+    (e.source || '').toLowerCase().includes(q)
+  );
+  list.innerHTML = filtered.map(e => renderEvidenceCard(e)).join('') ||
+    '<div style="color:var(--text3);font-size:13px">No matching evidence.</div>';
+}
+
+/* ============================================================
+   WORKFLOW MONITOR
+============================================================ */
+async function loadWorkflow() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('workflow-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const [wf, tele] = await Promise.allSettled([apiGetWorkflow(id), apiGetWorkflowTelemetry(id)]);
+    const workflow = wf.value || {};
+    const telemetry = tele.value || {};
+    const agents = workflow.agents || workflow.steps || workflow.nodes || [];
+    const tokenUsage = telemetry.token_usage || telemetry.tokens || {};
+
+    if (el) el.innerHTML = `
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">⬡ Agent Pipeline</div>
+        <div class="wf-pipeline" id="wf-pipeline-vis">
+          ${renderAgentPipeline(agents)}
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Agent Timeline</div>
+          <div class="timeline">
+            ${renderAgentTimeline(agents)}
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Token Usage</div>
+          ${renderTokenChart(tokenUsage, telemetry)}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderAgentPipeline(agents) {
+  if (!agents.length) return '<div style="color:var(--text3);font-size:13px">No agent data available.</div>';
+  const statusMap = { completed: 'done', running: 'active', pending: 'queued', error: 'error', failed: 'error', success: 'done' };
+  const icons = { research: '🔬', verify: '✓', write: '✦', evidence: '◈', contradiction: '⚡', citation: '⊕' };
+  let html = '';
+  agents.forEach((a, i) => {
+    const status = statusMap[a.status] || 'queued';
+    const icon = Object.entries(icons).find(([k]) => (a.name||'').toLowerCase().includes(k))?.[1] || '⬡';
+    const timing = a.duration_ms ? ` · ${(a.duration_ms/1000).toFixed(1)}s` : '';
+    html += `<div class="wf-node">
+      <div class="wf-node-circle ${status}">${status === 'done' ? '✓' : status === 'error' ? '✕' : icon}</div>
+      <div class="wf-node-label">${esc((a.name||'Agent').slice(0,12))}</div>
+      <div style="font-size:9px;color:var(--text4);font-family:var(--font-mono)">${timing}</div>
+    </div>`;
+    if (i < agents.length - 1) html += `<div class="wf-connector${status === 'done' ? ' active' : ''}"></div>`;
+  });
+  return html;
+}
+
+function renderAgentTimeline(agents) {
+  if (!agents.length) return '<div style="color:var(--text3);font-size:13px">No timeline data.</div>';
+  const statusMap = { completed: 'done', running: 'active', pending: 'queued', error: 'error', success: 'done' };
+  return agents.map(a => {
+    const status = statusMap[a.status] || 'queued';
+    return `
+      <div class="tl-event">
+        <div class="tl-dot ${status}"></div>
+        <div class="tl-label">${esc(a.name || 'Agent')}</div>
+        ${a.description || a.task ? `<div class="tl-sub">${esc(a.description || a.task)}</div>` : ''}
+        ${a.duration_ms ? `<div class="tl-time">${(a.duration_ms/1000).toFixed(2)}s · ${(a.token_usage||0)} tokens</div>` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTokenChart(tokenUsage, telemetry) {
+  const prompt = tokenUsage.prompt_tokens || tokenUsage.input || 0;
+  const completion = tokenUsage.completion_tokens || tokenUsage.output || 0;
+  const total = tokenUsage.total_tokens || (prompt + completion) || 0;
+  const duration = telemetry.duration_ms || telemetry.total_time_ms || 0;
+  return `
+    <div class="grid-2" style="gap:10px;margin-bottom:14px">
+      <div style="text-align:center;background:var(--bg3);border-radius:var(--r2);padding:12px">
+        <div style="font-size:20px;font-weight:700;font-family:var(--font-head);color:var(--blue)">${total.toLocaleString()}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Total Tokens</div>
+      </div>
+      <div style="text-align:center;background:var(--bg3);border-radius:var(--r2);padding:12px">
+        <div style="font-size:20px;font-weight:700;font-family:var(--font-head);color:var(--teal)">${duration ? (duration/1000).toFixed(1)+'s' : '—'}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px">Duration</div>
+      </div>
+    </div>
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text3)">Prompt</span><span style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">${prompt.toLocaleString()}</span></div>
+      <div class="progress"><div class="progress-fill progress-blue" style="width:${total?Math.round(prompt/total*100):0}%"></div></div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:12px;color:var(--text3)">Completion</span><span style="font-size:12px;font-family:var(--font-mono);color:var(--teal)">${completion.toLocaleString()}</span></div>
+      <div class="progress"><div class="progress-fill progress-teal" style="width:${total?Math.round(completion/total*100):0}%"></div></div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   CONTRADICTIONS
+============================================================ */
+async function loadContradictions() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('contradictions-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const data = await apiGetContradictions(id);
+    const items = Array.isArray(data) ? data : (data.contradictions || []);
+    setEl('contra-badge', items.length);
+
+    const unresolved = items.filter(c => !c.resolved && c.status !== 'resolved');
+    if (el) el.innerHTML = `
+      <div class="grid-3" style="margin-bottom:16px">
+        <div class="stat-card amber"><div class="stat-label">Total Found</div><div class="stat-value" style="color:var(--amber)">${items.length}</div></div>
+        <div class="stat-card red"><div class="stat-label">Unresolved</div><div class="stat-value" style="color:var(--red)">${unresolved.length}</div></div>
+        <div class="stat-card green"><div class="stat-label">Resolved</div><div class="stat-value" style="color:var(--green)">${items.length - unresolved.length}</div></div>
+      </div>
+      <div id="contradictions-list">
+        ${items.length ? items.map(c => renderContraCard(c, id)).join('') : '<div style="color:var(--green);padding:20px;text-align:center;font-size:14px">✓ No contradictions detected in this project.</div>'}
+      </div>
+    `;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderContraCard(c, projectId) {
+  const severity = c.severity || c.confidence || 0.5;
+  const sevColor = severity > 0.7 ? 'var(--red)' : severity > 0.4 ? 'var(--amber)' : 'var(--text3)';
+  const isResolved = c.resolved || c.status === 'resolved';
+  const cid = c.id || c._id || c.contradiction_id || '';
+  return `
+    <div class="contra-card${isResolved ? '' : ''}" id="contra-${cid}">
+      <div class="contra-header" onclick="this.parentElement.classList.toggle('expanded')">
+        <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+          <span style="font-size:16px">${isResolved ? '✓' : '⚡'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.topic || c.title || c.description || 'Contradiction')}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px">Severity: <span style="color:${sevColor}">${Math.round(severity*100)}%</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          ${isResolved ? '<span class="tag tag-green">Resolved</span>' : `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();resolveContra('${esc(projectId)}','${esc(cid)}')">Resolve</button>`}
+          <span style="color:var(--text3)">▾</span>
+        </div>
+      </div>
+      <div class="contra-body">
+        ${c.description ? `<p style="font-size:13px;color:var(--text2);margin-bottom:12px">${esc(c.description)}</p>` : ''}
+        ${c.ai_recommendation || c.recommendation ? `<div style="background:var(--blue-glow);border:1px solid rgba(79,143,255,.2);border-radius:var(--r);padding:12px;margin-bottom:12px;font-size:12px;color:var(--text2)"><strong style="color:var(--blue)">AI Recommendation:</strong> ${esc(c.ai_recommendation || c.recommendation)}</div>` : ''}
+        <div class="contra-sources">
+          ${renderContraSource(c.source_a || c.claim_a || c.source1 || {}, 'Source A')}
+          ${renderContraSource(c.source_b || c.claim_b || c.source2 || {}, 'Source B')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderContraSource(src, label) {
+  if (typeof src === 'string') return `<div class="contra-source"><div class="contra-source-label" style="color:var(--blue)">${label}</div>${esc(src)}</div>`;
+  return `
+    <div class="contra-source">
+      <div class="contra-source-label" style="color:var(--blue)">${label}</div>
+      ${src.claim || src.text || src.content ? `<div style="margin-bottom:6px">${esc((src.claim || src.text || src.content || '').slice(0, 200))}</div>` : '<div style="color:var(--text4)">No claim data</div>'}
+      ${src.source || src.domain ? `<a href="${esc(src.url || '#')}" target="_blank" style="color:var(--blue);font-size:11px;text-decoration:none">↗ ${esc(src.source || src.domain)}</a>` : ''}
+    </div>
+  `;
+}
+
+async function resolveContra(projectId, contraId) {
+  try {
+    await apiResolveContradiction(projectId, contraId);
+    toast('Contradiction resolved!', 'success');
+    loadContradictions();
+  } catch (e) {
+    toast('Failed to resolve: ' + e.message, 'error');
+  }
+}
+
+/* ============================================================
+   HYPERLINK HEALTH
+============================================================ */
+async function loadHyperlinks() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('hyperlinks-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const [links, summary] = await Promise.allSettled([apiGetHyperlinks(id), apiGetHyperlinksSummary(id)]);
+    const linkItems = Array.isArray(links.value) ? links.value : (links.value?.links || links.value?.hyperlinks || []);
+    const sum = summary.value || {};
+    const healthy = linkItems.filter(l => l.status === 'healthy' || l.status_code === 200 || l.valid === true).length;
+    const broken = linkItems.filter(l => l.status === 'broken' || l.status === 'error' || l.valid === false).length;
+
+    if (el) el.innerHTML = `
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="stat-card blue"><div class="stat-label">Total Links</div><div class="stat-value">${linkItems.length || sum.total || '—'}</div></div>
+        <div class="stat-card green"><div class="stat-label">Healthy</div><div class="stat-value" style="color:var(--green)">${healthy || sum.healthy || '—'}</div></div>
+        <div class="stat-card red"><div class="stat-label">Broken</div><div class="stat-value" style="color:var(--red)">${broken || sum.broken || '—'}</div></div>
+        <div class="stat-card teal"><div class="stat-label">Health Rate</div><div class="stat-value" style="color:var(--teal)">${linkItems.length ? Math.round(healthy/linkItems.length*100) + '%' : sum.health_rate != null ? Math.round(sum.health_rate*100)+'%' : '—'}</div></div>
+      </div>
+      <div class="card">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Link Validation Table</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>URL</th><th>Status</th><th>Status Code</th><th>Domain</th><th>Trust</th>
+            </tr></thead>
+            <tbody>
+              ${linkItems.length ? linkItems.slice(0, 50).map(l => renderLinkRow(l)).join('') : '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No hyperlinks found</td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderLinkRow(l) {
+  const isHealthy = l.status === 'healthy' || l.status_code === 200 || l.valid === true;
+  const statusTag = isHealthy ? '<span class="tag tag-green">✓ Healthy</span>' : '<span class="tag tag-red">✕ Broken</span>';
+  const code = l.status_code || l.http_status || '—';
+  const domain = l.domain || (l.url ? new URL(l.url.startsWith('http') ? l.url : 'https://'+l.url).hostname : '—');
+  const trust = l.trust_score != null ? Math.round(l.trust_score*100)+'%' : '—';
+  return `
+    <tr>
+      <td class="url-cell"><a href="${esc(l.url||'#')}" target="_blank" rel="noopener" style="color:var(--blue);text-decoration:none">${esc((l.url||'').slice(0,60))}</a></td>
+      <td>${statusTag}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:${isHealthy?'var(--green)':'var(--red)'}">${code}</td>
+      <td style="font-size:12px;color:var(--text3)">${esc(domain)}</td>
+      <td style="font-size:12px;font-family:var(--font-mono);color:var(--teal)">${trust}</td>
+    </tr>
+  `;
+}
+
+/* ============================================================
+   RESEARCH COPILOT (CHAT)
+============================================================ */
+function initCopilot() {
+  const noProj = document.getElementById('no-project-copilot');
+  const chat = document.getElementById('chat-container');
+  if (!state.currentProject) {
+    if (noProj) noProj.style.display = 'block';
+    if (chat) chat.style.display = 'none';
+    return;
+  }
+  if (noProj) noProj.style.display = 'none';
+  if (chat) chat.style.display = 'flex';
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const msg = input?.value?.trim();
+  if (!msg) return;
+  if (!state.currentProject) { toast('Select a project first', 'warn'); navigate('projects'); return; }
+  input.value = '';
+  appendChatMsg('user', msg);
+  const id = state.currentProject.id || state.currentProject._id;
+  const typingEl = appendTypingIndicator();
+  try {
+    const res = await apiPostChat(id, {
+      message: msg,
+      history: state.chatHistory.slice(-10),
+    });
+    typingEl.remove();
+    const reply = res.response || res.message || res.answer || res.content || 'I processed your request.';
+    appendChatMsg('ai', reply);
+    state.chatHistory.push({ role: 'user', content: msg }, { role: 'assistant', content: reply });
+    // Try fetching agent events silently
+    try { await apiGetChatEvents(id); } catch {}
+  } catch (e) {
+    typingEl.remove();
+    appendChatMsg('ai', `I encountered an error: ${e.message}. Please try again.`);
+  }
+}
+
+function sendSuggestion(text) {
+  const input = document.getElementById('chat-input');
+  if (input) { input.value = text; sendChatMessage(); }
+}
+
+function appendChatMsg(role, content) {
+  const messages = document.getElementById('chat-messages');
+  if (!messages) return;
+  const initials = role === 'user' ? 'RP' : '⬡';
+  const el = document.createElement('div');
+  el.className = `chat-msg ${role}`;
+  const formattedContent = esc(content).replace(/\n/g, '<br>').replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  el.innerHTML = `
+    <div class="chat-avatar ${role}">${initials}</div>
+    <div class="chat-bubble ${role}">${formattedContent}</div>
+  `;
+  messages.appendChild(el);
+  messages.scrollTop = messages.scrollHeight;
+  return el;
+}
+
+function appendTypingIndicator() {
+  const messages = document.getElementById('chat-messages');
+  const el = document.createElement('div');
+  el.className = 'chat-msg';
+  el.innerHTML = `
+    <div class="chat-avatar ai">⬡</div>
+    <div class="typing-indicator">
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>
+  `;
+  messages.appendChild(el);
+  messages.scrollTop = messages.scrollHeight;
+  return el;
+}
+
+/* ============================================================
+   TELEMETRY
+============================================================ */
+async function loadTelemetry() {
+  if (!state.currentProject) return;
+  const id = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('telemetry-content');
+  if (el) el.innerHTML = `<div style="text-align:center;padding:40px"><div class="loading-spinner" style="width:32px;height:32px;border-width:3px"></div></div>`;
+
+  try {
+    const data = await apiGetWorkflowTelemetry(id);
+    const agents = data.agents || data.agent_metrics || [];
+    const tokenUsage = data.token_usage || data.tokens || {};
+    const totalTokens = tokenUsage.total_tokens || 0;
+    const duration = data.duration_ms || data.total_time_ms || 0;
+
+    // Build bar chart data from agents
+    const chartData = agents.map(a => ({
+      label: (a.name || 'Agent').slice(0, 8),
+      value: a.token_usage || a.tokens || 0,
+      duration: a.duration_ms || 0,
+    }));
+    const maxVal = Math.max(...chartData.map(d => d.value), 1);
+
+    if (el) el.innerHTML = `
+      <div class="grid-4" style="margin-bottom:16px">
+        <div class="stat-card blue"><div class="stat-label">Total Tokens</div><div class="stat-value">${(totalTokens||0).toLocaleString()}</div></div>
+        <div class="stat-card teal"><div class="stat-label">Duration</div><div class="stat-value" style="color:var(--teal)">${duration ? (duration/1000).toFixed(2)+'s' : '—'}</div></div>
+        <div class="stat-card purple"><div class="stat-label">Agents Run</div><div class="stat-value" style="color:var(--purple)">${agents.length || '—'}</div></div>
+        <div class="stat-card green"><div class="stat-label">Avg Latency</div><div class="stat-value" style="color:var(--green)">${agents.length && duration ? Math.round(duration/agents.length)+'ms' : '—'}</div></div>
+      </div>
+      ${chartData.length ? `
+      <div class="card" style="margin-bottom:16px">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px">Token Usage by Agent</div>
+        <div class="bar-chart" id="token-chart">
+          ${chartData.map((d, i) => `
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+              <div class="bar" style="height:${Math.max(4,Math.round((d.value/maxVal)*80))}px;width:100%"></div>
+              <div class="bar-label" style="font-size:9px">${esc(d.label)}</div>
+            </div>
+          `).join('')}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text3);font-family:var(--font-mono);margin-top:8px"><span>0</span><span>${(maxVal).toLocaleString()} tokens</span></div>
+      </div>` : ''}
+      <div class="grid-2">
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Agent Metrics</div>
+          ${agents.map(a => `
+            <div style="margin-bottom:12px">
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                <span style="font-size:13px;color:var(--text2)">${esc(a.name||'Agent')}</span>
+                <span class="tag ${a.status==='completed'||a.status==='success'?'tag-green':'tag-amber'}">${a.status||'—'}</span>
+              </div>
+              <div style="display:flex;gap:10px;font-size:11px;color:var(--text3);font-family:var(--font-mono)">
+                ${a.token_usage != null ? `<span>🔤 ${a.token_usage.toLocaleString()} tokens</span>` : ''}
+                ${a.duration_ms != null ? `<span>⏱ ${(a.duration_ms/1000).toFixed(2)}s</span>` : ''}
+              </div>
+            </div>
+          `).join('') || '<div style="color:var(--text3);font-size:13px">No agent data.</div>'}
+        </div>
+        <div class="card">
+          <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px">Token Breakdown</div>
+          ${['prompt_tokens','completion_tokens','total_tokens'].map(k => {
+            const val = tokenUsage[k] || 0;
+            const total = tokenUsage.total_tokens || 1;
+            return `
+              <div style="margin-bottom:10px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                  <span style="font-size:12px;color:var(--text2)">${k.replace(/_/g,' ').replace(/\b\w/g,l=>l.toUpperCase())}</span>
+                  <span style="font-size:12px;font-family:var(--font-mono);color:var(--blue)">${val.toLocaleString()}</span>
+                </div>
+                <div class="progress"><div class="progress-fill progress-blue" style="width:${Math.round((val/total)*100)}%"></div></div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    if (el) el.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${esc(e.message)}</div>`;
+  }
+}
+
+/* ============================================================
+   SETTINGS
+============================================================ */
+async function loadSettings() {
+  const el = document.getElementById('settings-base-url');
+  // Show the real backend URL (without the /api/v1 suffix) for display
+  if (el) el.value = 'https://verified-ai-research-writer.onrender.com';
+  const info = document.getElementById('settings-health-info');
+  try {
+    const data = await apiCheckHealth();
+    if (info) info.innerHTML = `<pre style="font-family:var(--font-mono);font-size:12px;color:var(--text3);overflow-x:auto;white-space:pre-wrap">${JSON.stringify(data, null, 2)}</pre>`;
+  } catch (e) {
+    if (info) info.innerHTML = `<span style="color:var(--red)">API unavailable: ${esc(e.message)}</span>`;
+  }
+}
+
+function saveSettings() {
+  const raw = document.getElementById('settings-base-url')?.value?.trim().replace(/\/+$/, '');
+  if (raw) {
+    // Always store with /api/v1 so all api() calls work correctly
+    state.baseUrl = raw.endsWith('/api/v1') ? raw : raw + '/api/v1';
+    toast('Settings saved! Backend: ' + state.baseUrl, 'success');
+  }
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+function setEl(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d)) return String(dateStr).slice(0, 10);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 60000) return 'just now';
+    if (diff < 3600000) return Math.round(diff/60000) + 'm ago';
+    if (diff < 86400000) return Math.round(diff/3600000) + 'h ago';
+    if (diff < 604800000) return Math.round(diff/86400000) + 'd ago';
+    return d.toLocaleDateString();
+  } catch { return String(dateStr).slice(0, 10); }
+}
+function countWords(str) {
+  return str.trim().split(/\s+/).filter(Boolean).length;
+}
+
+/* ============================================================
+   INIT — single DOMContentLoaded, all setup here
+============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('ARCOS frontend initialised. Backend:', state.baseUrl);
+
+  // If opened as file:// warn immediately — CORS will block all API calls
+  if (window.location.protocol === 'file:') {
+    setTimeout(showCorsBanner, 350);
+  }
+
+  checkSystemHealth();
+  loadDashboard();
+
+  // Auto-resize chat textarea
+  const chatInput = document.getElementById('chat-input');
+  if (chatInput) {
+    chatInput.addEventListener('input', () => {
+      chatInput.style.height = 'auto';
+      chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    });
+  }
+
+  // Global search with debounce
+  let searchTimer;
+  const searchEl = document.getElementById('global-search');
+  if (searchEl) {
+    searchEl.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        const q = searchEl.value.trim().toLowerCase();
+        if (q.length > 1) {
+          const filtered = state.projects.filter(p =>
+            (p.title || '').toLowerCase().includes(q) ||
+            (p.topic || '').toLowerCase().includes(q)
+          );
+          if (filtered.length) toast(`Found ${filtered.length} matching project${filtered.length > 1 ? 's' : ''}`, 'info');
+        }
+      }, 400);
+    });
+  }
+
+  // Close sidebar on mobile overlay click
+  document.addEventListener('click', e => {
+    const app = document.getElementById('app');
+    if (app && window.innerWidth <= 768 && app.classList.contains('sidebar-mobile-open')) {
+      if (!e.target.closest('.sidebar') && !e.target.closest('.topbar')) {
+        app.classList.remove('sidebar-mobile-open');
+      }
+    }
+  });
+
+  console.log('All API endpoints connected. Ready.');
+});
+
+window.showProjectDropdown = function () { navigate('projects'); };
+
+</script>
 </body>
 </html>
