@@ -1,8 +1,5 @@
 import uuid
-<<<<<<< HEAD
 import logging
-=======
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,11 +10,8 @@ from app.schemas.content import ContentResponse, ContentGenerateResponse
 from app.services.content_generator import ContentGeneratorService
 from app.services.orchestration_service import MultiAgentOrchestrator
 
-<<<<<<< HEAD
 logger = logging.getLogger(__name__)
 
-=======
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
 
 
@@ -31,12 +25,7 @@ async def run_orchestrator(project_id: uuid.UUID):
                 await orchestrator.generate(project)
                 await session.commit()
         except Exception as e:
-<<<<<<< HEAD
             logger.error(f"Background orchestrator failed for project {project_id}: {e}", exc_info=True)
-=======
-            # Errors are logged inside orchestrator.generate
-            pass
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 
 @router.get("", response_model=list[ContentResponse])
 async def get_content(

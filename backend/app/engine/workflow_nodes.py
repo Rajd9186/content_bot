@@ -23,7 +23,6 @@ class WorkflowNode:
     async def __call__(self, state: dict) -> dict:
         self.logger.info(f"Entering node: {self.name}")
         
-        # Trigger real-time status update if callback exists
         if self.status_callback:
             try:
                 await self.status_callback(state.get("project_id"), self.name)
@@ -48,7 +47,6 @@ class WorkflowNode:
                 node_durations[self.name] = round(elapsed * 1000, 2)
                 telemetry["node_durations"] = node_durations
                 
-                # Update retry count in telemetry if any
                 if attempt > 0:
                     telemetry["total_retries"] = telemetry.get("total_retries", 0) + attempt
                 
@@ -60,7 +58,7 @@ class WorkflowNode:
                 elapsed = time.time() - start
                 self.logger.warning(f"Node {self.name} attempt {attempt+1} failed: {e}")
                 if attempt < max_retries:
-                    await asyncio.sleep(1 * (attempt + 1)) # Simple backoff
+                    await asyncio.sleep(1 * (attempt + 1))
                     continue
 
                 self.logger.error(f"Node {self.name} failed after {max_retries+1} attempts: {e}")
@@ -81,13 +79,8 @@ class WorkflowNode:
 
 
 class PlannerNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, planner_agent, **kwargs):
         super().__init__("planner", **kwargs)
-=======
-    def __init__(self, planner_agent):
-        super().__init__("planner")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.planner = planner_agent
 
     async def execute(self, state: dict) -> dict:
@@ -130,13 +123,8 @@ class PlannerNode(WorkflowNode):
 
 
 class ParallelResearchCoordinator(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, research_service, memory_service, vector_store=None, **kwargs):
         super().__init__("research_coordinator", **kwargs)
-=======
-    def __init__(self, research_service, memory_service, vector_store=None):
-        super().__init__("research_coordinator")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.research_service = research_service
         self.memory = memory_service
         self.vector_store = vector_store
@@ -156,7 +144,6 @@ class ParallelResearchCoordinator(WorkflowNode):
             grouped.setdefault(agent, []).append(t["query"])
 
         async def research_agent(agent_name: str, queries: list[str]) -> tuple[str, list[dict]]:
-            # Parallelize queries within the agent
             search_tasks = [self.research_service.search(q, agent_type=agent_name) for q in queries]
             search_results_list = await asyncio.gather(*search_tasks)
             
@@ -165,7 +152,6 @@ class ParallelResearchCoordinator(WorkflowNode):
                 for r in search_results:
                     r["assigned_agent"] = agent_name
                     r["query"] = q
-                    # Emit event for each source discovered
                     await self.emit_event(
                         state["project_id"], 
                         "discovery", 
@@ -182,7 +168,6 @@ class ParallelResearchCoordinator(WorkflowNode):
         all_sources = []
         research_results = {}
         
-        # Clear vector store for new project run if it exists
         if self.vector_store:
             self.vector_store.clear()
 
@@ -194,7 +179,6 @@ class ParallelResearchCoordinator(WorkflowNode):
             research_results[agent_name] = sources
             all_sources.extend(sources)
             
-            # Index snippets in vector store for RAG
             if self.vector_store and sources:
                 await self.vector_store.add_documents(sources)
 
@@ -216,13 +200,8 @@ def queries_for(agent: str, tasks: list[dict]) -> str:
 
 
 class ClaimExtractionNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, verifier_agent, **kwargs):
         super().__init__("claim_extraction", **kwargs)
-=======
-    def __init__(self, verifier_agent):
-        super().__init__("claim_extraction")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.verifier = verifier_agent
 
     async def execute(self, state: dict) -> dict:
@@ -255,13 +234,8 @@ class ClaimExtractionNode(WorkflowNode):
 
 
 class ContradictionDetectionNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, contradiction_agent, vector_store=None, **kwargs):
         super().__init__("contradiction_detection", **kwargs)
-=======
-    def __init__(self, contradiction_agent, vector_store=None):
-        super().__init__("contradiction_detection")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.contradiction_agent = contradiction_agent
         self.vector_store = vector_store
 
@@ -271,7 +245,6 @@ class ContradictionDetectionNode(WorkflowNode):
         
         await self.emit_event(state["project_id"], "info", f"Analyzing {len(claims)} claims for contradictions", workflow_id=state.get("workflow_id"))
 
-        # Enrich claims with retrieved evidence for better contradiction detection
         enriched_claims = []
         if self.vector_store and self.vector_store.size > 0:
             for c in claims:
@@ -303,19 +276,13 @@ class ContradictionDetectionNode(WorkflowNode):
 
 
 class ContentWritingNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, writer_agent, vector_store=None, **kwargs):
         super().__init__("content_writer", **kwargs)
-=======
-    def __init__(self, writer_agent, vector_store=None):
-        super().__init__("content_writer")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.writer = writer_agent
         self.vector_store = vector_store
 
     async def execute(self, state: dict) -> dict:
         await self.emit_event(state["project_id"], "info", "Writing content draft based on verified claims and research", workflow_id=state.get("workflow_id"))
-        # Perform RAG retrieval for relevant context if vector store is populated
         rag_context = ""
         if self.vector_store and self.vector_store.size > 0:
             query = f"{state['topic']} {state['title']}"
@@ -341,13 +308,8 @@ class ContentWritingNode(WorkflowNode):
 
 
 class CritiqueNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, critique_agent, **kwargs):
         super().__init__("critique", **kwargs)
-=======
-    def __init__(self, critique_agent):
-        super().__init__("critique")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.critique_agent = critique_agent
 
     async def execute(self, state: dict) -> dict:
@@ -364,13 +326,8 @@ class CritiqueNode(WorkflowNode):
 
 
 class RevisionNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, revision_agent, **kwargs):
         super().__init__("revision", **kwargs)
-=======
-    def __init__(self, revision_agent):
-        super().__init__("revision")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.revision_agent = revision_agent
 
     async def execute(self, state: dict) -> dict:
@@ -385,13 +342,8 @@ class RevisionNode(WorkflowNode):
 
 
 class SelfVerificationNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, self_verifier_agent, **kwargs):
         super().__init__("self_verification", **kwargs)
-=======
-    def __init__(self, self_verifier_agent):
-        super().__init__("self_verification")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.self_verifier = self_verifier_agent
 
     async def execute(self, state: dict) -> dict:
@@ -413,13 +365,8 @@ class SelfVerificationNode(WorkflowNode):
 
 
 class HyperlinkValidationNode(WorkflowNode):
-<<<<<<< HEAD
     def __init__(self, hyperlink_agent, **kwargs):
         super().__init__("hyperlink_validation", **kwargs)
-=======
-    def __init__(self, hyperlink_agent):
-        super().__init__("hyperlink_validation")
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
         self.hyperlink_agent = hyperlink_agent
 
     async def execute(self, state: dict) -> dict:
@@ -431,7 +378,6 @@ class HyperlinkValidationNode(WorkflowNode):
         
         result = await self.hyperlink_agent.run(citations=citations, markdown=markdown)
         
-        # Hyperlink agent already checks health in Phase 2 update.
         broken_count = sum(1 for r in result.get("results", []) if r.get("status") == "broken")
         if broken_count > 0:
             await self.emit_event(state["project_id"], "warning", f"Found {broken_count} broken or suspicious hyperlinks", workflow_id=state.get("workflow_id"))
