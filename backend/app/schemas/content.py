@@ -19,12 +19,14 @@ class ContentResponse(BaseModel):
 
 class ContentGenerateResponse(BaseModel):
     project_id: uuid.UUID
-    content_id: uuid.UUID
-    markdown: str
-    summary: str
-    word_count: int
-    citations: list[dict]
-    seo_metadata: dict
-    overall_confidence: float
+    status: str = Field(default="completed")
+    message: str | None = Field(default=None)
+    content_id: uuid.UUID | None = Field(default=None)
+    markdown: str | None = Field(default=None)
+    summary: str | None = Field(default=None)
+    word_count: int | None = Field(default=None)
+    citations: list[dict] | None = Field(default=None)
+    seo_metadata: dict | None = Field(default=None)
+    overall_confidence: float | None = Field(default=None)
     claims: list[dict] = Field(default_factory=list)
     verification_summary: dict = Field(default_factory=dict)
