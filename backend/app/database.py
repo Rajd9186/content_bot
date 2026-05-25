@@ -43,7 +43,6 @@ def _create_engine() -> AsyncEngine:
         engine_kwargs["max_overflow"] = settings.database_max_overflow
         engine_kwargs["pool_timeout"] = settings.database_pool_timeout
         engine_kwargs["pool_pre_ping"] = settings.database_pool_pre_ping
-        engine_kwargs["connect_args"] = connect_args or None
         engine_kwargs["isolation_level"] = "AUTOCOMMIT"
 
     engine = create_async_engine(**engine_kwargs)
