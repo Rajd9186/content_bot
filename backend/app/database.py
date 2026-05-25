@@ -28,21 +28,25 @@ def _build_engine_url() -> str:
 def _create_engine() -> AsyncEngine:
     url = _build_engine_url()
     connect_args = {}
+    engine_kwargs = {
+        "url": url,
+        "echo": settings.database_echo or (settings.environment == "development"),
+    }
 
     if "sqlite" in url:
         connect_args["check_same_thread"] = False
         connect_args["timeout"] = settings.database_pool_timeout
+        engine_kwargs["connect_args"] = connect_args
+    else:
+        # PostgreSQL pool configuration
+        engine_kwargs["pool_size"] = settings.database_pool_size
+        engine_kwargs["max_overflow"] = settings.database_max_overflow
+        engine_kwargs["pool_timeout"] = settings.database_pool_timeout
+        engine_kwargs["pool_pre_ping"] = settings.database_pool_pre_ping
+        engine_kwargs["connect_args"] = connect_args or None
+        engine_kwargs["isolation_level"] = "AUTOCOMMIT"
 
-    engine = create_async_engine(
-        url,
-        echo=settings.database_echo or (settings.environment == "development"),
-        pool_size=settings.database_pool_size,
-        max_overflow=settings.database_max_overflow,
-        pool_timeout=settings.database_pool_timeout,
-        pool_pre_ping=settings.database_pool_pre_ping,
-        connect_args=connect_args or None,
-        isolation_level="AUTOCOMMIT" if "postgresql" in url else None,
-    )
+    engine = create_async_engine(**engine_kwargs)
     return engine
 
 
