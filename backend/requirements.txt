@@ -13,3 +13,4 @@ langchain-core>=0.3.0
 sentence-transformers>=3.0.0
 numpy>=1.26.0
 groq>=0.11.0
+duckduckgo-search>=6.0.0

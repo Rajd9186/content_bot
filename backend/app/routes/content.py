@@ -1,5 +1,4 @@
 import uuid
-import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,8 +8,9 @@ from app.repositories.content import ContentRepository
 from app.schemas.content import ContentResponse, ContentGenerateResponse
 from app.services.content_generator import ContentGeneratorService
 from app.services.orchestration_service import MultiAgentOrchestrator
+from app.log_config.logger import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
 
@@ -18,14 +18,18 @@ router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
 async def run_orchestrator(project_id: uuid.UUID):
     async with async_session_factory() as session:
         try:
+            orchestrator = MultiAgentOrchestrator(session)
             project_repo = ProjectRepository(session)
             project = await project_repo.get(project_id)
-            if project:
-                orchestrator = MultiAgentOrchestrator(session)
-                await orchestrator.generate(project)
-                await session.commit()
+            if not project:
+                logger.error(f"Project {project_id} not found during background orchestration")
+                return
+            
+            await orchestrator.generate(project)
+            logger.info(f"Orchestration completed for project {project_id}")
         except Exception as e:
-            logger.error(f"Background orchestrator failed for project {project_id}: {e}", exc_info=True)
+            logger.error(f"Background orchestration failed for project {project_id}: {str(e)}", exc_info=True)
+
 
 @router.get("", response_model=list[ContentResponse])
 async def get_content(
@@ -33,8 +37,7 @@ async def get_content(
     session: AsyncSession = Depends(get_session),
 ):
     repo = ContentRepository(session)
-    contents = await repo.get_by_project(project_id)
-    return contents
+    return await repo.get_by_project(project_id)
 
 
 @router.get("/latest", response_model=ContentResponse)
@@ -47,12 +50,12 @@ async def get_latest_content(
     if content is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No content generated yet for this project",
+            detail=f"No content found for project {project_id}",
         )
     return content
 
 
-@router.post("/generate", response_model=dict)
+@router.post("/generate", response_model=ContentGenerateResponse)
 async def generate_content(
     project_id: uuid.UUID,
     background_tasks: BackgroundTasks,

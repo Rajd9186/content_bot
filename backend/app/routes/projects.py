@@ -4,7 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.log_config.logger import logger
+from app.log_config.logger import get_logger
+logger = get_logger(__name__)
 
 from app.database import get_session
 from app.repositories.project import ProjectRepository
