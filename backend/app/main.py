@@ -64,7 +64,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://verified-ai-research-writer-frontend.onrender.com"
+        "https://verified-ai-research-writer-frontend.onrender.com",
+        "https://verified-ai-research-writer.onrender.com"
     ],
     allow_credentials=True,
     allow_methods=["*"],

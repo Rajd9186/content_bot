@@ -1225,7 +1225,7 @@ async function api(method, path, body = null, signal = null) {
   const opts = {
     method,
     mode: 'cors',
-    credentials: 'omit',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
     signal,
   };
@@ -1272,7 +1272,7 @@ async function apiStream(path, body) {
     return await fetch(url, {
       method: 'POST',
       mode: 'cors',
-      credentials: 'omit',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json, text/event-stream' },
       body: JSON.stringify(body),
     });
