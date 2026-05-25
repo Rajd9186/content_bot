@@ -65,7 +65,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://verified-ai-research-writer-frontend.onrender.com",
-        "https://verified-ai-research-writer.onrender.com"
+        "https://verified-ai-research-writer.onrender.com",
+        "null",
     ],
     allow_credentials=True,
     allow_methods=["*"],
