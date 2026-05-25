@@ -63,8 +63,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",
         "https://verified-ai-research-writer-frontend.onrender.com",
+        "http://localhost:3000",        
         "https://verified-ai-research-writer.onrender.com",
         "null",
     ],
