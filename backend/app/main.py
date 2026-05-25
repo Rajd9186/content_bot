@@ -105,9 +105,10 @@ if __name__ == "__main__":
     import uvicorn
     _wf_counts = len([r for r in app.routes if hasattr(r, 'path') and 'workflow' in r.path])
     print(f"SERVER START: app has {_wf_counts} workflow routes out of {len([r for r in app.routes if hasattr(r, 'path')])} total", flush=True)
+    port = int(os.getenv("PORT", "8000"))
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=False,
     )
