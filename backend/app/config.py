@@ -16,7 +16,8 @@ class Settings(BaseSettings):
     )
 
     # --- Database ---
-    # Use PostgreSQL in production. Falls back to SQLite for local dev.
+    # Use PostgreSQL in production (set via DATABASE_URL env var).
+    # Falls back to SQLite for local dev if no DATABASE_URL is set.
     database_url: str = "sqlite+aiosqlite:///./verified_ai.db"
     database_pool_size: int = 10
     database_max_overflow: int = 20
