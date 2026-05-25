@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, cast, Integer
 
 from app.repositories.base import BaseRepository
 from app.models.hyperlink import HyperlinkValidation
@@ -13,7 +13,7 @@ class HyperlinkValidationRepository(BaseRepository[HyperlinkValidation]):
     async def get_by_project(self, project_id: UUID) -> list[HyperlinkValidation]:
         result = await self.session.execute(
             select(HyperlinkValidation)
-            .where(HyperlinkValidation.project_id == str(project_id))
+            .where(HyperlinkValidation.project_id == project_id)
             .order_by(HyperlinkValidation.created_at.desc())
         )
         return list(result.scalars().all())
@@ -23,10 +23,10 @@ class HyperlinkValidationRepository(BaseRepository[HyperlinkValidation]):
             select(
                 func.count().label("total"),
                 func.sum(
-                    func.cast(HyperlinkValidation.is_verified, func.Integer())
+                    cast(HyperlinkValidation.is_verified, Integer)
                 ).label("verified"),
             )
-            .where(HyperlinkValidation.project_id == str(project_id))
+            .where(HyperlinkValidation.project_id == project_id)
         )
         row = result.one()
         total = row.total or 0
@@ -34,7 +34,7 @@ class HyperlinkValidationRepository(BaseRepository[HyperlinkValidation]):
         result2 = await self.session.execute(
             select(func.count())
             .where(
-                HyperlinkValidation.project_id == str(project_id),
+                HyperlinkValidation.project_id == project_id,
                 HyperlinkValidation.status == "broken",
             )
         )

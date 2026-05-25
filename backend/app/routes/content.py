@@ -16,6 +16,11 @@ router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
 
 
 async def run_orchestrator(project_id: uuid.UUID):
+    """Background task that runs the multi-agent workflow for a project.
+
+    Opens its own session so the request session is not held during the
+    potentially long-running orchestration.
+    """
     async with async_session_factory() as session:
         try:
             orchestrator = MultiAgentOrchestrator(session)
@@ -24,11 +29,23 @@ async def run_orchestrator(project_id: uuid.UUID):
             if not project:
                 logger.error(f"Project {project_id} not found during background orchestration")
                 return
-            
+
             await orchestrator.generate(project)
+            await session.commit()
             logger.info(f"Orchestration completed for project {project_id}")
         except Exception as e:
-            logger.error(f"Background orchestration failed for project {project_id}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Background orchestration failed for project {project_id}: {e}",
+                exc_info=True,
+            )
+            try:
+                await session.rollback()
+                # Ensure project is marked as failed
+                project_repo = ProjectRepository(session)
+                await project_repo.update_status(project_id, "failed")
+                await session.commit()
+            except Exception:
+                pass
 
 
 @router.get("", response_model=list[ContentResponse])
@@ -75,13 +92,12 @@ async def generate_content(
         result = await service.generate_full_content(project)
         return result
 
-    # Update status to queued/planning before background task starts
     await project_repo.update_status(project_id, "planning")
-    
+
     background_tasks.add_task(run_orchestrator, project_id)
-    
-    return {
-        "project_id": str(project_id),
-        "status": "started",
-        "message": "Content generation started in background"
-    }
+
+    return ContentGenerateResponse(
+        project_id=project_id,
+        status="started",
+        message="Content generation started in background",
+    )

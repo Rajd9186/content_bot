@@ -83,7 +83,7 @@ def register_workflow_routes(router: APIRouter) -> None:
     @router.post("/{project_id}/workflow/contradictions/{contradiction_id}/resolve", response_model=ContradictionResponse)
     async def resolve_contradiction(
         project_id: uuid.UUID,
-        contradiction_id: str,
+        contradiction_id: uuid.UUID,
         payload: ContradictionResolve,
         session: AsyncSession = Depends(get_session),
     ):

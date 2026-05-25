@@ -17,7 +17,7 @@ async def chat_with_copilot(
 ):
     service = ResearchCopilotService(session)
     try:
-        response = await service.chat(str(project_id), request.message, request.history)
+        response = await service.chat(project_id, request.message, request.history)
         return response
     except Exception as e:
         raise HTTPException(
@@ -32,5 +32,5 @@ async def get_workflow_events(
     session: AsyncSession = Depends(get_session)
 ):
     service = ResearchCopilotService(session)
-    events = await service.get_events(str(project_id), limit=limit)
+    events = await service.get_events(project_id, limit=limit)
     return events

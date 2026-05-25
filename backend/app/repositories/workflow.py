@@ -13,7 +13,7 @@ class WorkflowExecutionRepository(BaseRepository[WorkflowExecution]):
     async def get_by_project(self, project_id: UUID) -> list[WorkflowExecution]:
         result = await self.session.execute(
             select(WorkflowExecution)
-            .where(WorkflowExecution.project_id == str(project_id))
+            .where(WorkflowExecution.project_id == project_id)
             .order_by(WorkflowExecution.started_at.desc())
         )
         return list(result.scalars().all())
@@ -21,26 +21,32 @@ class WorkflowExecutionRepository(BaseRepository[WorkflowExecution]):
     async def get_latest_by_project(self, project_id: UUID) -> WorkflowExecution | None:
         result = await self.session.execute(
             select(WorkflowExecution)
-            .where(WorkflowExecution.project_id == str(project_id))
+            .where(WorkflowExecution.project_id == project_id)
             .order_by(WorkflowExecution.started_at.desc())
             .limit(1)
         )
         return result.scalar_one_or_none()
 
-    async def update_node(self, workflow_id: str, node: str) -> None:
+    async def update_node(self, workflow_id: UUID, node: str) -> None:
         await self.session.execute(
             update(WorkflowExecution)
             .where(WorkflowExecution.id == workflow_id)
             .values(current_node=node)
         )
-        await self.session.flush()
+
+    async def update_status(self, workflow_id: UUID, status: str) -> None:
+        await self.session.execute(
+            update(WorkflowExecution)
+            .where(WorkflowExecution.id == workflow_id)
+            .values(status=status)
+        )
 
 
 class WorkflowStepRepository(BaseRepository[WorkflowStep]):
     def __init__(self, session: AsyncSession):
         super().__init__(session, WorkflowStep)
 
-    async def get_by_workflow(self, workflow_id: str) -> list[WorkflowStep]:
+    async def get_by_workflow(self, workflow_id: UUID) -> list[WorkflowStep]:
         result = await self.session.execute(
             select(WorkflowStep)
             .where(WorkflowStep.workflow_id == workflow_id)
@@ -48,7 +54,7 @@ class WorkflowStepRepository(BaseRepository[WorkflowStep]):
         )
         return list(result.scalars().all())
 
-    async def get_by_node(self, workflow_id: str, node_name: str) -> WorkflowStep | None:
+    async def get_by_node(self, workflow_id: UUID, node_name: str) -> WorkflowStep | None:
         result = await self.session.execute(
             select(WorkflowStep)
             .where(

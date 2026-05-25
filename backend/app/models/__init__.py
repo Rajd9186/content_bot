@@ -10,7 +10,6 @@ from app.models.hyperlink import HyperlinkValidation
 from app.models.chat import ChatSession, ChatMessageModel, WorkflowEventModel
 
 __all__ = [
-    "Base",
     "Project",
     "ProjectStatus",
     "ContentTone",

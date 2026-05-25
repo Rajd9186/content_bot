@@ -1,5 +1,7 @@
+import uuid
 from datetime import datetime
 from typing import Any
+from uuid import UUID
 
 from app.log_config.logger import get_logger
 
@@ -45,18 +47,19 @@ class AgentMemoryService:
         key: str,
         value: dict,
         memory_type: str = "research",
-        project_id: str | None = None,
+        project_id: UUID | str | None = None,
         relevance_score: float | None = None,
     ) -> None:
         cache_key = f"{agent_name}:{key}"
         self.cache.set(cache_key, value)
         if self.repo:
             try:
+                pid = uuid.UUID(project_id) if isinstance(project_id, str) else project_id
                 await self.repo.upsert_memory(
                     agent_name=agent_name,
                     key=key,
                     value=value,
-                    project_id=project_id,
+                    project_id=pid,
                     memory_type=memory_type,
                     relevance_score=relevance_score,
                 )

@@ -26,14 +26,14 @@ class AgentMemoryRepository(BaseRepository[AgentMemory]):
     async def get_by_project(self, project_id: UUID) -> list[AgentMemory]:
         result = await self.session.execute(
             select(AgentMemory)
-            .where(AgentMemory.project_id == str(project_id))
+            .where(AgentMemory.project_id == project_id)
             .order_by(AgentMemory.last_accessed_at.desc().nullslast())
         )
         return list(result.scalars().all())
 
     async def upsert_memory(
         self, agent_name: str, key: str, value: dict,
-        project_id: str | None = None,
+        project_id: UUID | None = None,
         memory_type: str = "research",
         relevance_score: float | None = None,
     ) -> AgentMemory:
@@ -44,7 +44,6 @@ class AgentMemoryRepository(BaseRepository[AgentMemory]):
             existing.last_accessed_at = datetime.utcnow()
             if relevance_score is not None:
                 existing.relevance_score = relevance_score
-            await self.session.flush()
             return existing
         return await self.create(
             agent_name=agent_name,

@@ -13,7 +13,7 @@ class ContradictionRepository(BaseRepository[Contradiction]):
     async def get_by_project(self, project_id: UUID) -> list[Contradiction]:
         result = await self.session.execute(
             select(Contradiction)
-            .where(Contradiction.project_id == str(project_id))
+            .where(Contradiction.project_id == project_id)
             .order_by(Contradiction.created_at.desc())
         )
         return list(result.scalars().all())
@@ -22,17 +22,16 @@ class ContradictionRepository(BaseRepository[Contradiction]):
         result = await self.session.execute(
             select(Contradiction)
             .where(
-                Contradiction.project_id == str(project_id),
+                Contradiction.project_id == project_id,
                 Contradiction.resolved == False,
             )
             .order_by(Contradiction.severity.desc())
         )
         return list(result.scalars().all())
 
-    async def resolve(self, contradiction_id: str, resolution: str) -> None:
+    async def resolve(self, contradiction_id: UUID, resolution: str) -> None:
         await self.session.execute(
             update(Contradiction)
             .where(Contradiction.id == contradiction_id)
             .values(resolved=True, resolution=resolution)
         )
-        await self.session.flush()
