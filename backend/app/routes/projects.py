@@ -1,7 +1,10 @@
 import uuid
 import re
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.log_config.logger import logger
 
 from app.database import get_session
 from app.repositories.project import ProjectRepository

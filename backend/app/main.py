@@ -4,9 +4,10 @@ import os
 from pathlib import Path
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import uvicorn
@@ -41,6 +42,23 @@ app = FastAPI(
     version=settings.project_version,
     lifespan=lifespan,
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """
+    Handle validation errors and log the detailed error for debugging.
+    This is especially useful for finding mismatches between frontend payloads and pydantic models.
+    """
+    error_details = exc.errors()
+    logger.error(f"Validation error for {request.method} {request.url.path}: {error_details}")
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": error_details,
+            "body": exc.body
+        },
+    )
 
 app.add_middleware(
     CORSMiddleware,

@@ -3,13 +3,25 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 
+from typing import Annotated
+from pydantic import BaseModel, Field, field_validator, BeforeValidator
+
+
+def empty_to_none(v: str | None) -> str | None:
+    if v == "":
+        return None
+    return v
+
+OptionalString = Annotated[str | None, BeforeValidator(empty_to_none)]
+
+
 class ProjectCreate(BaseModel):
     topic: str = Field(..., min_length=3, max_length=500)
-    title: str | None = Field(default=None, min_length=3, max_length=500)
+    title: OptionalString = Field(default=None, min_length=3, max_length=500)
     points_to_cover: list[str] = Field(default_factory=list)
     tone: str = Field(default="professional")
     content_type: str = Field(default="article")
-    target_audience: str | None = Field(default=None, max_length=300)
+    target_audience: OptionalString = Field(default=None, max_length=300)
     seo_keywords: list[str] = Field(default_factory=list)
 
     @field_validator("tone")
