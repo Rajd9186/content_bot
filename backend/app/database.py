@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 
@@ -125,30 +126,91 @@ async def retry_on_db_failure(
     raise last_exc
 
 
+async def run_migrations():
+    """Run Alembic migrations to bring the database schema up to date.
+
+    Uses Alembic's command API in a thread executor to avoid blocking
+    the async event loop. Falls back to Base.metadata.create_all() if
+    alembic is unavailable (offline / test environment).
+    """
+    def _upgrade():
+        try:
+            from alembic.config import Config
+            from alembic import command
+            import alembic
+
+            alembic_dir = os.path.join(os.path.dirname(__file__), "..", "alembic")
+            alembic_cfg = Config()
+            alembic_cfg.set_main_option("script_location", alembic_dir)
+            alembic_cfg.set_main_option("sqlalchemy.url", settings.database_url)
+            alembic_cfg.set_main_option("prepend_sys_path", ".")
+
+            logger.info("Running Alembic migrations (head)...")
+            command.upgrade(alembic_cfg, "head")
+            logger.info("Alembic migrations complete")
+        except Exception as e:
+            logger.error("Alembic migration failed: %s", e)
+            raise
+
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, _upgrade)
+
+
+async def validate_schema():
+    """Validate that the workflow_events table has the expected columns.
+
+    Logs a warning (but does not block startup) if columns are missing.
+    This helps catch deployment issues early.
+    """
+    from sqlalchemy import inspect as sa_inspect
+
+    expected_columns = {
+        "workflow_events": [
+            "id", "workflow_id", "project_id", "event_type", "agent_name",
+            "status", "message", "progress_percent", "payload_json", "created_at",
+        ],
+    }
+
+    async with engine.begin() as conn:
+        def _check(sync_conn):
+            inspector = sa_inspect(sync_conn)
+            tables = inspector.get_table_names()
+            logger.info("Database tables: %s", tables)
+
+            for table, cols in expected_columns.items():
+                if table not in tables:
+                    logger.warning("Schema validation: table '%s' does not exist", table)
+                    continue
+                existing = {c["name"] for c in inspector.get_columns(table)}
+                missing = [c for c in cols if c not in existing]
+                if missing:
+                    logger.warning(
+                        "Schema validation: table '%s' missing columns: %s. "
+                        "Run 'alembic upgrade head' to fix.",
+                        table, missing,
+                    )
+                else:
+                    logger.info("Schema validation: table '%s' has all expected columns", table)
+
+        await conn.run_sync(_check)
+
+
 async def init_db():
-    """Initialize database: create all tables and apply performance pragmas."""
+    """Initialize database: run migrations, verify schema, apply pragmas."""
     from sqlalchemy import inspect
 
     async with engine.begin() as conn:
-        # SQLite-specific optimizations
         if "sqlite" in settings.database_url:
             await conn.exec_driver_sql("PRAGMA journal_mode=WAL")
             await conn.exec_driver_sql("PRAGMA synchronous=NORMAL")
             await conn.exec_driver_sql("PRAGMA busy_timeout=30000")
             await conn.exec_driver_sql("PRAGMA foreign_keys=ON")
 
-        await conn.run_sync(Base.metadata.create_all)
+    # Run Alembic migrations
+    await run_migrations()
 
-    # Verify tables were created
-    async with engine.begin() as conn:
-        def _check_tables(sync_conn):
-            inspector = inspect(sync_conn)
-            tables = inspector.get_table_names()
-            logger.info("Database tables: %s", tables)
-            return tables
-        tables = await conn.run_sync(_check_tables)
-        if not tables:
-            logger.warning("No tables created — check model imports")
+    # Validate schema after migration
+    await validate_schema()
 
 
 async def dispose_engine():
