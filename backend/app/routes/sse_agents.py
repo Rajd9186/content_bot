@@ -10,6 +10,7 @@ POST /api/v1/workflows/{workflow_id}/approve
 
 import asyncio
 import uuid
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -35,11 +36,11 @@ class RunAgentRequest(BaseModel):
 
 
 class RunAgentResponse(BaseModel):
-    workflow_id: str
+    workflow_id: UUID
     agent: str
     status: str
     message: str
-    job_id: str | None = None
+    job_id: UUID | None = None
 
 
 @router.post("/{workflow_id}/run-agent", response_model=RunAgentResponse)
@@ -120,11 +121,11 @@ async def run_agent(
 
     await session.commit()
     return RunAgentResponse(
-        workflow_id=str(workflow_id),
+        workflow_id=workflow_id,
         agent=agent,
         status="completed",
         message=f"{agent.capitalize()} completed successfully",
-        job_id=str(job_id),
+        job_id=job_id,
     )
 
 

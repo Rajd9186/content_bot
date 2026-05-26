@@ -30,19 +30,7 @@ async def get_verification_results(
     claims = await repo.get_by_project(project_id)
     summary = await repo.get_verification_summary(project_id)
 
-    claim_responses = [
-        ClaimResponse(
-            id=c.id,
-            project_id=c.project_id,
-            claim_text=c.claim_text,
-            confidence=c.confidence,
-            status=c.status,
-            explanation=c.explanation,
-            category=c.category,
-            created_at=c.created_at,
-        )
-        for c in claims
-    ]
+    claim_responses = [ClaimResponse.model_validate(c) for c in claims]
 
     return ClaimVerificationResponse(
         claims=claim_responses,

@@ -1,10 +1,11 @@
+from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class HyperlinkValidationResponse(BaseModel):
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     url: str
     label: str | None
     status: str
@@ -15,7 +16,7 @@ class HyperlinkValidationResponse(BaseModel):
     checked_at: datetime | None
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class HyperlinkValidationSummary(BaseModel):

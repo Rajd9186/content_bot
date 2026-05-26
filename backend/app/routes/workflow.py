@@ -29,17 +29,9 @@ def register_workflow_routes(router: APIRouter) -> None:
             return None
         steps_repo = WorkflowStepRepository(session)
         steps = await steps_repo.get_by_workflow(workflow.id)
-        return WorkflowExecutionResponse(
-            id=workflow.id,
-            project_id=workflow.project_id,
-            status=workflow.status,
-            current_node=workflow.current_node,
-            error=workflow.error,
-            telemetry=workflow.telemetry,
-            started_at=workflow.started_at,
-            completed_at=workflow.completed_at,
-            steps=[WorkflowStepResponse.model_validate(s) for s in steps],
-        )
+        response = WorkflowExecutionResponse.model_validate(workflow)
+        response.steps = [WorkflowStepResponse.model_validate(s) for s in steps]
+        return response
 
     @router.get("/{project_id}/workflow/telemetry", response_model=WorkflowTelemetry)
     async def get_workflow_telemetry(

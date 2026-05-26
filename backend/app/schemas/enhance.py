@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class EnhancementJobResponse(BaseModel):
@@ -16,7 +16,7 @@ class EnhancementJobResponse(BaseModel):
     completed_at: datetime | None = None
     created_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EnhancementTriggerResponse(BaseModel):
@@ -41,4 +41,4 @@ class ContentVersionResponse(BaseModel):
     change_description: str | None = None
     created_at: datetime | None = None
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)

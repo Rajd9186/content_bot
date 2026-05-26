@@ -1,11 +1,11 @@
-import uuid
+from uuid import UUID
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class WorkflowStepResponse(BaseModel):
-    id: str
-    workflow_id: str
+    id: UUID
+    workflow_id: UUID
     node_name: str
     agent_name: str | None
     status: str
@@ -17,12 +17,12 @@ class WorkflowStepResponse(BaseModel):
     error: str | None
     retry_count: int
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WorkflowExecutionResponse(BaseModel):
-    id: str
-    project_id: str
+    id: UUID
+    project_id: UUID
     status: str
     current_node: str
     error: str | None
@@ -31,7 +31,7 @@ class WorkflowExecutionResponse(BaseModel):
     completed_at: datetime | None
     steps: list[WorkflowStepResponse] = []
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class WorkflowTelemetry(BaseModel):

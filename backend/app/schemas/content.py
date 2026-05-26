@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ContentResponse(BaseModel):
@@ -14,7 +14,7 @@ class ContentResponse(BaseModel):
     overall_confidence: float | None
     created_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ContentGenerateResponse(BaseModel):

@@ -1,10 +1,7 @@
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, Field, field_validator
-
-
 from typing import Annotated
-from pydantic import BaseModel, Field, field_validator, BeforeValidator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, BeforeValidator
 
 
 def empty_to_none(v: str | None) -> str | None:
@@ -55,7 +52,7 @@ class ProjectResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProjectQuickCreate(BaseModel):

@@ -29,18 +29,10 @@ async def get_evidence(
 
     items = []
     for e in evidence_items:
-        item = EvidenceResponse(
-            id=e.id,
-            project_id=e.project_id,
-            claim_id=e.claim_id,
-            source_id=e.source_id,
-            snippet=e.snippet,
-            relevance_score=e.relevance_score,
-            extracted_at=e.extracted_at,
-            source_url=e.source.url if e.source else None,
-            source_domain=e.source.domain if e.source else None,
-            source_trust_score=e.source.trust_score if e.source else None,
-        )
+        item = EvidenceResponse.model_validate(e)
+        item.source_url = e.source.url if e.source else None
+        item.source_domain = e.source.domain if e.source else None
+        item.source_trust_score = e.source.trust_score if e.source else None
         items.append(item)
 
     return EvidenceListResponse(
@@ -61,17 +53,9 @@ async def get_evidence_by_claim(
 
     items = []
     for e in evidence_items:
-        item = EvidenceResponse(
-            id=e.id,
-            project_id=e.project_id,
-            claim_id=e.claim_id,
-            source_id=e.source_id,
-            snippet=e.snippet,
-            relevance_score=e.relevance_score,
-            extracted_at=e.extracted_at,
-            source_url=e.source.url if e.source else None,
-            source_domain=e.source.domain if e.source else None,
-            source_trust_score=e.source.trust_score if e.source else None,
-        )
+        item = EvidenceResponse.model_validate(e)
+        item.source_url = e.source.url if e.source else None
+        item.source_domain = e.source.domain if e.source else None
+        item.source_trust_score = e.source.trust_score if e.source else None
         items.append(item)
     return items
