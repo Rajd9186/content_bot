@@ -29,7 +29,19 @@ def register_workflow_routes(router: APIRouter) -> None:
             return None
         steps_repo = WorkflowStepRepository(session)
         steps = await steps_repo.get_by_workflow(workflow.id)
-        response = WorkflowExecutionResponse.model_validate(workflow)
+        # Build from dict to avoid lazy-loading the steps relationship
+        # (workflow.steps relationship conflicts with schema's steps field)
+        workflow_data = {
+            "id": workflow.id,
+            "project_id": workflow.project_id,
+            "status": workflow.status if isinstance(workflow.status, str) else workflow.status.value,
+            "current_node": workflow.current_node,
+            "error": workflow.error,
+            "telemetry": workflow.telemetry,
+            "started_at": workflow.started_at,
+            "completed_at": workflow.completed_at,
+        }
+        response = WorkflowExecutionResponse.model_validate(workflow_data)
         response.steps = [WorkflowStepResponse.model_validate(s) for s in steps]
         return response
 
