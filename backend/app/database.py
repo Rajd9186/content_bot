@@ -139,10 +139,15 @@ async def run_migrations():
             from alembic import command
             import alembic
 
+            # Apply the same async-driver fix as _build_engine_url()
+            db_url = settings.database_url
+            if "postgresql" in db_url and "+" not in db_url:
+                db_url = db_url.replace("postgresql://", "postgresql+asyncpg://")
+
             alembic_dir = os.path.join(os.path.dirname(__file__), "..", "alembic")
             alembic_cfg = Config()
             alembic_cfg.set_main_option("script_location", alembic_dir)
-            alembic_cfg.set_main_option("sqlalchemy.url", settings.database_url)
+            alembic_cfg.set_main_option("sqlalchemy.url", db_url)
             alembic_cfg.set_main_option("prepend_sys_path", ".")
 
             logger.info("Running Alembic migrations (head)...")

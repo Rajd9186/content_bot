@@ -12,7 +12,11 @@ from app.models import *  # noqa: F401, F403
 from app.config import settings
 
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# Apply the same async-driver fix as database.py:_build_engine_url()
+_db_url = settings.database_url
+if "postgresql" in _db_url and "+" not in _db_url:
+    _db_url = _db_url.replace("postgresql://", "postgresql+asyncpg://")
+config.set_main_option("sqlalchemy.url", _db_url)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
