@@ -3,131 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<<<<<<< HEAD
-<title>Verified AI Research Writer — API</title>
-<style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f8fafc;
-    color: #1e293b;
-    line-height: 1.6;
-  }
-  .hero {
-    background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-    color: #fff;
-    padding: 48px 24px 40px;
-    text-align: center;
-  }
-  .hero h1 { font-size: 28px; margin-bottom: 6px; }
-  .hero p { opacity: .85; font-size: 15px; }
-  .hero .badge {
-    display: inline-block;
-    background: rgba(255,255,255,.15);
-    padding: 4px 14px;
-    border-radius: 20px;
-    font-size: 13px;
-    margin-top: 12px;
-  }
-  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
-
-  .group { margin-bottom: 32px; }
-  .group h2 {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1e3a8a;
-    border-bottom: 2px solid #e2e8f0;
-    padding-bottom: 8px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .group h2 .count {
-    background: #e2e8f0;
-    color: #475569;
-    font-size: 12px;
-    padding: 1px 10px;
-    border-radius: 12px;
-    font-weight: 500;
-  }
-  .endpoint {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    transition: box-shadow .15s;
-  }
-  .endpoint:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
-  .endpoint-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  .method {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 2px 10px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: .04em;
-    min-width: 52px;
-    text-align: center;
-  }
-  .method.get { background: #dbeafe; color: #1d4ed8; }
-  .method.post { background: #dcfce7; color: #15803d; }
-  .method.delete { background: #fce7f3; color: #be123c; }
-  .path {
-    font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
-    font-size: 14px;
-    font-weight: 500;
-    color: #0f172a;
-    word-break: break-all;
-  }
-  .desc {
-    font-size: 14px;
-    color: #64748b;
-    margin-top: 6px;
-    padding-left: 64px;
-  }
-  .details {
-    margin-top: 10px;
-    padding-left: 64px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .tag {
-    font-size: 11px;
-    background: #f1f5f9;
-    color: #475569;
-    padding: 2px 10px;
-    border-radius: 12px;
-  }
-  .section-title {
-    margin-top: 48px;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    font-size: 14px;
-    color: #475569;
-  }
-  .section-title strong { color: #0f172a; }
-  .footer {
-    text-align: center;
-    padding: 32px 16px;
-    color: #94a3b8;
-    font-size: 13px;
-  }
-  .footer a { color: #3b82f6; text-decoration: none; }
-  @media (max-width: 640px) {
-    .desc, .details { padding-left: 0; }
-  }
-=======
 <title>Verified AI Research Writer — Enterprise Platform</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap');
@@ -484,6 +359,28 @@ tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
 .tl-sub{font-size:11px;color:var(--text3);font-family:var(--font-mono);margin-top:2px}
 .tl-time{font-size:10px;color:var(--text4);font-family:var(--font-mono);margin-top:2px}
 
+/* ===================== AGENT OPTIONS ===================== */
+.agent-option{display:flex;align-items:center;justify-content:space-between;padding:12px;border-radius:var(--r2);border:1px solid var(--border);background:var(--glass);cursor:pointer;transition:var(--transition)}
+.agent-option:hover{border-color:var(--border2);background:var(--glass2)}
+.agent-option.selected{border-color:var(--blue);background:var(--blue-glow)}
+.radio-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border2);display:flex;align-items:center;justify-content:center;transition:var(--transition);flex-shrink:0}
+.agent-option.selected .radio-dot{border-color:var(--blue);background:var(--blue)}
+.agent-option.selected .radio-dot::after{content:'';width:4px;height:4px;border-radius:50%;background:#fff}
+
+/* ===================== WORKFLOW CONTROLS ===================== */
+.wf-controls{display:flex;flex-wrap:wrap;gap:6px;padding:12px;border-radius:var(--r2);border:1px solid var(--border);background:var(--glass);margin-bottom:12px}
+.wf-controls .btn{font-size:11px;padding:5px 10px}
+.wf-controls-label{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--text4);width:100%;margin-bottom:4px}
+.wf-event-log{max-height:240px;overflow-y:auto;font-size:11px;font-family:var(--font-mono);background:var(--bg2);border-radius:var(--r);padding:8px;margin-top:8px}
+.wf-event{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);font-size:11px}
+.wf-event:last-child{border-bottom:none}
+.wf-event-time{color:var(--text4);white-space:nowrap;flex-shrink:0}
+.wf-event-agent{white-space:nowrap;flex-shrink:0;padding:1px 5px;border-radius:3px;font-size:10px;font-weight:600}
+.wf-event-agent.running{background:var(--blue-glow);color:var(--blue)}
+.wf-event-agent.completed{background:var(--green-dim);color:var(--green)}
+.wf-event-agent.failed{background:var(--red-dim);color:var(--red)}
+.wf-event-msg{color:var(--text3);word-break:break-word}
+
 /* ===================== VERIFICATION ===================== */
 .verif-score-row{display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r);border:1px solid var(--border);background:var(--glass);margin-bottom:8px}
 .verif-score-label{flex:1;font-size:12px;color:var(--text2)}
@@ -501,227 +398,10 @@ tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
   .studio-layout{grid-template-columns:1fr;height:auto}
   .chat-container{height:auto;min-height:500px}
 }
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 </style>
 </head>
 <body>
 
-<<<<<<< HEAD
-<div class="hero">
-  <h1>Verified AI Research Writer</h1>
-  <p>API Reference — v1.0.0</p>
-  <span class="badge">Base URL: http://localhost:8000/api/v1</span>
-</div>
-
-<div class="container">
-
-  <!-- ============================== -->
-  <!-- HEALTH                         -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9889;</span> Health <span class="count">1</span></h2>
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/health</span>
-      </div>
-      <div class="desc">Check if the API server is running. Returns status and version.</div>
-      <div class="details">
-        <span class="tag">no auth</span>
-        <span class="tag">no project required</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- PROJECTS                       -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#128203;</span> Projects <span class="count">4</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method post">POST</span>
-        <span class="path">/api/v1/projects</span>
-      </div>
-      <div class="desc">Create a new content project. Provide topic, title, tone, content type, SEO keywords, and points to cover. Returns the created project with a UUID.</div>
-      <div class="details">
-        <span class="tag">request body: ProjectCreate</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects</span>
-      </div>
-      <div class="desc">List all projects ordered by creation date (newest first). Supports <code>?skip=0&amp;limit=100</code> pagination.</div>
-      <div class="details">
-        <span class="tag">query: skip, limit</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}</span>
-      </div>
-      <div class="desc">Get a single project by its UUID. Returns full project details including outline, status, and metadata.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method delete">DELETE</span>
-        <span class="path">/api/v1/projects/{project_id}</span>
-      </div>
-      <div class="desc">Delete a project and all its associated content, claims, evidence, and sources.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-        <span class="tag">returns 204</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- CONTENT                        -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9997;&#65039;</span> Content <span class="count">3</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method post">POST</span>
-        <span class="path">/api/v1/projects/{project_id}/content/generate</span>
-      </div>
-      <div class="desc"><strong>Core pipeline endpoint.</strong> Triggers the full multi-agent content generation pipeline: topic planning → web research → evidence retrieval → claim extraction → fact verification → content writing → self-verification. Returns generated markdown, citations, claims, and a verification summary.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-        <span class="tag">no request body</span>
-        <span class="tag">pipeline runs async</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/content</span>
-      </div>
-      <div class="desc">Get all generated content versions for a project, ordered newest first.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/content/latest</span>
-      </div>
-      <div class="desc">Get the most recently generated content for a project. Returns markdown, citations, SEO metadata, and confidence score.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- EVIDENCE                       -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#128270;</span> Evidence <span class="count">2</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/evidence</span>
-      </div>
-      <div class="desc">Get all evidence items collected during research. Each item includes a snippet, source URL, domain, relevance score, and source trust score. Returns average relevance across all evidence.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/evidence/claims/{claim_id}</span>
-      </div>
-      <div class="desc">Get evidence items specifically linked to a single claim. Useful for drilling into what sources support a particular claim.</div>
-      <div class="details">
-        <span class="tag">path: project_id, claim_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- VERIFICATION                   -->
-  <!-- ============================== -->
-  <div class="group">
-    <h2><span>&#9989;</span> Verification <span class="count">3</span></h2>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/claims</span>
-      </div>
-      <div class="desc">Get all extracted claims with their verification status, confidence scores, and explanations. Returns aggregate counts: total, verified, unverified, contradicted, unsupported.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/sources</span>
-      </div>
-      <div class="desc">Get source trust metrics. Lists every source URL with its domain, title, and computed trust score. Includes average trust score across all sources.</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-
-    <div class="endpoint">
-      <div class="endpoint-header">
-        <span class="method get">GET</span>
-        <span class="path">/api/v1/projects/{project_id}/verification/dashboard</span>
-      </div>
-      <div class="desc"><strong>Full dashboard endpoint.</strong> Returns a comprehensive snapshot: project metadata, all claims with statuses and confidence, source trust scores, evidence counts with relevance, and content metrics (word count, overall confidence, citation count).</div>
-      <div class="details">
-        <span class="tag">path: project_id (UUID)</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- PIPELINE OVERVIEW              -->
-  <!-- ============================== -->
-  <div class="section-title">
-    <strong>&#9881;&#65039; Pipeline Flow</strong>
-    <br><br>
-    When you call <code>POST /api/v1/projects/{id}/content/generate</code>, the system runs 5 stages in sequence:
-    <br><br>
-    1. <strong>Topic Planner</strong> &mdash; generates a structured outline with sections and research queries<br>
-    2. <strong>Research</strong> &mdash; searches web sources (Tavily API or mock), stores evidence, computes trust scores<br>
-    3. <strong>Verification</strong> &mdash; extracts factual claims from evidence, cross-references sources, assigns confidence scores<br>
-    4. <strong>Content Writer</strong> &mdash; writes markdown using only verified claims (&gt;0.70 confidence), adds inline citations<br>
-    5. <strong>Self-Verification</strong> &mdash; audits for hallucination risks, unsupported claims, citation mismatches
-    <br><br>
-    Each stage updates the project status so you can poll <code>GET /api/v1/projects/{id}</code> for progress.
-  </div>
-
-</div>
-
-<div class="footer">
-  Powered by <strong>Verified AI Research Writer</strong> &middot;
-  <a href="/docs">Swagger UI</a> &middot;
-  <a href="/redoc">ReDoc</a>
-</div>
-
-=======
 <canvas id="particles-canvas"></canvas>
 
 <!-- TOAST CONTAINER -->
@@ -803,6 +483,58 @@ tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-confirm-delete')">Cancel</button>
       <button class="btn btn-danger" onclick="handleDeleteProject()">Delete Project</button>
+    </div>
+  </div>
+</div>
+
+<!-- RUN AGENT MODAL -->
+<div class="modal-overlay" id="modal-run-agent">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <div class="modal-title">Run Enhancement Agent</div>
+      <button class="modal-close" onclick="closeModal('modal-run-agent')">✕</button>
+    </div>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:16px">Select an agent to run on the current draft:</p>
+    <div id="run-agent-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <div class="agent-option" data-agent="critique" onclick="selectAgentOption(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">🔍</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Critique</div><div style="font-size:11px;color:var(--text3)">Analyze draft for weaknesses and gaps</div></div>
+        </div>
+        <span class="radio-dot"></span>
+      </div>
+      <div class="agent-option" data-agent="revision" onclick="selectAgentOption(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">✏️</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Revision</div><div style="font-size:11px;color:var(--text3)">Improve draft based on critique</div></div>
+        </div>
+        <span class="radio-dot"></span>
+      </div>
+      <div class="agent-option" data-agent="verification" onclick="selectAgentOption(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">✓</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Verification</div><div style="font-size:11px;color:var(--text3)">Verify claims against sources</div></div>
+        </div>
+        <span class="radio-dot"></span>
+      </div>
+      <div class="agent-option" data-agent="contradiction_detection" onclick="selectAgentOption(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">⚡</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Contradiction Detection</div><div style="font-size:11px;color:var(--text3)">Find conflicting claims across sources</div></div>
+        </div>
+        <span class="radio-dot"></span>
+      </div>
+      <div class="agent-option" data-agent="hyperlink_validation" onclick="selectAgentOption(this)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:18px">⊕</span>
+          <div><div style="font-weight:600;font-size:13px;color:var(--text)">Hyperlink Validation</div><div style="font-size:11px;color:var(--text3)">Check all URLs for validity</div></div>
+        </div>
+        <span class="radio-dot"></span>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-run-agent')">Cancel</button>
+      <button class="btn btn-primary" onclick="handleRunAgent()" id="run-agent-btn">Run Agent</button>
     </div>
   </div>
 </div>
@@ -917,25 +649,25 @@ tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
 
       <!-- Stat cards -->
       <div class="grid-4" style="margin-bottom:16px" id="dashboard-stats">
-        <div class="stat-card blue card-glow">
+        <div class="stat-card blue card-glow" onclick="navigate('projects')" style="cursor:pointer">
           <div class="stat-bg-icon">◫</div>
           <div class="stat-label">Total Projects</div>
           <div class="stat-value" id="stat-projects">—</div>
           <div class="stat-delta">↑ All time</div>
         </div>
-        <div class="stat-card teal card-glow">
+        <div class="stat-card teal card-glow" onclick="navigate('evidence')" style="cursor:pointer">
           <div class="stat-bg-icon">◈</div>
           <div class="stat-label">Evidence Items</div>
           <div class="stat-value" id="stat-evidence">—</div>
           <div class="stat-delta">↑ This session</div>
         </div>
-        <div class="stat-card amber">
+        <div class="stat-card amber" onclick="navigate('contradictions')" style="cursor:pointer">
           <div class="stat-bg-icon">⚡</div>
           <div class="stat-label">Contradictions</div>
           <div class="stat-value" id="stat-contras" style="color:var(--amber)">—</div>
           <div class="stat-delta neg">⚡ Review needed</div>
         </div>
-        <div class="stat-card green">
+        <div class="stat-card green" onclick="navigate('verification')" style="cursor:pointer">
           <div class="stat-bg-icon">✓</div>
           <div class="stat-label">Verification Score</div>
           <div class="stat-value" id="stat-verif" style="color:var(--green)">—</div>
@@ -1056,14 +788,31 @@ tbody td{padding:10px 14px;color:var(--text2);vertical-align:middle}
           <div class="card">
             <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:12px">⬡ Agent Pipeline</div>
             <div id="studio-pipeline">
-              <div class="wf-pipeline">
+              <div class="wf-pipeline" id="pipeline-stages">
+                <div class="wf-node"><div class="wf-node-circle queued">◎</div><div class="wf-node-label">Plan</div></div>
+                <div class="wf-connector"></div>
                 <div class="wf-node"><div class="wf-node-circle queued">◎</div><div class="wf-node-label">Research</div></div>
                 <div class="wf-connector"></div>
-                <div class="wf-node"><div class="wf-node-circle queued">✓</div><div class="wf-node-label">Verify</div></div>
-                <div class="wf-connector"></div>
                 <div class="wf-node"><div class="wf-node-circle queued">✦</div><div class="wf-node-label">Write</div></div>
+                <div class="wf-connector"></div>
+                <div class="wf-node"><div class="wf-node-circle queued">✓</div><div class="wf-node-label">Draft</div></div>
+                <div class="wf-connector"></div>
+                <div class="wf-node"><div class="wf-node-circle queued">✓</div><div class="wf-node-label">Review</div></div>
               </div>
-              <div style="font-size:12px;color:var(--text3);text-align:center">Click Generate to start</div>
+              <div style="font-size:12px;color:var(--text3);text-align:center" id="pipeline-status">Click Generate to start</div>
+              <div class="progress" style="margin-top:10px" id="studio-progress-bar"><div class="progress-fill progress-blue" id="studio-progress-fill" style="width:0%"></div></div>
+            </div>
+          </div>
+          <div class="card" id="studio-controls" style="display:none">
+            <div class="wf-controls">
+              <div class="wf-controls-label">Workflow Controls</div>
+              <button class="btn btn-primary btn-sm" onclick="approveWorkflow()" id="btn-approve">✓ Approve</button>
+              <button class="btn btn-secondary btn-sm" onclick="regenerateWorkflow()" id="btn-regenerate">↻ Regenerate</button>
+              <button class="btn btn-ghost btn-sm" onclick="openModal('modal-run-agent')" id="btn-run-agent">⚡ Run Agent</button>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;margin-top:8px">⊕ Live Events</div>
+            <div class="wf-event-log" id="studio-event-log">
+              <div style="color:var(--text4);text-align:center;padding:8px">Waiting for workflow events...</div>
             </div>
           </div>
           <div class="card" id="studio-citations" style="display:none">
@@ -1234,6 +983,8 @@ const state = {
   deleteTarget: null,
   generatedContent: null,
   sidebarCollapsed: false,
+  workflowId: null,
+  sseConnected: false,
 };
 
 /* ============================================================
@@ -1403,6 +1154,22 @@ const apiGetHyperlinksSummary = id => api('GET', `/projects/${id}/workflow/hyper
 const apiPostChat = (id, body) => api('POST', `/projects/${id}/chat`, body);
 const apiGetChatEvents = id => api('GET', `/projects/${id}/chat/events`);
 
+// Workflow agents (human-in-the-loop)
+const apiGetWorkflowById = wfId => api('GET', `/workflows/${wfId}`);
+const apiApproveWorkflow = wfId => api('POST', `/workflows/${wfId}/approve`);
+const apiRegenerateWorkflow = wfId => api('POST', `/workflows/${wfId}/regenerate`);
+const apiRunAgent = (wfId, agent) => api('POST', `/workflows/${wfId}/run-agent`, { agent });
+
+// Enhancement (content versions & jobs)
+const apiGetEnhanceVersions = pid => api('GET', `/projects/${pid}/enhance/versions`);
+const apiGetEnhanceVersion = (pid, vid) => api('GET', `/projects/${pid}/enhance/versions/${vid}`);
+const apiGetEnhanceJobs = pid => api('GET', `/projects/${pid}/enhance/jobs`);
+
+// SSE streaming URL builder
+function sseUrl(wfId) {
+  return state.baseUrl + `/workflows/${wfId}/stream`;
+}
+
 // System — GET /health and GET /
 const apiCheckHealth = () => api('GET', '/health');
 const apiGetRoot = () => api('GET', '__root__');
@@ -1418,6 +1185,8 @@ function navigate(page) {
   const nv = document.getElementById('nav-' + page);
   if (nv) nv.classList.add('active');
 
+  // Disconnect SSE when leaving content-studio
+  if (page !== 'content-studio') disconnectSSE();
   // Page-specific load triggers
   if (page === 'dashboard') loadDashboard();
   if (page === 'projects') loadProjects();
@@ -1587,11 +1356,29 @@ async function loadDashboard() {
     feed.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:12px 0">No recent activity. Create a project to get started.</div>`;
   }
 
-  // Update stat cards
+  // Update stat cards with real data from first project
   setEl('stat-projects', state.projects.length);
-  setEl('stat-evidence', '—');
-  setEl('stat-contras', '—');
-  setEl('stat-verif', '—');
+  if (state.projects.length > 0) {
+    const firstPid = state.projects[0].id || state.projects[0]._id;
+    // Fetch evidence count
+    apiGetEvidence(firstPid).then(d => {
+      const items = Array.isArray(d) ? d : (d.evidence || d.items || []);
+      setEl('stat-evidence', items.length);
+    }).catch(() => {});
+    // Fetch contradictions count
+    apiGetContradictions(firstPid).then(d => {
+      const items = Array.isArray(d) ? d : (d.contradictions || []);
+      setEl('stat-contras', items.length);
+    }).catch(() => {});
+    // Fetch verification dashboard for score
+    apiGetVerificationDashboard(firstPid).then(db => {
+      if (db.trust_score != null) setEl('stat-verif', Math.round(db.trust_score * 100) + '%');
+    }).catch(() => {});
+  } else {
+    setEl('stat-evidence', '—');
+    setEl('stat-contras', '—');
+    setEl('stat-verif', '—');
+  }
 
   // Recent projects
   renderRecentProjects();
@@ -1686,12 +1473,19 @@ function filterProjects() { renderProjectsGrid(); }
 
 function selectProject(p) {
   state.currentProject = p;
+  state.workflowId = null;
+  disconnectSSE();
   const name = p.title || p.topic || 'Untitled';
   setEl('topbar-project-name', esc(name));
   // Re-render project cards to show selection
   renderProjectsGrid();
   renderRecentProjects();
   toast(`Project selected: ${name}`, 'success');
+  // If we're already on content-studio, reconnect SSE
+  const studioPage = document.getElementById('page-content-studio');
+  if (studioPage && studioPage.classList.contains('active')) {
+    initStudio();
+  }
 }
 
 function selectProjectAndGo(p, page) {
@@ -1760,6 +1554,8 @@ async function handleDeleteProject() {
     state.projects = state.projects.filter(p => (p.id || p._id) !== id);
     if ((state.currentProject?.id || state.currentProject?._id) === id) {
       state.currentProject = null;
+      state.workflowId = null;
+      disconnectSSE();
       setEl('topbar-project-name', 'Select a project...');
     }
     closeModal('modal-confirm-delete');
@@ -1781,6 +1577,7 @@ function initStudio() {
   if (!state.currentProject) {
     if (noProj) noProj.style.display = 'block';
     if (layout) layout.style.display = 'none';
+    disconnectSSE();
     return;
   }
   if (noProj) noProj.style.display = 'none';
@@ -1788,6 +1585,22 @@ function initStudio() {
   const tag = document.getElementById('studio-project-tag');
   if (tag) tag.textContent = state.currentProject.title || state.currentProject.topic;
   loadLatestContent();
+  loadEnhanceVersions();
+  // Check for active workflow and connect SSE
+  const pid = state.currentProject.id || state.currentProject._id;
+  apiGetWorkflow(pid).then(wf => {
+    const wfId = wf.id || wf.workflow_id || (wf.workflow && wf.workflow.id);
+    if (wfId) {
+      state.workflowId = wfId;
+      connectSSE(wfId);
+      // If workflow is in waiting_for_user state, show controls
+      const status = wf.status || (wf.workflow && wf.workflow.status);
+      if (status === 'waiting_for_user' || status === 'draft_ready') {
+        const ctrl = document.getElementById('studio-controls');
+        if (ctrl) ctrl.style.display = 'block';
+      }
+    }
+  }).catch(() => { /* no workflow yet */ });
 }
 
 async function loadLatestContent() {
@@ -1808,7 +1621,7 @@ function renderContent(data) {
   const formatted = text
     .replace(/^# (.+)$/gm, '<h1>$1</h1>')
     .replace(/^## (.+)$/gm, '<h2>$1</h2>')
-    .replace(/^### (.+)$/gm, '<h3>$3</h3>')
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\[(\d+)\]/g, '<sup class="citation-inline">[$1]</sup>')
     .replace(/\n\n/g, '</p><p>')
@@ -1865,7 +1678,7 @@ async function generateContent() {
   if (modeTag) modeTag.textContent = mode === 'v2' ? 'Multi-Agent v2' : 'Standard';
 
   // Animate pipeline
-  animatePipeline(['active', 'queued', 'queued']);
+  animatePipeline(['active', 'queued', 'queued', 'queued', 'queued']);
 
   if (editor) {
     editor.innerHTML = `
@@ -1915,7 +1728,7 @@ async function generateContent() {
       let buffer = '';
       const streamEl = document.getElementById('stream-output');
       let fullText = '';
-      animatePipeline(['done', 'active', 'queued']);
+      animatePipeline(['done', 'active', 'queued', 'queued', 'queued']);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -1944,9 +1757,9 @@ async function generateContent() {
           }
         }
       }
-      animatePipeline(['done', 'done', 'active']);
+      animatePipeline(['done', 'done', 'queued', 'queued', 'queued']);
       setTimeout(() => {
-        animatePipeline(['done', 'done', 'done']);
+        animatePipeline(['done', 'done', 'done', 'queued', 'queued']);
         if (fullText) renderContent({ content: fullText });
         else loadLatestContent();
       }, 800);
@@ -1954,7 +1767,7 @@ async function generateContent() {
     } else {
       // Standard JSON response
       data = await res.json();
-      animatePipeline(['done', 'done', 'done']);
+      animatePipeline(['done', 'done', 'done', 'done', 'done']);
       renderContent(data);
     }
 
@@ -1962,7 +1775,7 @@ async function generateContent() {
     state.generatedContent = data.content || data.article || data.text;
   } catch (e) {
     toast('Generation failed: ' + e.message, 'error');
-    animatePipeline(['error', 'queued', 'queued']);
+    animatePipeline(['error', 'queued', 'queued', 'queued', 'queued']);
     if (editor) editor.innerHTML = `<div style="color:var(--red);padding:20px;font-size:13px">Generation failed: ${esc(e.message)}<br><br><span style="color:var(--text3)">Make sure a project is selected and the backend is reachable.</span></div>`;
   } finally {
     if (btn) { btn.innerHTML = '✦ Generate'; btn.disabled = false; }
@@ -1974,11 +1787,11 @@ async function generateContent() {
 function animatePipeline(states) {
   const nodes = document.querySelectorAll('#studio-pipeline .wf-node-circle');
   const connectors = document.querySelectorAll('#studio-pipeline .wf-connector');
-  const icons = ['🔬', '✓', '✦'];
-  const stateMap = { done: icons, active: icons, queued: ['◎','◎','◎'], error: ['✕','✕','✕'] };
+  const icons = ['◎', '🔬', '✦', '✓', '✓'];
   nodes.forEach((n, i) => {
-    n.className = 'wf-node-circle ' + (states[i] || 'queued');
-    n.textContent = states[i] === 'done' ? '✓' : states[i] === 'active' ? icons[i] : states[i] === 'error' ? '✕' : '◎';
+    const s = states[i] || 'queued';
+    n.className = 'wf-node-circle ' + s;
+    n.textContent = s === 'done' ? '✓' : s === 'active' ? (icons[i] || '⬡') : s === 'error' ? '✕' : '◎';
   });
   connectors.forEach((c, i) => {
     c.classList.toggle('active', states[i] === 'done');
@@ -1998,6 +1811,234 @@ function exportContent(format) {
   a.download = `research-${Date.now()}.${format}`;
   a.click();
   toast(`Exported as .${format}`, 'success');
+}
+
+/* ============================================================
+   SSE STREAMING
+============================================================ */
+let sseSource = null;
+let sseReconnectTimer = null;
+
+function connectSSE(workflowId) {
+  disconnectSSE();
+  if (!workflowId) return;
+  const url = sseUrl(workflowId);
+  try {
+    sseSource = new EventSource(url);
+    sseSource.onmessage = function(e) {
+      try {
+        const ev = JSON.parse(e.data);
+        handleSSEEvent(ev);
+      } catch { /* skip unparseable */ }
+    };
+    sseSource.onerror = function() {
+      // Browser auto-reconnects for EventSource
+      showEventLog({ agent: 'system', status: 'running', message: 'Reconnecting...', progress: null });
+    };
+    sseSource.onopen = function() {
+      showEventLog({ agent: 'system', status: 'completed', message: 'SSE connected', progress: null });
+    };
+  } catch (err) {
+    console.warn('SSE connection failed:', err);
+  }
+}
+
+function disconnectSSE() {
+  if (sseSource) {
+    sseSource.close();
+    sseSource = null;
+  }
+  if (sseReconnectTimer) {
+    clearTimeout(sseReconnectTimer);
+    sseReconnectTimer = null;
+  }
+}
+
+function handleSSEEvent(ev) {
+  // Update pipeline visualization
+  updatePipelineFromEvent(ev);
+  // Update progress bar
+  if (ev.progress != null) {
+    const fill = document.getElementById('studio-progress-fill');
+    if (fill) fill.style.width = Math.min(ev.progress, 100) + '%';
+  }
+  // Show event in log
+  showEventLog(ev);
+  // Handle specific event types
+  if (ev.type === 'draft_ready' || ev.status === 'waiting_for_user') {
+    const ctrl = document.getElementById('studio-controls');
+    if (ctrl) ctrl.style.display = 'block';
+    // Fetch the latest content
+    if (state.currentProject) {
+      const pid = state.currentProject.id || state.currentProject._id;
+      apiGetContentLatest(pid).then(d => { if (d) renderContent(d); }).catch(() => {});
+    }
+  }
+  if (ev.type === 'workflow_completed') {
+    toast('Workflow completed successfully!', 'success');
+    disconnectSSE();
+  }
+  if (ev.agent === 'writer' && ev.type === 'agent_completed') {
+    // Refresh content when writer finishes
+    if (state.currentProject) {
+      const pid = state.currentProject.id || state.currentProject._id;
+      apiGetContentLatest(pid).then(d => { if (d) renderContent(d); }).catch(() => {});
+    }
+  }
+}
+
+function updatePipelineFromEvent(ev) {
+  const stageMap = {
+    'planning': 0, 'planner': 0,
+    'researching': 1, 'research_coordinator': 1,
+    'writing': 2, 'writer': 2,
+    'draft_ready': 3,
+    'review_pending': 4, 'critique': 4, 'revision': 4, 'verification': 4,
+  };
+  const idx = stageMap[(ev.agent || ev.type || '').toLowerCase()];
+  if (idx == null) return;
+  const circles = document.querySelectorAll('#pipeline-stages .wf-node-circle');
+  const connectors = document.querySelectorAll('#pipeline-stages .wf-connector');
+  circles.forEach((c, i) => {
+    if (i < idx) { c.className = 'wf-node-circle done'; c.textContent = '✓'; }
+    else if (i === idx) {
+      c.className = 'wf-node-circle active';
+      c.textContent = '⬡';
+    } else { c.className = 'wf-node-circle queued'; c.textContent = '◎'; }
+  });
+  connectors.forEach((c, i) => {
+    c.classList.toggle('active', i < idx);
+  });
+  const status = document.getElementById('pipeline-status');
+  if (status) status.textContent = ev.message || `Stage: ${ev.agent || ev.type}`;
+}
+
+function showEventLog(ev) {
+  const log = document.getElementById('studio-event-log');
+  if (!log) return;
+  const time = new Date().toLocaleTimeString();
+  const agent = ev.agent || ev.type || 'system';
+  const msg = ev.message || '';
+  const status = ev.status || 'running';
+  const statusClass = status === 'completed' ? 'completed' : status === 'failed' ? 'failed' : 'running';
+  const el = document.createElement('div');
+  el.className = 'wf-event';
+  el.innerHTML = `<span class="wf-event-time">${time}</span><span class="wf-event-agent ${statusClass}">${agent}</span><span class="wf-event-msg">${esc(msg)}</span>`;
+  log.insertBefore(el, log.firstChild);
+  // Keep max 50 entries
+  while (log.children.length > 50) log.removeChild(log.lastChild);
+}
+
+/* ============================================================
+   WORKFLOW CONTROLS
+============================================================ */
+async function approveWorkflow() {
+  if (!state.workflowId) { toast('No active workflow to approve', 'warn'); return; }
+  const btn = document.getElementById('btn-approve');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>'; }
+  try {
+    await apiApproveWorkflow(state.workflowId);
+    toast('Workflow approved!', 'success');
+    showEventLog({ agent: 'system', status: 'completed', message: 'Workflow approved by user' });
+    disconnectSSE();
+    if (state.currentProject) {
+      const pid = state.currentProject.id || state.currentProject._id;
+      apiGetContentLatest(pid).then(d => { if (d) renderContent(d); }).catch(() => {});
+    }
+  } catch (e) {
+    toast('Approve failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '✓ Approve'; }
+  }
+}
+
+async function regenerateWorkflow() {
+  if (!state.workflowId) { toast('No active workflow to regenerate', 'warn'); return; }
+  const btn = document.getElementById('btn-regenerate');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>'; }
+  try {
+    await apiRegenerateWorkflow(state.workflowId);
+    toast('Regeneration triggered!', 'success');
+    showEventLog({ agent: 'system', status: 'running', message: 'Regeneration started' });
+  } catch (e) {
+    toast('Regenerate failed: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '↻ Regenerate'; }
+  }
+}
+
+let selectedAgent = null;
+function selectAgentOption(el) {
+  document.querySelectorAll('.agent-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedAgent = el.dataset.agent;
+}
+async function handleRunAgent() {
+  if (!selectedAgent) { toast('Select an agent first', 'warn'); return; }
+  if (!state.workflowId) { toast('No active workflow', 'warn'); return; }
+  const btn = document.getElementById('run-agent-btn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span> Running...'; }
+  try {
+    await apiRunAgent(state.workflowId, selectedAgent);
+    toast(`Agent "${selectedAgent}" started!`, 'success');
+    closeModal('modal-run-agent');
+    showEventLog({ agent: selectedAgent, status: 'running', message: 'Enhancement agent started' });
+  } catch (e) {
+    toast('Failed to run agent: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Run Agent'; }
+    selectedAgent = null;
+    document.querySelectorAll('.agent-option').forEach(o => o.classList.remove('selected'));
+  }
+}
+
+/* ============================================================
+   ENHANCEMENT VERSION HISTORY
+============================================================ */
+async function loadEnhanceVersions() {
+  if (!state.currentProject) return;
+  const pid = state.currentProject.id || state.currentProject._id;
+  const el = document.getElementById('version-history');
+  if (!el) return;
+  try {
+    const data = await apiGetEnhanceVersions(pid);
+    const versions = Array.isArray(data) ? data : (data.versions || data.items || []);
+    if (versions.length === 0) {
+      el.innerHTML = '<div style="font-size:12px;color:var(--text3)">No versions yet.</div>';
+      return;
+    }
+    el.innerHTML = versions.slice(0, 15).map((v, i) => {
+      const isLatest = i === 0;
+      const agentName = v.agent_name || v.generated_by || 'writer';
+      const ts = v.created_at || v.createdAt || '';
+      return `
+        <div style="display:flex;align-items:center;gap:8px;padding:8px;border-radius:var(--r);border:1px solid ${isLatest ? 'var(--blue)' : 'var(--border)'};background:${isLatest ? 'var(--blue-glow)' : 'transparent'};margin-bottom:6px;font-size:12px;cursor:pointer" onclick="loadVersionContent('${v.id || v._id || ''}')">
+          <span class="tag ${isLatest ? 'tag-blue' : 'tag-gray'}">v${v.version_number || i + 1}</span>
+          <div style="flex:1">
+            <div style="color:var(--text2)">${esc(agentName)}</div>
+            <div style="color:var(--text3);font-family:var(--font-mono);font-size:10px">${formatDate(ts)}</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    // Silently fail - version history is a nice-to-have
+    if (el) el.innerHTML = '<div style="font-size:12px;color:var(--text3)">Version history unavailable</div>';
+  }
+}
+
+async function loadVersionContent(versionId) {
+  if (!state.currentProject || !versionId) return;
+  const pid = state.currentProject.id || state.currentProject._id;
+  try {
+    const data = await apiGetEnhanceVersion(pid, versionId);
+    if (data && (data.content || data.text || data.article)) {
+      renderContent(data);
+      toast('Loaded version content', 'info');
+    }
+  } catch (e) {
+    toast('Failed to load version: ' + e.message, 'warn');
+  }
 }
 
 /* ============================================================
@@ -2695,6 +2736,5 @@ window.addEventListener('DOMContentLoaded', () => {
 window.showProjectDropdown = function () { navigate('projects'); };
 
 </script>
->>>>>>> d3ed8e87fa1597552c3adedaebc3c49e9b10de1b
 </body>
 </html>

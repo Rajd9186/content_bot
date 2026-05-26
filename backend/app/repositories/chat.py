@@ -2,13 +2,13 @@ from typing import List
 from uuid import UUID
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.chat import WorkflowEventModel
+from app.models.chat import WorkflowEventRecord
 from app.repositories.base import BaseRepository
 
 
-class WorkflowEventRepository(BaseRepository[WorkflowEventModel]):
+class WorkflowEventRepository(BaseRepository[WorkflowEventRecord]):
     def __init__(self, session: AsyncSession):
-        super().__init__(session, WorkflowEventModel)
+        super().__init__(session, WorkflowEventRecord)
 
     async def create_event(
         self,
@@ -18,23 +18,24 @@ class WorkflowEventRepository(BaseRepository[WorkflowEventModel]):
         message: str,
         data: dict = None,
         workflow_id: UUID = None,
-    ) -> WorkflowEventModel:
-        event = WorkflowEventModel(
+    ) -> WorkflowEventRecord:
+        event = WorkflowEventRecord(
             project_id=project_id,
-            node_name=node_name,
+            agent_name=node_name,
             event_type=event_type,
             message=message,
-            data=data or {},
+            payload_json=data or {},
             workflow_id=workflow_id,
+            status="running",
         )
         self.session.add(event)
         return event
 
-    async def get_by_project(self, project_id: UUID, limit: int = 50) -> List[WorkflowEventModel]:
+    async def get_by_project(self, project_id: UUID, limit: int = 50) -> List[WorkflowEventRecord]:
         stmt = (
-            select(WorkflowEventModel)
-            .where(WorkflowEventModel.project_id == project_id)
-            .order_by(WorkflowEventModel.timestamp.desc())
+            select(WorkflowEventRecord)
+            .where(WorkflowEventRecord.project_id == project_id)
+            .order_by(WorkflowEventRecord.created_at.desc())
             .limit(limit)
         )
         result = await self.session.execute(stmt)

@@ -23,3 +23,6 @@ duckduckgo-search>=6.0.0
 # Embeddings
 sentence-transformers>=3.0.0
 numpy>=1.26.0
+
+# SSE streaming (alternative: use FastAPI StreamingResponse natively)
+sse-starlette>=2.0.0

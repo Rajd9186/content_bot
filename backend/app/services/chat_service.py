@@ -1,6 +1,6 @@
 from typing import List, Dict, Any, Optional
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -94,7 +94,7 @@ class ResearchCopilotService:
             content=response_text,
             project_id=str(project_id),
             tool_calls=tool_calls,
-            metadata={"timestamp": datetime.utcnow().isoformat()},
+            metadata={"timestamp": datetime.now(timezone.utc).isoformat()},
         )
 
     async def get_events(self, project_id: uuid.UUID, limit: int = 50) -> List[Dict[str, Any]]:

@@ -7,7 +7,8 @@ from app.models.workflow import WorkflowExecution, WorkflowStep, WorkflowStatus
 from app.models.contradiction import Contradiction
 from app.models.agent_memory import AgentMemory
 from app.models.hyperlink import HyperlinkValidation
-from app.models.chat import ChatSession, ChatMessageModel, WorkflowEventModel
+from app.models.chat import ChatSession, ChatMessageModel, WorkflowEventRecord
+from app.models.content_version import ContentVersion, ContentVersionStatus, ContentLock, EnhancementJob
 
 __all__ = [
     "Project",
@@ -27,5 +28,9 @@ __all__ = [
     "HyperlinkValidation",
     "ChatSession",
     "ChatMessageModel",
-    "WorkflowEventModel",
+    "WorkflowEventRecord",
+    "ContentVersion",
+    "ContentVersionStatus",
+    "ContentLock",
+    "EnhancementJob",
 ]

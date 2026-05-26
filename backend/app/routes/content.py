@@ -9,7 +9,7 @@ from app.repositories.content import ContentRepository
 from app.repositories.workflow import WorkflowExecutionRepository
 from app.schemas.content import ContentResponse, ContentGenerateResponse, ContentStatusResponse
 from app.services.content_generator import ContentGeneratorService
-from app.services.orchestration_service import MultiAgentOrchestrator
+from app.services.stage_orchestrator import StageOrchestrator
 from app.models.project import Project
 from app.models.workflow import WorkflowExecution
 from app.log_config.logger import get_logger
@@ -20,27 +20,27 @@ router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
 
 
 async def run_orchestrator(project_id: uuid.UUID):
-    """Background task that runs the multi-agent workflow for a project.
+    """Background task that runs the staged multi-agent workflow for a project.
 
     Opens its own session so the request session is not held during the
     potentially long-running orchestration.
     """
     async with async_session_factory() as session:
         try:
-            orchestrator = MultiAgentOrchestrator(session)
+            orchestrator = StageOrchestrator(session)
             project_repo = ProjectRepository(session)
             project = await project_repo.get(project_id)
             if not project:
                 logger.error(f"Project {project_id} not found during background orchestration")
                 return
 
-            logger.info("Starting background orchestration", extra={"project_id": str(project_id)})
-            await orchestrator.generate(project)
+            logger.info("Starting background staged orchestration", extra={"project_id": str(project_id)})
+            await orchestrator.run_auto_pipeline(project)
             await session.commit()
-            logger.info("Orchestration completed and committed", extra={"project_id": str(project_id)})
+            logger.info("Staged orchestration completed and committed", extra={"project_id": str(project_id)})
         except Exception as e:
             logger.error(
-                f"Background orchestration failed for project {project_id}: {e}",
+                f"Background staged orchestration failed for project {project_id}: {e}",
                 exc_info=True,
             )
             try:
@@ -102,10 +102,12 @@ async def get_latest_content(
         )
 
     if workflow.status == "running":
+        progress_steps = [step.node_name for step in workflow.steps if step.status == "completed"] if workflow.steps else []
         return ContentStatusResponse(
             status="processing",
             workflow_status="running",
             current_node=workflow.current_node,
+            progress=progress_steps,
             message=f"Content generation is in progress. Current step: {workflow.current_node}",
         )
 

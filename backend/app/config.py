@@ -45,9 +45,25 @@ class Settings(BaseSettings):
 
     # --- Workflow ---
     max_workflow_retries: int = 3
+    research_concurrency: int = 10
     workflow_retry_delay: float = 1.0
     workflow_event_buffer_size: int = 50
     workflow_event_flush_interval: float = 2.0
+    sse_keepalive_interval: float = 15.0
+    sse_recent_event_limit: int = 100
+
+    # Stage weights for overall progress calculation (must sum to 100)
+    stage_weights: dict[str, float] = {
+        "CREATED": 0.0,
+        "PLANNING": 10.0,
+        "RESEARCHING": 25.0,
+        "WRITING": 35.0,
+        "DRAFT_READY": 10.0,
+        "REVIEW_PENDING": 5.0,
+        "REVISING": 10.0,
+        "VERIFYING": 5.0,
+        "COMPLETED": 100.0,
+    }
 
     # --- Domain Trust ---
     trusted_domains: list[str] = [

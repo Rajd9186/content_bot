@@ -1,8 +1,10 @@
+import asyncio
 import sys
 import os
 import uuid
 import time
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from contextlib import asynccontextmanager
@@ -11,15 +13,36 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import delete
 
 from app.config import settings
-from app.database import init_db, dispose_engine
-from app.routes import projects, content, evidence, verification, chat
+from app.database import init_db, dispose_engine, async_session_factory
+from app.models.content_version import ContentLock
+from app.routes import projects, content, evidence, verification, chat, enhance, ws, sse, sse_agents
 from app.routes.health import router as health_router
 from app.routes.workflow import register_workflow_routes
 from app.log_config.logger import setup_logging, set_correlation_id
 
 logger = setup_logging(__name__)
+
+_CONTENT_LOCK_CLEANUP_INTERVAL = 60.0  # seconds
+
+
+async def _cleanup_expired_locks():
+    """Periodically clean up expired content locks."""
+    while True:
+        try:
+            await asyncio.sleep(_CONTENT_LOCK_CLEANUP_INTERVAL)
+            async with async_session_factory() as session:
+                stmt = delete(ContentLock).where(ContentLock.expires_at < datetime.now(timezone.utc))
+                result = await session.execute(stmt)
+                await session.commit()
+                if result.rowcount > 0:
+                    logger.info("Cleaned up %d expired content locks", result.rowcount)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.warning("Content lock cleanup error: %s", e)
 
 
 @asynccontextmanager
@@ -27,7 +50,13 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Verified AI Research Writer API")
     await init_db()
     logger.info("Database initialized")
+    cleanup_task = asyncio.create_task(_cleanup_expired_locks())
     yield
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
     logger.info("Shutting down Verified AI Research Writer API")
     await dispose_engine()
 
@@ -115,6 +144,10 @@ app.include_router(content.router, prefix=settings.api_v1_prefix)
 app.include_router(evidence.router, prefix=settings.api_v1_prefix)
 app.include_router(verification.router, prefix=settings.api_v1_prefix)
 app.include_router(chat.router, prefix=settings.api_v1_prefix)
+app.include_router(enhance.router, prefix=settings.api_v1_prefix)
+app.include_router(ws.router)
+app.include_router(sse_agents.router, prefix=settings.api_v1_prefix)
+app.include_router(sse.router, prefix=settings.api_v1_prefix)
 
 # ---------------------------------------------------------------------------
 # Static files & root endpoint

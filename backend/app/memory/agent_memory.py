@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +16,7 @@ class InMemoryCache:
     def get(self, key: str) -> Any | None:
         val = self._store.get(key)
         if val is not None:
-            self._accessed[key] = datetime.utcnow()
+            self._accessed[key] = datetime.now(timezone.utc)
         return val
 
     def set(self, key: str, value: Any) -> None:
@@ -25,7 +25,7 @@ class InMemoryCache:
             del self._store[oldest]
             del self._accessed[oldest]
         self._store[key] = value
-        self._accessed[key] = datetime.utcnow()
+        self._accessed[key] = datetime.now(timezone.utc)
 
     def search(self, prefix: str) -> list[tuple[str, Any]]:
         return [(k, v) for k, v in self._store.items() if k.startswith(prefix)]
@@ -100,7 +100,7 @@ class AgentMemoryService:
         await self.store(
             agent_name=agent_name,
             key=f"failed_search:{query[:200]}",
-            value={"query": query, "timestamp": datetime.utcnow().isoformat()},
+            value={"query": query, "timestamp": datetime.now(timezone.utc).isoformat()},
             memory_type="failed_search",
         )
 

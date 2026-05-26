@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Workflow SSE Demo</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #e2e8f0; padding: 2rem; }
+  .container { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+  .status-bar { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 2rem; }
+  .stage { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 0.75rem 1rem; flex: 1; min-width: 120px; }
+  .stage .name { font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stage .label { font-size: 0.9rem; margin-top: 0.25rem; }
+  .stage.done { border-color: #22c55e; }
+  .stage.done .name { color: #22c55e; }
+  .stage.active { border-color: #3b82f6; box-shadow: 0 0 12px rgba(59,130,246,0.3); }
+  .stage.active .name { color: #3b82f6; }
+  .stage.failed { border-color: #ef4444; }
+  .stage.failed .name { color: #ef4444; }
+  .stage.waiting { border-color: #f59e0b; }
+  .stage.waiting .name { color: #f59e0b; }
+  .log { background: #1e293b; border: 1px solid #334155; border-radius: 8px; padding: 1rem; max-height: 400px; overflow-y: auto; margin-bottom: 2rem; }
+  .log-entry { padding: 0.4rem 0; border-bottom: 1px solid #1a2332; font-size: 0.85rem; display: flex; gap: 0.75rem; }
+  .log-entry:last-child { border-bottom: none; }
+  .log-entry .time { color: #64748b; font-size: 0.75rem; white-space: nowrap; }
+  .log-entry .agent { color: #60a5fa; font-weight: 600; min-width: 8rem; }
+  .log-entry .msg { color: #cbd5e1; flex: 1; }
+  .log-entry .pct { color: #22c55e; font-size: 0.75rem; font-weight: 600; min-width: 3rem; text-align: right; }
+  .progress-bar { width: 100%; height: 8px; background: #1e293b; border-radius: 4px; overflow: hidden; margin-bottom: 2rem; }
+  .progress-bar .fill { height: 100%; background: linear-gradient(90deg, #3b82f6, #22c55e); border-radius: 4px; transition: width 0.5s ease; }
+  .controls { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  button { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.85rem; }
+  button:hover { background: #334155; }
+  button.primary { background: #3b82f6; border-color: #3b82f6; }
+  button.primary:hover { background: #2563eb; }
+  button.success { background: #22c55e; border-color: #22c55e; }
+  button.danger { background: #ef4444; border-color: #ef4444; }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .conn-status { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 0.5rem; }
+  .conn-status.connected { background: #22c55e; }
+  .conn-status.disconnected { background: #ef4444; }
+  input[type="text"] { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 0.5rem; border-radius: 6px; font-size: 0.85rem; flex: 1; min-width: 200px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Workflow SSE Stream</h1>
+  <p class="subtitle">Real-time agent orchestration events via Server-Sent Events</p>
+
+  <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+
+  <div class="status-bar" id="stageBar">
+    <div class="stage" data-stage="PLANNING"><div class="name">Planning</div><div class="label">⏸ Waiting</div></div>
+    <div class="stage" data-stage="RESEARCHING"><div class="name">Research</div><div class="label">⏸ Waiting</div></div>
+    <div class="stage" data-stage="WRITING"><div class="name">Writing</div><div class="label">⏸ Waiting</div></div>
+    <div class="stage" data-stage="DRAFT_READY"><div class="name">Draft Ready</div><div class="label">⏸ Waiting</div></div>
+    <div class="stage" data-stage="REVIEW_PENDING"><div class="name">Review</div><div class="label">⏸ Waiting</div></div>
+  </div>
+
+  <div class="log" id="eventLog">
+    <div class="log-entry"><span class="time">--</span><span class="agent">System</span><span class="msg">Waiting for workflow events...</span></div>
+  </div>
+
+  <div class="controls">
+    <span><span class="conn-status disconnected" id="connDot"></span><span id="connLabel">Disconnected</span></span>
+    <span style="flex:1"></span>
+    <input type="text" id="workflowId" placeholder="Workflow ID (leave blank for auto-detect)" style="display:none">
+    <button id="connectBtn" class="primary">Connect</button>
+    <button id="clearBtn">Clear Log</button>
+  </div>
+</div>
+
+<script>
+const eventLog = document.getElementById('eventLog');
+const progressFill = document.getElementById('progressFill');
+const connDot = document.getElementById('connDot');
+const connLabel = document.getElementById('connLabel');
+const connectBtn = document.getElementById('connectBtn');
+const clearBtn = document.getElementById('clearBtn');
+const workflowInput = document.getElementById('workflowId');
+
+let eventSource = null;
+
+function addLogEntry(agent, message, time, pct, type) {
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  const ts = time ? new Date(time).toLocaleTimeString() : new Date().toLocaleTimeString();
+  const pctStr = pct !== undefined ? Math.round(pct) + '%' : '';
+  div.innerHTML = `<span class="time">${ts}</span><span class="agent">${agent}</span><span class="msg">${message}</span><span class="pct">${pctStr}</span>`;
+  eventLog.appendChild(div);
+  eventLog.scrollTop = eventLog.scrollHeight;
+}
+
+function updateProgress(pct) {
+  progressFill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+}
+
+function updateStageBar(stageName, status) {
+  document.querySelectorAll('.stage').forEach(el => {
+    el.classList.remove('active', 'done', 'failed', 'waiting');
+    const s = el.dataset.stage;
+    if (s === stageName) {
+      if (status === 'completed') el.classList.add('done');
+      else if (status === 'failed') el.classList.add('failed');
+      else if (status === 'waiting') el.classList.add('waiting');
+      else el.classList.add('active');
+    } else if (isStageBefore(s, stageName)) {
+      el.classList.add('done');
+    }
+  });
+}
+
+function isStageBefore(a, b) {
+  const order = ['CREATED','PLANNING','RESEARCHING','WRITING','DRAFT_READY','REVIEW_PENDING','REVISING','VERIFYING','COMPLETED'];
+  return order.indexOf(a) < order.indexOf(b);
+}
+
+function handleEvent(data) {
+  const evt = typeof data === 'string' ? JSON.parse(data) : data;
+  addLogEntry(evt.agent || evt.type, evt.message, evt.timestamp, evt.progress);
+  if (evt.progress !== undefined) updateProgress(evt.progress);
+  if (evt.payload && evt.payload.stage) updateStageBar(evt.payload.stage, evt.status);
+  else if (evt.type === 'workflow_started') updateStageBar('CREATED', 'active');
+  else if (evt.type === 'agent_completed' || evt.type === 'stage_completed') {
+    const stageFromEvent = evt.payload && evt.payload.stage;
+    if (stageFromEvent) updateStageBar(stageFromEvent, 'completed');
+  } else if (evt.type === 'waiting_for_user') updateStageBar('DRAFT_READY', 'waiting');
+}
+
+function connect(workflowId) {
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  const baseUrl = window.location.origin.replace(/\/+$/, '');
+  const url = baseUrl + '/api/v1/workflows/' + encodeURIComponent(workflowId) + '/stream';
+  connDot.className = 'conn-status disconnected';
+  connLabel.textContent = 'Connecting...';
+  eventSource = new EventSource(url);
+  eventSource.onopen = () => {
+    connDot.className = 'conn-status connected';
+    connLabel.textContent = 'Connected';
+    addLogEntry('SSE', 'Connected to workflow stream', new Date().toISOString());
+  };
+  eventSource.onmessage = (e) => {
+    try { handleEvent(e.data); } catch(err) { console.warn('Parse error', err); }
+  };
+  eventSource.onerror = () => {
+    connDot.className = 'conn-status disconnected';
+    connLabel.textContent = 'Disconnected (reconnecting...)';
+    addLogEntry('SSE', 'Connection lost — will auto-reconnect', new Date().toISOString());
+  };
+}
+
+function disconnect() {
+  if (eventSource) { eventSource.close(); eventSource = null; }
+  connDot.className = 'conn-status disconnected';
+  connLabel.textContent = 'Disconnected';
+}
+
+connectBtn.addEventListener('click', () => {
+  const wid = workflowInput.value.trim();
+  if (wid) connect(wid);
+  else {
+    const entered = prompt('Enter Workflow ID:');
+    if (entered) { workflowInput.value = entered; connect(entered); }
+  }
+});
+
+clearBtn.addEventListener('click', () => {
+  eventLog.innerHTML = '<div class="log-entry"><span class="time">--</span><span class="agent">System</span><span class="msg">Log cleared</span></div>';
+});
+
+// Try to detect workflow from URL hash or prompt on load
+window.addEventListener('load', () => {
+  const hash = window.location.hash.slice(1);
+  if (hash) { workflowInput.value = hash; connect(hash); }
+});
+</script>
+</body>
+</html>

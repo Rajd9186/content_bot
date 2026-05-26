@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update, func
 
@@ -41,7 +41,7 @@ class AgentMemoryRepository(BaseRepository[AgentMemory]):
         if existing:
             existing.value = value
             existing.access_count = (existing.access_count or 0) + 1
-            existing.last_accessed_at = datetime.utcnow()
+            existing.last_accessed_at = datetime.now(timezone.utc)
             if relevance_score is not None:
                 existing.relevance_score = relevance_score
             return existing

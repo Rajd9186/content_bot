@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import String, Text, Float, DateTime, ForeignKey, Enum as SAEnum, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import JSON
@@ -9,10 +9,12 @@ from app.database import Base
 
 
 class WorkflowStatus(str, enum.Enum):
+    pending = "pending"
     running = "running"
     completed = "completed"
     failed = "failed"
     cancelled = "cancelled"
+    waiting_user = "waiting_user"
 
 
 class WorkflowExecution(Base):
@@ -30,7 +32,7 @@ class WorkflowExecution(Base):
     current_node: Mapped[str] = mapped_column(String(100), default="planner")
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     telemetry: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     project = relationship("Project", backref="workflow_executions")
@@ -49,7 +51,7 @@ class WorkflowStep(Base):
     node_name: Mapped[str] = mapped_column(String(100), nullable=False)
     agent_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
     completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
     duration_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
     input_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)

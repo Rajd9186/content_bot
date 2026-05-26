@@ -1,7 +1,7 @@
 import uuid
 import time
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -107,7 +107,7 @@ class MultiAgentOrchestrator:
         try:
             for event_data in batch:
                 self.event_repo.session.add(
-                    __import__("app.models.chat", fromlist=["WorkflowEventModel"]).WorkflowEventModel(
+                    __import__("app.models.chat", fromlist=["WorkflowEventRecord"]).WorkflowEventRecord(
                         project_id=event_data["project_id"],
                         node_name=event_data["node_name"],
                         event_type=event_data["event_type"],
@@ -219,7 +219,7 @@ class MultiAgentOrchestrator:
             telemetry = final_state.get("telemetry", {})
             workflow.telemetry = telemetry
             workflow.status = WorkflowStatus.completed
-            workflow.completed_at = datetime.utcnow()
+            workflow.completed_at = datetime.now(timezone.utc)
 
             await self.project_repo.update_status(project_id, "completed")
             await self.session.flush()
@@ -244,7 +244,7 @@ class MultiAgentOrchestrator:
                 pass
             workflow.status = WorkflowStatus.failed
             workflow.error = str(e)
-            workflow.completed_at = datetime.utcnow()
+            workflow.completed_at = datetime.now(timezone.utc)
             await self.project_repo.update_status(project_id, "failed")
             await self.session.flush()
             raise
@@ -355,7 +355,7 @@ class MultiAgentOrchestrator:
                     node_name=step_name.replace("_failed", ""),
                     status="failed" if step_name.endswith("_failed") else "completed",
                     duration_ms=node_durations.get(step_name.replace("_failed", "")),
-                    completed_at=datetime.utcnow(),
+                    completed_at=datetime.now(timezone.utc),
                 )
             except Exception:
                 pass
