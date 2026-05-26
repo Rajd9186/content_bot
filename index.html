@@ -29,6 +29,7 @@
       --right: 360px;
       --bottom: 154px;
       --top: 58px;
+      --ease: cubic-bezier(.2, .8, .2, 1);
       font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
 
@@ -61,6 +62,9 @@
       position: relative;
     }
 
+    .app.sidebar-collapsed { --left: 76px; }
+    .app.resizing * { user-select: none; cursor: col-resize; }
+
     .app:before {
       content: "";
       position: fixed;
@@ -83,6 +87,18 @@
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(22px);
       z-index: 20;
+      box-shadow: 0 12px 40px rgba(0,0,0,.18);
+    }
+
+    .topbar:after {
+      content: "";
+      position: absolute;
+      left: 18%;
+      right: 18%;
+      bottom: -1px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(47,231,255,.6), rgba(169,139,255,.45), transparent);
+      opacity: .55;
     }
 
     .brand {
@@ -121,6 +137,13 @@
       color: var(--text);
       outline: none;
       padding: 0 14px 0 38px;
+      transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    }
+
+    .command input:focus {
+      border-color: rgba(47,231,255,.55);
+      background: rgba(255,255,255,.075);
+      box-shadow: 0 0 0 4px rgba(47,231,255,.1), 0 14px 36px rgba(0,0,0,.22);
     }
 
     .command:before {
@@ -178,6 +201,24 @@
       border-right: 1px solid var(--line);
       backdrop-filter: blur(22px);
       z-index: 10;
+      transition: width .22s var(--ease), padding .22s var(--ease), background .22s ease;
+    }
+
+    .sidebar-tools {
+      display: flex;
+      gap: 8px;
+      padding: 0 4px 8px;
+    }
+
+    .sidebar-collapsed .nav-item span:last-child,
+    .sidebar-collapsed .nav-label,
+    .sidebar-collapsed .side-status {
+      display: none;
+    }
+
+    .sidebar-collapsed .nav-item {
+      justify-content: center;
+      padding: 9px;
     }
 
     .nav-label {
@@ -204,7 +245,7 @@
       transition: .18s ease;
     }
 
-    .nav-item:hover { color: var(--text); background: rgba(255,255,255,.055); }
+    .nav-item:hover { color: var(--text); background: rgba(255,255,255,.055); transform: translateX(2px); }
     .nav-item.active {
       color: var(--text);
       border-color: rgba(90, 167, 255, .26);
@@ -254,7 +295,33 @@
       display: flex;
       flex-direction: column;
       z-index: 9;
+      position: relative;
     }
+
+    .resize-handle {
+      position: absolute;
+      left: -4px;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      cursor: col-resize;
+      z-index: 5;
+    }
+
+    .resize-handle:after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 42%;
+      width: 2px;
+      height: 70px;
+      border-radius: 8px;
+      background: rgba(255,255,255,.18);
+      opacity: 0;
+      transition: opacity .18s ease;
+    }
+
+    .resize-handle:hover:after { opacity: 1; }
 
     .console {
       grid-column: 2 / -1;
@@ -325,7 +392,19 @@
       background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.035));
       box-shadow: 0 10px 40px rgba(0,0,0,.14);
       overflow: hidden;
+      position: relative;
     }
+
+    .card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255,255,255,.08), transparent 30%, rgba(47,231,255,.04));
+      opacity: .42;
+    }
+
+    .card > * { position: relative; z-index: 1; }
 
     .card.pad { padding: 16px; }
     .card + .card { margin-top: 14px; }
@@ -386,9 +465,14 @@
       padding: 0 13px;
       transition: .18s ease;
       font-weight: 750;
+      will-change: transform;
     }
 
-    .btn:hover { transform: translateY(-1px); border-color: var(--line-2); background: rgba(255,255,255,.095); }
+    .btn:hover { transform: translateY(-1px); border-color: var(--line-2); background: rgba(255,255,255,.095); box-shadow: 0 10px 28px rgba(0,0,0,.18); }
+    .btn:focus-visible, .nav-item:focus-visible, .input:focus-visible, .select:focus-visible, .textarea:focus-visible {
+      outline: 2px solid rgba(47,231,255,.72);
+      outline-offset: 2px;
+    }
     .btn.primary {
       border-color: rgba(90,167,255,.42);
       background: linear-gradient(135deg, rgba(90,167,255,.95), rgba(169,139,255,.82));
@@ -505,7 +589,55 @@
       transition: .18s ease;
     }
 
-    .project-card:hover { transform: translateY(-2px); border-color: rgba(90,167,255,.35); }
+    .project-card:hover { transform: translateY(-3px); border-color: rgba(90,167,255,.35); box-shadow: 0 18px 42px rgba(0,0,0,.2); }
+
+    .project-card-head {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) 54px;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .progress-ring {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background:
+        radial-gradient(circle at center, rgba(8,12,20,.95) 54%, transparent 56%),
+        conic-gradient(var(--cyan) calc(var(--value) * 1%), rgba(255,255,255,.08) 0);
+      color: var(--cyan);
+      font-size: 11px;
+      font-weight: 900;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      box-shadow: 0 0 24px rgba(47,231,255,.15);
+    }
+
+    .ai-score {
+      display: grid;
+      grid-template-columns: auto minmax(0,1fr);
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      color: var(--quiet);
+      font-size: 12px;
+    }
+
+    .score-bar {
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      overflow: hidden;
+    }
+
+    .score-bar span {
+      display: block;
+      height: 100%;
+      width: calc(var(--value) * 1%);
+      background: linear-gradient(90deg, var(--blue), var(--cyan), var(--violet));
+      border-radius: inherit;
+    }
 
     .workflow {
       display: grid;
@@ -571,6 +703,39 @@
       border-radius: 8px;
       background: rgba(255,255,255,.04);
       animation: flash-in .35s ease;
+    }
+
+    .event details {
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .event summary {
+      cursor: pointer;
+      color: var(--quiet);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .json-viewer {
+      margin: 7px 0 0;
+      padding: 9px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 8px;
+      background: rgba(0,0,0,.22);
+      overflow: auto;
+      max-height: 180px;
+      white-space: pre-wrap;
+      color: #c6d5ee;
+      font-size: 11px;
+    }
+
+    .event-toolbar {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto auto;
+      gap: 8px;
+      margin-bottom: 10px;
     }
 
     @keyframes flash-in {
@@ -691,6 +856,176 @@
       font-size: 14px;
     }
 
+    .message.assistant.streaming:after {
+      content: "";
+      display: inline-block;
+      width: 7px;
+      height: 1em;
+      margin-left: 3px;
+      vertical-align: -2px;
+      background: var(--cyan);
+      animation: blink .9s infinite;
+    }
+
+    @keyframes blink { 50% { opacity: .18; } }
+
+    .typing {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .typing span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: typing 1s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) { animation-delay: .12s; }
+    .typing span:nth-child(3) { animation-delay: .24s; }
+    @keyframes typing { 0%, 80%, 100% { opacity: .35; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+    .workspace-tabs {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .workspace-tab {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.045);
+      color: var(--muted);
+      padding: 7px 11px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .workspace-tab.active {
+      color: var(--text);
+      border-color: rgba(47,231,255,.36);
+      background: rgba(47,231,255,.1);
+      box-shadow: 0 0 24px rgba(47,231,255,.1);
+    }
+
+    .dependency-tree {
+      display: grid;
+      gap: 9px;
+    }
+
+    .tree-row {
+      display: grid;
+      grid-template-columns: 130px minmax(0,1fr);
+      gap: 10px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .tree-track {
+      height: 2px;
+      background: linear-gradient(90deg, rgba(47,231,255,.7), rgba(169,139,255,.3), transparent);
+      position: relative;
+    }
+
+    .tree-track:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: -4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 18px var(--cyan);
+    }
+
+    .command-palette {
+      position: fixed;
+      inset: 0;
+      z-index: 80;
+      display: none;
+      place-items: start center;
+      padding-top: 10vh;
+      background: rgba(2,4,8,.58);
+      backdrop-filter: blur(14px);
+    }
+
+    .command-palette.open { display: grid; animation: rise .18s ease; }
+
+    .palette-card {
+      width: min(760px, calc(100vw - 28px));
+      border: 1px solid var(--line-2);
+      border-radius: 14px;
+      background: rgba(10, 14, 24, .96);
+      box-shadow: 0 28px 90px rgba(0,0,0,.55);
+      overflow: hidden;
+    }
+
+    .palette-card input {
+      width: 100%;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      background: transparent;
+      color: var(--text);
+      outline: 0;
+      padding: 18px 20px;
+      font-size: 18px;
+    }
+
+    .palette-list {
+      max-height: 420px;
+      overflow: auto;
+      padding: 8px;
+    }
+
+    .palette-item {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 34px minmax(0,1fr) auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--text);
+      padding: 10px;
+      text-align: left;
+    }
+
+    .palette-item:hover, .palette-item.active {
+      background: rgba(255,255,255,.065);
+      border-color: rgba(47,231,255,.2);
+    }
+
+    .fab {
+      position: fixed;
+      right: 20px;
+      bottom: calc(var(--bottom) + 82px);
+      z-index: 45;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      border: 1px solid rgba(47,231,255,.35);
+      background: linear-gradient(135deg, rgba(90,167,255,.96), rgba(169,139,255,.88));
+      color: white;
+      box-shadow: 0 18px 44px rgba(90,167,255,.22);
+      font-weight: 900;
+    }
+
+    .offline {
+      filter: saturate(.65);
+    }
+
+    .offline .live-pill {
+      color: var(--amber);
+      border-color: rgba(255,209,102,.25);
+      background: rgba(255,209,102,.08);
+    }
+
     .message.user {
       justify-self: end;
       background: rgba(90,167,255,.14);
@@ -805,6 +1140,15 @@
       .top-meta { display: none; }
     }
 
+    @media (prefers-reduced-motion: reduce) {
+      *, *:before, *:after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .001ms !important;
+      }
+    }
+
     @media (max-width: 640px) {
       .brand { min-width: auto; }
       .brand span:last-child { display: none; }
@@ -844,6 +1188,7 @@
     </main>
 
     <aside class="right-panel">
+      <div class="resize-handle" id="rightResize" title="Resize activity panel"></div>
       <div class="panel-head">
         <div>
           <div class="panel-title">Live Activity</div>
@@ -863,6 +1208,15 @@
       </div>
       <div class="console-lines" id="consoleLines"></div>
     </section>
+  </div>
+
+  <button class="fab" id="assistantFab" aria-label="Open AI copilot">AI</button>
+
+  <div class="command-palette" id="commandPalette" role="dialog" aria-modal="true" aria-label="Command palette">
+    <div class="palette-card">
+      <input id="paletteInput" placeholder="Search navigation, projects, or run an AI action..." autocomplete="off">
+      <div class="palette-list" id="paletteList"></div>
+    </div>
   </div>
 
   <div class="toast-stack" id="toasts"></div>
@@ -914,7 +1268,14 @@
       telemetryTimer: null,
       generationMode: localStorage.getItem("arcos.mode") || "v2",
       contentMode: "preview",
-      chat: []
+      chat: [],
+      sidebarCollapsed: localStorage.getItem("arcos.sidebar") === "collapsed",
+      commandPaletteOpen: false,
+      eventFilter: "",
+      eventSeverity: "all",
+      autoScrollConsole: localStorage.getItem("arcos.autoscroll") !== "false",
+      activeResearchTab: "draft",
+      offline: false
     };
 
     const $ = (sel, root = document) => root.querySelector(sel);
@@ -957,7 +1318,16 @@
       const url = path.startsWith("http") ? path : state.apiBase + path;
       const headers = { Accept: "application/json", ...(options.headers || {}) };
       if (options.body && !(options.body instanceof FormData)) headers["Content-Type"] = "application/json";
-      const res = await fetch(url, { ...options, headers });
+      let res;
+      try {
+        res = await fetch(url, { ...options, headers });
+      } catch (err) {
+        state.offline = true;
+        document.body.classList.add("offline");
+        throw err;
+      }
+      state.offline = false;
+      document.body.classList.remove("offline");
       if (!res.ok) {
         let detail = "";
         try { detail = JSON.stringify(await res.json()); } catch { detail = await res.text(); }
@@ -1008,13 +1378,15 @@
 
     function renderConsole() {
       $("#consoleMeta").textContent = state.project ? `${state.console.length} buffered events` : "awaiting project";
-      $("#consoleLines").innerHTML = state.console.map(line => `
+      const box = $("#consoleLines");
+      box.innerHTML = state.console.map(line => `
         <div class="line">
           <span class="quiet">${escapeHtml(line.t)}</span>
           <span style="color:var(--cyan)">${escapeHtml(line.event)}</span>
           <span><span class="quiet">${escapeHtml(line.agent || "system")}</span> ${escapeHtml(line.message)}</span>
         </div>
       `).join("");
+      if (state.autoScrollConsole) box.scrollTop = 0;
     }
 
     function addEvent(raw) {
@@ -1056,10 +1428,15 @@
     }
 
     function renderShell() {
+      $(".app").classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
       $("#sidebar").innerHTML = `
+        <div class="sidebar-tools">
+          <button class="btn icon small" onclick="toggleSidebar()" aria-label="Collapse navigation">${state.sidebarCollapsed ? ">" : "<"}</button>
+          <button class="btn small" onclick="openCommandPalette()" aria-label="Open command palette">Cmd K</button>
+        </div>
         <div class="nav-label">Workspace</div>
         ${navItems.map(([id, label, icon]) => `
-          <button class="nav-item ${state.currentView === id ? "active" : ""}" data-view="${id}">
+          <button class="nav-item ${state.currentView === id ? "active" : ""}" data-view="${id}" aria-current="${state.currentView === id ? "page" : "false"}" title="${escapeHtml(label)}">
             <span class="nav-icon">${icon}</span><span>${label}</span>
           </button>
         `).join("")}
@@ -1072,14 +1449,77 @@
       `;
       $$(".nav-item").forEach(btn => btn.onclick = () => navigate(btn.dataset.view));
       $("#activeProjectName").textContent = state.project?.title || state.project?.topic || "No active project";
-      $("#streamState").textContent = state.eventSource ? "stream live" : state.project ? "polling ready" : "stream idle";
+      $("#streamState").textContent = state.offline ? "offline" : state.eventSource ? "stream live" : state.project ? "polling ready" : "stream idle";
     }
 
     function navigate(view) {
       state.currentView = view;
       $$(".view").forEach(el => el.classList.toggle("active", el.id === viewId(view)));
+      closeCommandPalette();
       renderShell();
       renderCurrentView();
+    }
+
+    function toggleSidebar() {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      localStorage.setItem("arcos.sidebar", state.sidebarCollapsed ? "collapsed" : "expanded");
+      renderShell();
+    }
+
+    function openCommandPalette() {
+      state.commandPaletteOpen = true;
+      $("#commandPalette").classList.add("open");
+      renderCommandPalette();
+      setTimeout(() => $("#paletteInput")?.focus(), 20);
+    }
+
+    function closeCommandPalette() {
+      state.commandPaletteOpen = false;
+      $("#commandPalette")?.classList.remove("open");
+    }
+
+    function commandItems(query = "") {
+      const q = query.toLowerCase();
+      const nav = navItems.map(([id, label, icon]) => ({
+        icon,
+        title: label,
+        meta: "Navigate",
+        action: () => navigate(id)
+      }));
+      const projects = state.projects.map(p => ({
+        icon: "P",
+        title: p.title || p.topic || "Untitled project",
+        meta: "Project",
+        action: () => { activateProject(p); navigate("ai-studio"); }
+      }));
+      const actions = [
+        { icon: "G", title: "Start multi-agent generation", meta: "Action", action: () => startGeneration("v2") },
+        { icon: "L", title: "Start linear generation", meta: "Action", action: () => startGeneration("v1") },
+        { icon: "R", title: "Refresh live workspace", meta: "Action", action: () => refreshAll() },
+        { icon: "C", title: "Open copilot with current context", meta: "Action", action: () => navigate("ai-copilot") }
+      ];
+      return [...actions, ...nav, ...projects].filter(item =>
+        !q || item.title.toLowerCase().includes(q) || item.meta.toLowerCase().includes(q)
+      ).slice(0, 18);
+    }
+
+    function renderCommandPalette() {
+      const input = $("#paletteInput");
+      const items = commandItems(input?.value || "");
+      $("#paletteList").innerHTML = items.map((item, index) => `
+        <button class="palette-item ${index === 0 ? "active" : ""}" data-palette-index="${index}">
+          <span class="brand-mark" style="width:30px;height:30px;font-size:11px">${escapeHtml(item.icon)}</span>
+          <span><strong>${escapeHtml(item.title)}</strong><br><span class="quiet">${escapeHtml(item.meta)}</span></span>
+          <span class="badge">Enter</span>
+        </button>
+      `).join("") || `<div class="empty">No matching commands.</div>`;
+      $$("[data-palette-index]").forEach(btn => {
+        btn.onclick = () => {
+          const item = items[Number(btn.dataset.paletteIndex)];
+          closeCommandPalette();
+          item?.action();
+        };
+      });
     }
 
     function requireProjectHtml() {
@@ -1218,20 +1658,42 @@
     function projectCard(p) {
       const id = normalizeId(p);
       const active = id && id === projectId();
+      const progress = projectProgress(p);
+      const score = aiScore(p);
       return `
         <article class="project-card">
-          <div style="display:flex;justify-content:space-between;gap:8px;align-items:start">
-            <strong>${escapeHtml(p.title || p.topic || "Untitled project")}</strong>
-            ${active ? `<span class="badge green">active</span>` : `<span class="badge">idle</span>`}
+          <div class="project-card-head">
+            <div>
+              <strong>${escapeHtml(p.title || p.topic || "Untitled project")}</strong>
+              <p class="subtle" style="font-size:13px">${escapeHtml(p.topic || p.description || "Research workspace")}</p>
+            </div>
+            <div class="progress-ring" style="--value:${progress}">${progress}%</div>
           </div>
-          <p class="subtle" style="font-size:13px">${escapeHtml(p.topic || p.description || "Research workspace")}</p>
           <div style="display:flex;gap:7px;flex-wrap:wrap;margin:10px 0">
+            ${active ? `<span class="badge green">active</span>` : `<span class="badge">idle</span>`}
             <span class="badge blue">${escapeHtml(p.content_type || "content")}</span>
             <span class="badge violet">${escapeHtml(p.tone || "tone")}</span>
+            <span class="badge ${statusTone(p.status)}">${escapeHtml(p.status || "queued")}</span>
           </div>
+          <div class="ai-score"><span>AI score ${score}</span><div class="score-bar" style="--value:${score}"><span></span></div></div>
+          <div class="quiet" style="font-size:12px;margin:10px 0">Recent outputs: ${escapeHtml(p.updated_at ? timeLabel(p.updated_at) : "not generated yet")} · Activity: ${active ? state.events.length : 0} events</div>
           <button class="btn small primary" data-project="${escapeHtml(id)}">Open Workspace</button>
         </article>
       `;
+    }
+
+    function projectProgress(p) {
+      if (normalizeId(p) === projectId()) return Math.min(98, 12 + completedCount() * 11 + Math.min(state.events.length, 25));
+      const status = String(p.status || "").toLowerCase();
+      if (status.includes("complete") || status.includes("published")) return 100;
+      if (status.includes("running") || status.includes("generating")) return 62;
+      if (status.includes("fail")) return 26;
+      return 18;
+    }
+
+    function aiScore(p) {
+      const basis = (p.seo_keywords?.length || 0) * 6 + String(p.title || p.topic || "").length % 37 + 48;
+      return Math.max(52, Math.min(97, basis));
     }
 
     async function createProject(payload, quick) {
@@ -1288,9 +1750,12 @@
                 <button class="btn small primary" onclick="startGeneration('v2')">Start v2</button>
               </div>
             </div>
-            ${state.contentMode === "edit"
-              ? `<textarea class="editor" id="contentEditor">${escapeHtml(state.content)}</textarea>`
-              : `<article class="article">${renderMarkdown(state.content || "## Waiting for generation\n\nStart a linear or multi-agent run to watch sections appear here as the writer and revision agents stream updates.")}</article>`}
+            <div style="padding:14px 14px 0">
+              <div class="workspace-tabs">
+                ${["draft","sources","notes","export"].map(tab => `<button class="workspace-tab ${state.activeResearchTab === tab ? "active" : ""}" onclick="setResearchTab('${tab}')">${titleize(tab)}</button>`).join("")}
+              </div>
+            </div>
+            ${renderResearchTab()}
           </div>
           <div class="grid">
             <div class="card pad">
@@ -1306,6 +1771,10 @@
               </div>
             </div>
             <div class="card pad">
+              <div class="section-head"><h3>Queue Visualization</h3><span class="badge amber">${queuedCount()} queued</span></div>
+              <div class="dependency-tree">${renderDependencyTree()}</div>
+            </div>
+            <div class="card pad">
               <div class="section-head"><h3>Active Workflow</h3><span class="badge green">${activeStageName()}</span></div>
               <div class="workflow">${renderWorkflowNodes()}</div>
             </div>
@@ -1314,6 +1783,34 @@
       `;
       const editor = $("#contentEditor");
       if (editor) editor.oninput = () => { state.content = editor.value; };
+      const notes = $("#notesEditor");
+      if (notes) notes.oninput = () => localStorage.setItem("arcos.notes." + projectId(), notes.value);
+    }
+
+    function setResearchTab(tab) {
+      state.activeResearchTab = tab;
+      renderAiStudio();
+    }
+
+    function renderResearchTab() {
+      if (state.activeResearchTab === "sources") {
+        return `<div class="article"><h2>Citation Panel</h2>${citationPreview()}<h2>Source Explorer</h2>${discoveredUrls().length ? discoveredUrls().map(u => `<p><a href="${escapeHtml(u)}" target="_blank" rel="noopener">${escapeHtml(u)}</a></p>`).join("") : "<p>No streamed sources yet.</p>"}</div>`;
+      }
+      if (state.activeResearchTab === "notes") {
+        return `<textarea class="editor" id="notesEditor" placeholder="Capture research notes, human decisions, and reviewer context.">${escapeHtml(localStorage.getItem("arcos.notes." + projectId()) || "")}</textarea>`;
+      }
+      if (state.activeResearchTab === "export") {
+        return `<div class="article"><h2>Export Preview</h2><p>${countWords(state.content)} words ready for markdown export.</p><p>Citations detected: ${discoveredUrls().length}</p><button class="btn primary" onclick="downloadContent()">Export Markdown</button></div>`;
+      }
+      return state.contentMode === "edit"
+        ? `<textarea class="editor" id="contentEditor">${escapeHtml(state.content)}</textarea>`
+        : `<article class="article">${renderMarkdown(state.content || "## Waiting for generation\n\nStart a linear or multi-agent run to watch sections appear here as the writer and revision agents stream updates.")}</article>`;
+    }
+
+    function renderDependencyTree() {
+      return workflowStages.slice(0, -1).map((stage, index) => `
+        <div class="tree-row"><span>${stage[1]}</span><span class="tree-track" title="${stage[1]} feeds ${workflowStages[index + 1][1]}"></span></div>
+      `).join("");
     }
 
     function setMode(mode) {
@@ -1428,24 +1925,51 @@
     function renderActivity() {
       $("#sideEvents") && ($("#sideEvents").textContent = state.events.length);
       const feed = $("#activityFeed");
-      feed.innerHTML = state.events.length ? state.events.slice(0, 80).map(renderEvent).join("") : `<div class="empty">Live agent events will animate into this panel.</div>`;
+      const events = filteredEvents();
+      feed.innerHTML = `
+        <div class="event-toolbar">
+          <input class="input" id="eventFilterInput" placeholder="Filter events..." value="${escapeHtml(state.eventFilter)}" aria-label="Filter live events">
+          <select class="select" id="eventSeveritySelect" aria-label="Filter severity">
+            ${["all","blue","green","amber","red","violet"].map(t => `<option value="${t}" ${state.eventSeverity === t ? "selected" : ""}>${t}</option>`).join("")}
+          </select>
+          <button class="btn small" id="autoScrollBtn">${state.autoScrollConsole ? "Auto" : "Manual"}</button>
+        </div>
+        <div class="feed">${events.length ? events.slice(0, 80).map(renderEvent).join("") : `<div class="empty">Live agent events will animate into this panel.</div>`}</div>
+      `;
+      $("#eventFilterInput").oninput = e => { state.eventFilter = e.target.value; renderActivity(); };
+      $("#eventSeveritySelect").onchange = e => { state.eventSeverity = e.target.value; renderActivity(); };
+      $("#autoScrollBtn").onclick = () => {
+        state.autoScrollConsole = !state.autoScrollConsole;
+        localStorage.setItem("arcos.autoscroll", String(state.autoScrollConsole));
+        renderActivity();
+      };
       if (state.currentView === "agent-activity") renderAgentActivityView();
+    }
+
+    function filteredEvents() {
+      const q = state.eventFilter.toLowerCase();
+      return state.events.filter(ev => {
+        const tone = eventTone(ev);
+        const text = `${ev.event_type} ${ev.node} ${ev.agent} ${ev.message} ${JSON.stringify(ev.data || {})}`.toLowerCase();
+        return (state.eventSeverity === "all" || tone === state.eventSeverity) && (!q || text.includes(q));
+      });
     }
 
     function renderAgentActivityView() {
       const el = $("#view-agent-activity");
+      const events = filteredEvents();
       el.innerHTML = `
         <div class="section-head">
           <div><h2>Real-Time Agent Activity</h2><div class="subtle">Operational event stream with agents, confidence, URLs, token usage, and severity.</div></div>
           <button class="btn" onclick="pollEvents()">Poll Events</button>
         </div>
         <div class="grid four">
-          ${metric("Events", state.events.length, "received", "blue")}
-          ${metric("Agents", new Set(state.events.map(e => e.agent)).size, "active identities", "cyan")}
+          ${metric("Events", events.length, "visible / filtered", "blue")}
+          ${metric("Agents", new Set(events.map(e => e.agent)).size, "active identities", "cyan")}
           ${metric("URLs", discoveredUrls().length, "discovered sources", "green")}
-          ${metric("Tokens", compactNumber(state.events.reduce((a,e)=>a+Number(e.tokens||0),0)), "reported usage", "violet")}
+          ${metric("Tokens", compactNumber(events.reduce((a,e)=>a+Number(e.tokens||0),0)), "reported usage", "violet")}
         </div>
-        <div class="card pad" style="margin-top:14px"><div class="feed">${state.events.map(renderEvent).join("") || `<div class="empty">No activity yet.</div>`}</div></div>
+        <div class="card pad" style="margin-top:14px"><div class="feed">${events.map(renderEvent).join("") || `<div class="empty">No activity yet.</div>`}</div></div>
       `;
     }
 
@@ -1453,7 +1977,7 @@
       const tone = eventTone(ev);
       const url = ev.data?.url || ev.data?.source_url || "";
       return `
-        <article class="event">
+        <article class="event" aria-label="${escapeHtml(ev.event_type)} event from ${escapeHtml(ev.agent || ev.node)}">
           <div class="event-top">
             <div style="display:flex;gap:7px;align-items:center;min-width:0;flex-wrap:wrap">
               <span class="badge ${tone}">${escapeHtml(ev.event_type)}</span>
@@ -1468,6 +1992,10 @@
             ${ev.tokens ? ` tokens=${escapeHtml(ev.tokens)}` : ""}
             ${url ? ` url=<a href="${escapeHtml(url)}" target="_blank" rel="noopener">${escapeHtml(url)}</a>` : ""}
           </div>
+          <details>
+            <summary>Payload</summary>
+            <pre class="json-viewer">${escapeHtml(JSON.stringify(ev.data || {}, null, 2))}</pre>
+          </details>
         </article>
       `;
     }
@@ -1693,12 +2221,13 @@
       if (!text) return;
       $("#chatText").value = "";
       state.chat.push({ role: "user", content: text });
+      state.chat.push({ role: "assistant", content: `<span class="typing"><span></span><span></span><span></span></span>`, streaming: true });
       renderCopilot();
       try {
         const res = await endpoints.chat(projectId(), { message: text, history: state.chat.slice(-12) });
-        state.chat.push({ role: "assistant", content: res?.response || res?.answer || res?.message || res?.content || "I processed that request." });
+        state.chat[state.chat.length - 1] = { role: "assistant", content: res?.response || res?.answer || res?.message || res?.content || "I processed that request." };
       } catch (err) {
-        state.chat.push({ role: "assistant", content: "The copilot request failed: " + err.message });
+        state.chat[state.chat.length - 1] = { role: "assistant", content: "The copilot request failed: " + err.message };
       }
       renderCopilot();
       const box = $("#chatMessages");
@@ -1706,7 +2235,7 @@
     }
 
     function renderMessage(m) {
-      return `<div class="message ${m.role === "user" ? "user" : ""}">${renderMarkdown(m.content)}</div>`;
+      return `<div class="message ${m.role === "user" ? "user" : "assistant"} ${m.role === "user" ? "user" : ""} ${m.streaming ? "streaming" : ""}">${m.streaming ? m.content : renderMarkdown(m.content)}</div>`;
     }
 
     async function renderGeneratedContent() {
@@ -1855,6 +2384,8 @@
         events.forEach(addEvent);
         $("#streamState").textContent = state.eventSource ? "stream live" : "polling";
       } catch (err) {
+        state.offline = true;
+        document.body.classList.add("offline");
         $("#streamState").textContent = "stream degraded";
       }
     }
@@ -1964,6 +2495,16 @@
 
     $("#refreshBtn").onclick = () => refreshAll();
     $("#clearFeedBtn").onclick = () => { state.events = []; renderActivity(); renderConsole(); };
+    $("#assistantFab").onclick = () => navigate("ai-copilot");
+    $("#commandPalette").onclick = e => { if (e.target.id === "commandPalette") closeCommandPalette(); };
+    $("#paletteInput").oninput = renderCommandPalette;
+    $("#paletteInput").onkeydown = e => {
+      if (e.key === "Escape") closeCommandPalette();
+      if (e.key === "Enter") {
+        const first = $("[data-palette-index='0']");
+        if (first) first.click();
+      }
+    };
     $("#commandInput").addEventListener("keydown", e => {
       if (e.key !== "Enter") return;
       const q = e.currentTarget.value.trim().toLowerCase();
@@ -1980,7 +2521,44 @@
       }
     });
 
+    document.addEventListener("keydown", e => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        openCommandPalette();
+      }
+      if (e.key === "Escape" && state.commandPaletteOpen) closeCommandPalette();
+    });
+
+    function initResizablePanels() {
+      const handle = $("#rightResize");
+      if (!handle) return;
+      let startX = 0;
+      let startWidth = 0;
+      const onMove = e => {
+        const next = Math.max(280, Math.min(560, startWidth + (startX - e.clientX)));
+        document.documentElement.style.setProperty("--right", `${next}px`);
+      };
+      const onUp = () => {
+        $(".app").classList.remove("resizing");
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        localStorage.setItem("arcos.rightPanel", getComputedStyle(document.documentElement).getPropertyValue("--right").trim());
+      };
+      handle.addEventListener("mousedown", e => {
+        startX = e.clientX;
+        startWidth = $(".right-panel").getBoundingClientRect().width;
+        $(".app").classList.add("resizing");
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
+      });
+      const saved = localStorage.getItem("arcos.rightPanel");
+      if (saved) document.documentElement.style.setProperty("--right", saved);
+    }
+
     window.navigate = navigate;
+    window.toggleSidebar = toggleSidebar;
+    window.openCommandPalette = openCommandPalette;
+    window.closeCommandPalette = closeCommandPalette;
     window.refreshAll = refreshAll;
     window.loadProjects = loadProjects;
     window.renderVerification = renderVerification;
@@ -1998,8 +2576,10 @@
     window.selectVersion = selectVersion;
     window.renderContentWorkspace = renderContentWorkspace;
     window.renderAiStudio = renderAiStudio;
+    window.setResearchTab = setResearchTab;
 
     document.addEventListener("DOMContentLoaded", async () => {
+      initResizablePanels();
       renderShell();
       renderProjects();
       renderActivity();
