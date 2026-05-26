@@ -23,7 +23,7 @@ class StructuredFormatter(logging.Formatter):
         return json.dumps(log_entry)
 
 
-_correlation_id = None
+_correlation_id: str | None = None
 
 
 def set_correlation_id(cid: str | None = None) -> str:
@@ -44,25 +44,28 @@ class CorrelationFilter(logging.Filter):
         return True
 
 
+_ROOT_CONFIGURED = False
+
+
 def setup_logging(name: str = __name__) -> logging.Logger:
+    global _ROOT_CONFIGURED
+
+    if not _ROOT_CONFIGURED:
+        _ROOT_CONFIGURED = True
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setFormatter(StructuredFormatter())
+        handler.addFilter(CorrelationFilter())
+
+        root = logging.getLogger()
+        root.setLevel(logging.INFO)
+        # Remove default handlers to avoid duplication
+        for h in root.handlers[:]:
+            root.removeHandler(h)
+        root.addHandler(handler)
+
     logger = logging.getLogger(name)
-    logger.setLevel(logging.INFO)
-
-    handler = logging.StreamHandler(sys.stdout)
-    handler.setFormatter(StructuredFormatter())
-    handler.addFilter(CorrelationFilter())
-    logger.addHandler(handler)
-
-    logger.info("Logging initialized", extra={"environment": "development"})
     return logger
 
 
 def get_logger(name: str) -> logging.Logger:
-    logger = logging.getLogger(name)
-    if not logger.handlers:
-        handler = logging.StreamHandler(sys.stdout)
-        handler.setFormatter(StructuredFormatter())
-        handler.addFilter(CorrelationFilter())
-        logger.addHandler(handler)
-        logger.setLevel(logging.INFO)
-    return logger
+    return logging.getLogger(name)

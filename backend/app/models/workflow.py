@@ -1,11 +1,12 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Text, Float, DateTime, ForeignKey, Enum as SAEnum, Uuid
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import JSON
 import enum
 
 from app.database import Base
+from app.utils.datetime_utils import utc_now
 
 
 class WorkflowStatus(str, enum.Enum):
@@ -32,8 +33,8 @@ class WorkflowExecution(Base):
     current_node: Mapped[str] = mapped_column(String(100), default="planner")
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
     telemetry: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     project = relationship("Project", backref="workflow_executions")
     steps = relationship("WorkflowStep", back_populates="workflow", cascade="all, delete-orphan")
@@ -51,8 +52,8 @@ class WorkflowStep(Base):
     node_name: Mapped[str] = mapped_column(String(100), nullable=False)
     agent_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     status: Mapped[str] = mapped_column(String(20), default="running")
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     duration_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
     input_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     output_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)

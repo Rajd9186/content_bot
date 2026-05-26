@@ -1,9 +1,10 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Text, Float, DateTime, ForeignKey, Integer, JSON, Uuid
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import Base
+from app.utils.datetime_utils import utc_now
 
 
 class AgentMemory(Base):
@@ -21,5 +22,5 @@ class AgentMemory(Base):
     value: Mapped[dict] = mapped_column(JSON, default=dict)
     relevance_score: Mapped[float | None] = mapped_column(Float, nullable=True)
     access_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    last_accessed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    last_accessed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

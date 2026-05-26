@@ -1,10 +1,11 @@
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime
 from sqlalchemy import String, Text, Float, Integer, DateTime, ForeignKey, func, JSON, Uuid, Boolean, Enum as SAEnum, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 
 from app.database import Base
+from app.utils.datetime_utils import utc_now
 
 
 class ContentVersionStatus(str, enum.Enum):
@@ -69,8 +70,8 @@ class ContentLock(Base):
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False, unique=True
     )
     locked_by: Mapped[str] = mapped_column(String(100), nullable=False)
-    locked_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc))
-    expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    locked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class EnhancementJob(Base):
@@ -96,8 +97,8 @@ class EnhancementJob(Base):
     progress: Mapped[float] = mapped_column(Float, default=0.0)
     result_data: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

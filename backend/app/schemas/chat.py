@@ -3,10 +3,12 @@ from typing import List, Optional, Any, Dict
 from datetime import datetime
 import uuid
 
+from app.utils.datetime_utils import utc_now
+
 class ChatMessage(BaseModel):
-    role: str # 'user' or 'assistant'
+    role: str
     content: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)
 
 class ChatRequest(BaseModel):
     message: str
@@ -26,11 +28,13 @@ class WorkflowEvent(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     project_id: str
     workflow_id: Optional[str] = None
-    node_name: str
-    event_type: str # 'info', 'discovery', 'claim', 'contradiction', 'warning', 'error'
-    message: str
-    data: Optional[Dict[str, Any]] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    agent_name: str = ""
+    event_type: str
+    status: str = "running"
+    message: str = ""
+    progress_percent: float = 0.0
+    payload: Dict[str, Any] = Field(default_factory=dict)
+    timestamp: str = ""
 
 class AgentStatusUpdate(BaseModel):
     project_id: str
@@ -38,4 +42,4 @@ class AgentStatusUpdate(BaseModel):
     current_task: str
     progress: float
     recent_logs: List[str] = []
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=utc_now)

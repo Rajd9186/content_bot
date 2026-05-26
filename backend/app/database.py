@@ -200,6 +200,28 @@ async def validate_schema():
         await conn.run_sync(_check)
 
 
+def validate_environment():
+    """Validate critical environment settings at startup.
+
+    Raises ValueError if required configuration is missing or misconfigured.
+    """
+    db_url = settings.database_url
+    if not db_url:
+        raise ValueError("DATABASE_URL is not set")
+
+    if settings.environment == "production":
+        if "sqlite" in db_url:
+            raise ValueError("SQLite is not supported in production — set DATABASE_URL to a PostgreSQL connection string")
+        if not db_url.startswith("postgresql"):
+            raise ValueError("DATABASE_URL must be a PostgreSQL connection string in production")
+        if settings.secret_key == "change-me-in-production":
+            logger.warning("SECRET_KEY is still set to the default value — update it in production")
+        if not settings.groq_api_key:
+            logger.warning("GROQ_API_KEY is not set — LLM features will not work")
+
+    logger.info("Environment validation passed (environment=%s)", settings.environment)
+
+
 async def init_db():
     """Initialize database: run migrations, verify schema, apply pragmas."""
     from sqlalchemy import inspect

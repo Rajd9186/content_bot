@@ -1,10 +1,11 @@
 from typing import List, Dict, Any, Optional
 import json
-from datetime import datetime, timezone
+from datetime import datetime
 import uuid
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.log_config.logger import get_logger
+from app.utils.datetime_utils import utc_now
 from app.repositories.project import ProjectRepository
 from app.repositories.content import ContentRepository
 from app.repositories.claim import ClaimRepository
@@ -94,7 +95,7 @@ class ResearchCopilotService:
             content=response_text,
             project_id=str(project_id),
             tool_calls=tool_calls,
-            metadata={"timestamp": datetime.now(timezone.utc).isoformat()},
+            metadata={"timestamp": utc_now().isoformat()},
         )
 
     async def get_events(self, project_id: uuid.UUID, limit: int = 50) -> List[Dict[str, Any]]:
@@ -102,11 +103,15 @@ class ResearchCopilotService:
         return [
             {
                 "id": str(e.id),
-                "node_name": e.node_name,
+                "project_id": str(e.project_id),
+                "workflow_id": str(e.workflow_id) if e.workflow_id else None,
+                "agent_name": e.agent_name,
                 "event_type": e.event_type,
+                "status": e.status,
                 "message": e.message,
-                "data": e.data,
-                "timestamp": e.timestamp.isoformat(),
+                "progress_percent": e.progress_percent,
+                "payload": e.payload_json or {},
+                "timestamp": e.created_at.isoformat() if e.created_at else "",
             }
             for e in events
         ]

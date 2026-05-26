@@ -10,7 +10,6 @@ POST /api/v1/workflows/{workflow_id}/approve
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,6 +23,7 @@ from app.engine.workflow_state import WorkflowStage, can_transition_to
 from app.services.stage_orchestrator import StageOrchestrator
 from app.services.event_bus import event_bus
 from app.log_config.logger import get_logger
+from app.utils.datetime_utils import utc_now
 
 logger = get_logger(__name__)
 
@@ -97,7 +97,7 @@ async def run_agent(
         result = await _run_agent_method(orch, agent, project_id, workflow_id)
         job.status = "completed"
         job.result_data = result
-        job.completed_at = datetime.now(timezone.utc)
+        job.completed_at = utc_now()
         await session.flush()
         await event_bus.publish(
             workflow_id, "agent_completed", agent_name=agent, status="completed",
@@ -148,7 +148,7 @@ async def approve_workflow(
 
     workflow.status = WorkflowStatus.completed
     workflow.current_node = WorkflowStage.COMPLETED.value
-    workflow.completed_at = datetime.now(timezone.utc)
+    workflow.completed_at = utc_now()
     await session.flush()
 
     await event_bus.publish(

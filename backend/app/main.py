@@ -4,7 +4,7 @@ import os
 import uuid
 import time
 
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from contextlib import asynccontextmanager
@@ -16,12 +16,13 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import delete
 
 from app.config import settings
-from app.database import init_db, dispose_engine, async_session_factory
+from app.database import init_db, dispose_engine, async_session_factory, validate_environment
 from app.models.content_version import ContentLock
 from app.routes import projects, content, evidence, verification, chat, enhance, ws, sse, sse_agents
 from app.routes.health import router as health_router
 from app.routes.workflow import register_workflow_routes
 from app.log_config.logger import setup_logging, set_correlation_id
+from app.utils.datetime_utils import utc_now
 
 logger = setup_logging(__name__)
 
@@ -34,7 +35,8 @@ async def _cleanup_expired_locks():
         try:
             await asyncio.sleep(_CONTENT_LOCK_CLEANUP_INTERVAL)
             async with async_session_factory() as session:
-                stmt = delete(ContentLock).where(ContentLock.expires_at < datetime.now(timezone.utc))
+                now = utc_now()
+                stmt = delete(ContentLock).where(ContentLock.expires_at < now)
                 result = await session.execute(stmt)
                 await session.commit()
                 if result.rowcount > 0:
@@ -48,6 +50,7 @@ async def _cleanup_expired_locks():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting Verified AI Research Writer API")
+    validate_environment()
     await init_db()
     logger.info("Database initialized")
     cleanup_task = asyncio.create_task(_cleanup_expired_locks())

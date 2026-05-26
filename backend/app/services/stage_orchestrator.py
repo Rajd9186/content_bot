@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
@@ -22,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.log_config.logger import get_logger
 from app.config import settings
+from app.utils.datetime_utils import utc_now
 from app.models.workflow import WorkflowStatus
 from app.models.content_version import ContentVersion, ContentVersionStatus, ContentLock, EnhancementJob
 from app.engine.workflow_state import (
@@ -517,7 +517,7 @@ class StageOrchestrator:
             )
             if error:
                 workflow.error = error
-            workflow.completed_at = datetime.now(timezone.utc)
+            workflow.completed_at = utc_now()
 
         await self.session.flush()
         progress = _calc_stage_weight(stage)
