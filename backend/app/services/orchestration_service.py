@@ -2,7 +2,6 @@ import uuid
 import time
 import asyncio
 from datetime import datetime
-from collections import deque
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -32,8 +31,10 @@ from app.retrieval.embeddings import EmbeddingService
 from app.retrieval.vector_store import LocalVectorStore
 from app.engine import build_workflow_graph, WorkflowExecutor
 from app.models.workflow import WorkflowStatus
+from app.models.content import GeneratedContent
 
 from app.config import settings
+from app.database import async_session_factory
 
 
 class MultiAgentOrchestrator:
@@ -66,6 +67,7 @@ class MultiAgentOrchestrator:
         self.revision = RevisionAgent()
         self.hyperlink_validator = HyperlinkValidationAgent()
 
+        self.logger.info("Building workflow graph with all agents")
         self.graph = build_workflow_graph(
             planner_agent=self.planner,
             research_service=self.research_service,
@@ -83,20 +85,18 @@ class MultiAgentOrchestrator:
         )
         self.executor = WorkflowExecutor(self.graph)
 
-        # Event batching: buffer events in-memory, flush periodically
+        # Event batching
         self._event_buffer: list[dict] = []
         self._event_flush_task: asyncio.Task | None = None
         self._flush_lock = asyncio.Lock()
 
     async def _start_event_flusher(self):
-        """Background task that flushes buffered events to DB periodically."""
         interval = settings.workflow_event_flush_interval
         while True:
             await asyncio.sleep(interval)
             await self._flush_events()
 
     async def _flush_events(self):
-        """Flush all buffered events to the database in a single batch."""
         if not self._event_buffer:
             return
         async with self._flush_lock:
@@ -125,7 +125,6 @@ class MultiAgentOrchestrator:
         self, project_id: str, node_name: str, event_type: str,
         message: str, data: dict = None, workflow_id: str = None,
     ):
-        """Buffer a workflow event for batched DB write."""
         self._event_buffer.append({
             "project_id": uuid.UUID(project_id) if isinstance(project_id, str) else project_id,
             "node_name": node_name,
@@ -134,12 +133,10 @@ class MultiAgentOrchestrator:
             "data": data or {},
             "workflow_id": uuid.UUID(workflow_id) if (workflow_id and isinstance(workflow_id, str)) else workflow_id,
         })
-        # Flush if buffer exceeds threshold
         if len(self._event_buffer) >= settings.workflow_event_buffer_size:
             await self._flush_events()
 
     async def _update_workflow_status(self, project_id: str, node_name: str):
-        """Callback for real-time node status updates."""
         if not project_id:
             return
         try:
@@ -162,6 +159,7 @@ class MultiAgentOrchestrator:
             wf = await self.workflow_repo.get_latest_by_project(pid)
             if wf:
                 wf.current_node = node_name
+            self.logger.info(f"Workflow status update: node={node_name}, project_status={new_status}")
         except Exception as e:
             self.logger.warning(f"Status update failed for node {node_name}: {e}")
 
@@ -169,19 +167,26 @@ class MultiAgentOrchestrator:
         project_id = project.id
         workflow_id = uuid.uuid4()
 
-        # Start background event flusher
         self._event_flush_task = asyncio.create_task(self._start_event_flusher())
 
+        self.logger.info(
+            "Creating workflow execution record",
+            extra={"project_id": str(project_id), "workflow_id": str(workflow_id)},
+        )
         workflow = await self.workflow_repo.create(
             id=workflow_id,
             project_id=project_id,
             status=WorkflowStatus.running,
             current_node="planner",
         )
-
         await self.project_repo.update_status(project_id, "planning")
+        await self.session.flush()
 
         try:
+            self.logger.info(
+                "Starting LangGraph workflow execution",
+                extra={"project_id": str(project_id), "workflow_id": str(workflow_id)},
+            )
             final_state = await self.executor.execute(
                 project_id=str(project_id),
                 topic=project.topic,
@@ -194,11 +199,21 @@ class MultiAgentOrchestrator:
                 workflow_id=str(workflow_id),
             )
 
-            # Flush remaining events before persisting results
-            await self._flush_events()
+            self.logger.info(
+                "LangGraph execution completed, persisting results",
+                extra={
+                    "project_id": str(project_id),
+                    "steps_completed": len(final_state.get("steps_completed", [])),
+                    "has_content": bool(final_state.get("final_content") or final_state.get("content_draft")),
+                },
+            )
 
+            await self._flush_events()
             await self._persist_workflow_results(workflow_id, final_state)
-            await self._persist_content(project_id, final_state)
+
+            # Persist content with its own dedicated commit for durability
+            content_persisted = await self._persist_content(project_id, final_state)
+
             await self._save_steps_to_db(workflow_id, final_state)
 
             telemetry = final_state.get("telemetry", {})
@@ -207,12 +222,14 @@ class MultiAgentOrchestrator:
             workflow.completed_at = datetime.utcnow()
 
             await self.project_repo.update_status(project_id, "completed")
+            await self.session.flush()
 
             self.logger.info(
                 "Workflow completed successfully",
                 extra={
                     "project_id": str(project_id),
                     "workflow_id": str(workflow_id),
+                    "content_persisted": content_persisted,
                     "telemetry": telemetry,
                 },
             )
@@ -221,7 +238,6 @@ class MultiAgentOrchestrator:
 
         except Exception as e:
             self.logger.error(f"Multi-agent workflow failed: {e}", exc_info=True)
-            # Flush any remaining events so the frontend can see partial progress
             try:
                 await self._flush_events()
             except Exception:
@@ -230,15 +246,77 @@ class MultiAgentOrchestrator:
             workflow.error = str(e)
             workflow.completed_at = datetime.utcnow()
             await self.project_repo.update_status(project_id, "failed")
+            await self.session.flush()
             raise
         finally:
-            # Cancel the event flusher
             if self._event_flush_task and not self._event_flush_task.done():
                 self._event_flush_task.cancel()
                 try:
                     await self._event_flush_task
                 except asyncio.CancelledError:
                     pass
+
+    async def _persist_content(self, project_id: uuid.UUID, state: dict) -> bool:
+        """Persist generated content to the database with its own commit.
+
+        Returns True if content was persisted, False otherwise.
+        """
+        final_content = state.get("final_content", state.get("content_draft", {}))
+        if not final_content or not final_content.get("markdown"):
+            self.logger.warning(
+                "No content to persist — final_content or markdown is empty",
+                extra={
+                    "has_final_content": "final_content" in state,
+                    "has_content_draft": "content_draft" in state,
+                    "final_content_keys": list(final_content.keys()) if final_content else [],
+                },
+            )
+            return False
+
+        content = state.get("content_draft", {})
+        citations = content.get("citations", [])
+        seo = content.get("seo_metadata", {})
+        word_count = content.get("word_count", 0)
+        summary = content.get("summary", "")
+        telemetry = state.get("telemetry", {})
+        overall_confidence = telemetry.get("overall_quality_score", 0.7)
+
+        markdown_len = len(final_content.get("markdown", ""))
+        self.logger.info(
+            "Persisting generated content",
+            extra={
+                "project_id": str(project_id),
+                "markdown_length": markdown_len,
+                "citations_count": len(citations),
+                "word_count": word_count,
+            },
+        )
+
+        try:
+            content_entry = GeneratedContent(
+                project_id=project_id,
+                markdown=final_content.get("markdown", ""),
+                summary=summary,
+                word_count=word_count,
+                citations=citations,
+                seo_metadata=seo,
+                overall_confidence=overall_confidence,
+            )
+            self.session.add(content_entry)
+            await self.session.flush()
+            self.logger.info(
+                "Content persisted with ID: %s",
+                str(content_entry.id),
+                extra={"content_id": str(content_entry.id)},
+            )
+            return True
+        except Exception as e:
+            self.logger.error(
+                "Failed to persist content: %s",
+                str(e),
+                exc_info=True,
+            )
+            raise
 
     async def _persist_workflow_results(self, workflow_id: uuid.UUID, state: dict) -> None:
         for contradiction in state.get("contradictions", []):
@@ -266,59 +344,6 @@ class MultiAgentOrchestrator:
                 )
             except Exception as e:
                 self.logger.warning(f"Failed to persist hyperlink: {e}")
-
-    async def _persist_content(self, project_id: uuid.UUID, state: dict) -> None:
-        final_content = state.get("final_content", state.get("content_draft", {}))
-        if not final_content or not final_content.get("markdown"):
-            self.logger.warning("No content to persist")
-            return
-
-        content = state.get("content_draft", {})
-        citations = content.get("citations", [])
-        seo = content.get("seo_metadata", {})
-        word_count = content.get("word_count", 0)
-        summary = content.get("summary", "")
-        telemetry = state.get("telemetry", {})
-        overall_confidence = telemetry.get("overall_quality_score", 0.7)
-
-        await self.content_repo.create(
-            project_id=project_id,
-            markdown=final_content.get("markdown", ""),
-            summary=summary,
-            word_count=word_count,
-            citations=citations,
-            seo_metadata=seo,
-            overall_confidence=overall_confidence,
-        )
-
-        await self.project_repo.update(project_id, outline=state.get("outline", {}))
-
-        for claim_data in state.get("claims", []):
-            try:
-                await self.claim_repo.create(
-                    project_id=project_id,
-                    claim_text=claim_data.get("claim_text", ""),
-                    confidence=claim_data.get("confidence"),
-                    status=claim_data.get("status", "unverified"),
-                    explanation=claim_data.get("explanation"),
-                    category=claim_data.get("category"),
-                )
-            except Exception:
-                pass
-
-        for source in state.get("all_sources", []):
-            try:
-                url = source.get("url", "")
-                domain = url.split("/")[2] if "://" in url else ""
-                await self.source_repo.create(
-                    project_id=project_id,
-                    url=url,
-                    domain=domain,
-                    title=source.get("title", ""),
-                    snippet=(source.get("content", "") or source.get("snippet", "") or "")[:500],
-                )
-            except Exception:
-                pass
 
     async def _save_steps_to_db(self, workflow_id: uuid.UUID, state: dict) -> None:
         steps = state.get("steps_completed", [])

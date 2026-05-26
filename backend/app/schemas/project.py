@@ -64,3 +64,11 @@ class ProjectQuickCreate(BaseModel):
 
 class ProjectStatusUpdate(BaseModel):
     status: str
+
+
+class ProjectWorkflowStatus(BaseModel):
+    """Lightweight workflow status returned with project info."""
+
+    workflow_status: str | None = None
+    current_node: str | None = None
+    has_content: bool = False

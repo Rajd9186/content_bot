@@ -1,13 +1,17 @@
 import uuid
 from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.database import get_session, async_session_factory
 from app.repositories.project import ProjectRepository
 from app.repositories.content import ContentRepository
-from app.schemas.content import ContentResponse, ContentGenerateResponse
+from app.repositories.workflow import WorkflowExecutionRepository
+from app.schemas.content import ContentResponse, ContentGenerateResponse, ContentStatusResponse
 from app.services.content_generator import ContentGeneratorService
 from app.services.orchestration_service import MultiAgentOrchestrator
+from app.models.project import Project
+from app.models.workflow import WorkflowExecution
 from app.log_config.logger import get_logger
 
 logger = get_logger(__name__)
@@ -30,9 +34,10 @@ async def run_orchestrator(project_id: uuid.UUID):
                 logger.error(f"Project {project_id} not found during background orchestration")
                 return
 
+            logger.info("Starting background orchestration", extra={"project_id": str(project_id)})
             await orchestrator.generate(project)
             await session.commit()
-            logger.info(f"Orchestration completed for project {project_id}")
+            logger.info("Orchestration completed and committed", extra={"project_id": str(project_id)})
         except Exception as e:
             logger.error(
                 f"Background orchestration failed for project {project_id}: {e}",
@@ -40,7 +45,6 @@ async def run_orchestrator(project_id: uuid.UUID):
             )
             try:
                 await session.rollback()
-                # Ensure project is marked as failed
                 project_repo = ProjectRepository(session)
                 await project_repo.update_status(project_id, "failed")
                 await session.commit()
@@ -57,19 +61,68 @@ async def get_content(
     return await repo.get_by_project(project_id)
 
 
-@router.get("/latest", response_model=ContentResponse)
+@router.get("/latest", response_model=ContentStatusResponse)
 async def get_latest_content(
     project_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
 ):
-    repo = ContentRepository(session)
-    content = await repo.get_latest_by_project(project_id)
-    if content is None:
+    """Get the latest generated content for a project.
+
+    Returns workflow status while content is being generated, avoiding
+    404 errors that cause frontend polling to fail.
+    """
+    # Check project exists
+    project_repo = ProjectRepository(session)
+    project = await project_repo.get(project_id)
+    if project is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No content found for project {project_id}",
+            detail=f"Project {project_id} not found",
         )
-    return content
+
+    # Check if content exists
+    content_repo = ContentRepository(session)
+    content = await content_repo.get_latest_by_project(project_id)
+    if content is not None:
+        return ContentStatusResponse(
+            status="completed",
+            workflow_status="completed",
+            content=ContentResponse.model_validate(content),
+        )
+
+    # No content yet — check workflow status
+    workflow_repo = WorkflowExecutionRepository(session)
+    workflow = await workflow_repo.get_latest_by_project(project_id)
+
+    if workflow is None:
+        # No workflow and no content — project just created, not yet generating
+        return ContentStatusResponse(
+            status="not_found",
+            message="No content has been generated for this project yet. Start generation first.",
+        )
+
+    if workflow.status == "running":
+        return ContentStatusResponse(
+            status="processing",
+            workflow_status="running",
+            current_node=workflow.current_node,
+            message=f"Content generation is in progress. Current step: {workflow.current_node}",
+        )
+
+    if workflow.status == "failed":
+        return ContentStatusResponse(
+            status="failed",
+            workflow_status="failed",
+            current_node=workflow.current_node,
+            message=f"Content generation failed at step: {workflow.current_node}. Error: {workflow.error or 'Unknown'}",
+        )
+
+    # Completed workflow but no content — edge case
+    return ContentStatusResponse(
+        status="not_found",
+        workflow_status=workflow.status,
+        message="Workflow completed but no content was generated.",
+    )
 
 
 @router.post("/generate", response_model=ContentGenerateResponse)

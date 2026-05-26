@@ -30,3 +30,26 @@ class ContentGenerateResponse(BaseModel):
     overall_confidence: float | None = Field(default=None)
     claims: list[dict] = Field(default_factory=list)
     verification_summary: dict = Field(default_factory=dict)
+
+
+class ContentStatusResponse(BaseModel):
+    """Response for /content/latest that can return either content or status."""
+
+    status: str = Field(
+        ...,
+        description="One of: processing, completed, failed, not_found",
+    )
+    workflow_status: str | None = Field(
+        default=None,
+        description="Current workflow execution status: running, completed, failed",
+    )
+    current_node: str | None = Field(
+        default=None,
+        description="Current workflow node being executed",
+    )
+    progress: list[str] = Field(
+        default_factory=list,
+        description="List of completed workflow steps so far",
+    )
+    message: str | None = Field(default=None)
+    content: ContentResponse | None = Field(default=None)
