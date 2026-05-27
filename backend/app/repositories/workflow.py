@@ -1,6 +1,7 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, update
+from sqlalchemy.orm import selectinload
 
 from app.repositories.base import BaseRepository
 from app.models.workflow import WorkflowExecution, WorkflowStep
@@ -13,6 +14,7 @@ class WorkflowExecutionRepository(BaseRepository[WorkflowExecution]):
     async def get_by_project(self, project_id: UUID) -> list[WorkflowExecution]:
         result = await self.session.execute(
             select(WorkflowExecution)
+            .options(selectinload(WorkflowExecution.steps))
             .where(WorkflowExecution.project_id == project_id)
             .order_by(WorkflowExecution.started_at.desc())
         )
@@ -21,6 +23,7 @@ class WorkflowExecutionRepository(BaseRepository[WorkflowExecution]):
     async def get_latest_by_project(self, project_id: UUID) -> WorkflowExecution | None:
         result = await self.session.execute(
             select(WorkflowExecution)
+            .options(selectinload(WorkflowExecution.steps))
             .where(WorkflowExecution.project_id == project_id)
             .order_by(WorkflowExecution.started_at.desc())
             .limit(1)

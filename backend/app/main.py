@@ -95,15 +95,31 @@ async def request_tracing_middleware(request: Request, call_next):
 # ---------------------------------------------------------------------------
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    error_details = exc.errors()
+    # Sanitize error details to ensure they are JSON serializable.
+    # Pydantic v2 errors can contain non-serializable objects (like ValueErrors) in 'ctx'.
+    raw_errors = exc.errors()
+    error_details = []
+    for error in raw_errors:
+        sanitized = error.copy()
+        if "ctx" in sanitized:
+            ctx = sanitized["ctx"]
+            new_ctx = {}
+            for k, v in ctx.items():
+                if isinstance(v, (str, int, float, bool, type(None))):
+                    new_ctx[k] = v
+                else:
+                    new_ctx[k] = str(v)
+            sanitized["ctx"] = new_ctx
+        error_details.append(sanitized)
+
     logger.error(
         "Validation error for %s %s: %s",
         request.method, request.url.path, error_details,
-        extra={"body": exc.body},
+        extra={"body": str(exc.body)},
     )
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": error_details, "body": exc.body},
+        content={"detail": error_details, "body": str(exc.body)},
     )
 
 

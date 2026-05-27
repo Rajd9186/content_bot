@@ -18,7 +18,7 @@ def register_workflow_routes(router: APIRouter) -> None:
     separate routers using path-parameter prefixes.
     """
 
-    @router.get("/{project_id}/workflow")
+    @router.get("/{project_id}/workflow", response_model=WorkflowExecutionResponse)
     async def get_workflow(
         project_id: uuid.UUID,
         session: AsyncSession = Depends(get_session),
@@ -26,24 +26,9 @@ def register_workflow_routes(router: APIRouter) -> None:
         repo = WorkflowExecutionRepository(session)
         workflow = await repo.get_latest_by_project(project_id)
         if workflow is None:
-            return None
-        steps_repo = WorkflowStepRepository(session)
-        steps = await steps_repo.get_by_workflow(workflow.id)
-        # Build from dict to avoid lazy-loading the steps relationship
-        # (workflow.steps relationship conflicts with schema's steps field)
-        workflow_data = {
-            "id": workflow.id,
-            "project_id": workflow.project_id,
-            "status": workflow.status if isinstance(workflow.status, str) else workflow.status.value,
-            "current_node": workflow.current_node,
-            "error": workflow.error,
-            "telemetry": workflow.telemetry,
-            "started_at": workflow.started_at,
-            "completed_at": workflow.completed_at,
-        }
-        response = WorkflowExecutionResponse.model_validate(workflow_data)
-        response.steps = [WorkflowStepResponse.model_validate(s) for s in steps]
-        return response
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        
+        return workflow
 
     @router.get("/{project_id}/workflow/telemetry", response_model=WorkflowTelemetry)
     async def get_workflow_telemetry(
