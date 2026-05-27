@@ -85,12 +85,33 @@ class WorkflowEventBus:
         wid = str(workflow_id)
         event_id = ""
 
+        # Extract project_id from payload if present
+        # We must ensure project_id is a valid UUID that exists in the 'projects' table
+        # to avoid ForeignKeyViolationError. If missing or invalid, we default to wid
+        # but the schema might require it to be a real project.
+        project_id = None
+        if payload and "project_id" in payload:
+            try:
+                pid_val = payload["project_id"]
+                project_id = UUID(str(pid_val))
+            except (ValueError, TypeError):
+                pass
+        
+        # Fallback to trying to use workflow_id as project_id if still None
+        # NOTE: This might still fail FK check if workflow_id isn't a project_id.
+        # The best fix is ensuring the caller always provides a valid project_id.
+        if project_id is None:
+            try:
+                project_id = UUID(wid)
+            except (ValueError, TypeError):
+                pass
+
         # Persist to database
         try:
             async with async_session_factory() as session:
                 db_event = WorkflowEventRecord(
                     workflow_id=UUID(wid),
-                    project_id=payload.get("project_id", UUID(wid)) if payload and "project_id" in payload else UUID(wid),
+                    project_id=project_id,
                     event_type=event_type,
                     agent_name=agent_name,
                     status=status,

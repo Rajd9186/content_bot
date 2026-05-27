@@ -525,7 +525,7 @@ class StageOrchestrator:
             workflow.id, event_type, agent_name=agent, status="completed",
             message=f"Stage: {stage_display_name(stage)}",
             progress_percent=progress,
-            payload={"stage": stage.value, "error": error} if error else {"stage": stage.value},
+            payload={"project_id": str(workflow.project_id), "stage": stage.value, "error": error} if error else {"project_id": str(workflow.project_id), "stage": stage.value},
         )
         self.logger.info("Stage transition: %s (%.0f%%)", stage_display_name(stage), progress)
 
