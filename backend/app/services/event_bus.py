@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
@@ -77,41 +78,48 @@ class WorkflowEventBus:
         message: str = "",
         progress_percent: float = 0.0,
         payload: dict | None = None,
+        project_id: str | UUID | None = None,
     ) -> str:
         """Persist an event to the database and broadcast to active subscribers.
 
-        Returns the event id string.
+        Returns the event id string (generated UUID if DB persistence fails).
         """
         wid = str(workflow_id)
-        event_id = ""
+        event_id = str(uuid.uuid4())
 
-        # Extract project_id from payload if present
-        # We must ensure project_id is a valid UUID that exists in the 'projects' table
-        # to avoid ForeignKeyViolationError. If missing or invalid, we default to wid
-        # but the schema might require it to be a real project.
-        project_id = None
-        if payload and "project_id" in payload:
+        resolved_project_id: UUID | None = None
+        if project_id is not None:
             try:
-                pid_val = payload["project_id"]
-                project_id = UUID(str(pid_val))
+                resolved_project_id = UUID(str(project_id))
             except (ValueError, TypeError):
                 pass
-        
-        # Fallback to trying to use workflow_id as project_id if still None
-        # NOTE: This might still fail FK check if workflow_id isn't a project_id.
-        # The best fix is ensuring the caller always provides a valid project_id.
-        if project_id is None:
+        elif payload and "project_id" in payload:
             try:
-                project_id = UUID(wid)
+                resolved_project_id = UUID(str(payload["project_id"]))
             except (ValueError, TypeError):
                 pass
 
-        # Persist to database
+        if resolved_project_id is None:
+            logger.error(
+                "Cannot persist event without project_id. "
+                "Callers must provide project_id either as parameter or in payload. "
+                "workflow_id=%s event_type=%s",
+                wid, event_type,
+            )
+            sse_event = WorkflowEvent(
+                workflow_id=wid, event_type=event_type,
+                agent_name=agent_name, status=status,
+                message=message, progress_percent=progress_percent,
+                payload=payload, event_id=event_id,
+            )
+            await self._broadcast(wid, sse_event)
+            return event_id
+
         try:
             async with async_session_factory() as session:
                 db_event = WorkflowEventRecord(
                     workflow_id=UUID(wid),
-                    project_id=project_id,
+                    project_id=resolved_project_id,
                     event_type=event_type,
                     agent_name=agent_name,
                     status=status,
@@ -124,10 +132,8 @@ class WorkflowEventBus:
                 event_id = str(db_event.id)
                 logger.debug("Persisted event %s: %s/%s", event_id, event_type, status)
         except Exception as e:
-            logger.warning("Failed to persist workflow event: %s", e)
-            # Continue — don't block the broadcast on a DB failure
+            logger.warning("Failed to persist workflow event, using generated UUID: %s", e)
 
-        # Broadcast to subscribers
         sse_event = WorkflowEvent(
             workflow_id=wid,
             event_type=event_type,
@@ -140,7 +146,6 @@ class WorkflowEventBus:
         )
         await self._broadcast(wid, sse_event)
 
-        # Structured log
         extra = {
             "workflow_id": wid,
             "agent": agent_name,

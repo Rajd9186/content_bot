@@ -1262,8 +1262,6 @@
       content: "",
       contentVersions: [],
       workflow: null,
-      eventSource: null,
-      reconnectTimer: null,
       pollTimer: null,
       telemetryTimer: null,
       generationMode: localStorage.getItem("arcos.mode") || "v2",
@@ -1418,13 +1416,16 @@
     }
 
     function routeEvent(ev) {
-      const type = ev.event_type.toLowerCase();
-      const dataText = JSON.stringify(ev.data || {}).toLowerCase();
-      if (type.includes("writing") || type.includes("draft") || type.includes("content") || ev.node === "writer") {
-        const chunk = ev.data?.chunk || ev.data?.content || ev.data?.markdown || ev.message;
-        if (chunk && !state.content.includes(chunk)) state.content += (state.content ? "\n\n" : "") + chunk;
+      const type = (ev.event_type || "").toLowerCase();
+      const agent = (ev.agent || ev.node || "").toLowerCase();
+      const data = ev.data || {};
+      if (type.includes("draft") || type.includes("writing") || agent === "writer") {
+        const chunk = data.markdown || data.content || data.chunk || ev.message;
+        if (chunk && chunk.length > 50 && !state.content.includes(chunk.slice(0, 80))) {
+          state.content = chunk;
+        }
       }
-      if (type.includes("telemetry") || dataText.includes("tokens")) updateTelemetryCounters(ev);
+      if (data.tokens || data.token_usage || type.includes("telemetry")) updateTelemetryCounters(ev);
     }
 
     function renderShell() {
@@ -1449,7 +1450,7 @@
       `;
       $$(".nav-item").forEach(btn => btn.onclick = () => navigate(btn.dataset.view));
       $("#activeProjectName").textContent = state.project?.title || state.project?.topic || "No active project";
-      $("#streamState").textContent = state.offline ? "offline" : state.eventSource ? "stream live" : state.project ? "polling ready" : "stream idle";
+      $("#streamState").textContent = state.offline ? "offline" : state.project ? "polling" : "idle";
     }
 
     function navigate(view) {
@@ -2168,22 +2169,32 @@
       el.innerHTML = `<div class="loading">Loading telemetry...</div>`;
       try {
         const data = await endpoints.telemetry(projectId());
-        const agents = arrayFrom(data, ["agents", "agent_metrics", "runs"]);
-        const tokenUsage = data?.token_usage || data?.tokens || {};
-        const totalTokens = tokenUsage.total_tokens || data?.total_tokens || state.events.reduce((a,e)=>a+Number(e.tokens||0),0);
+        const nodeDurations = data?.node_durations || {};
+        const agentNames = Object.keys(nodeDurations);
+        const totalTokens = data?.total_tokens || state.events.reduce((a,e)=>a+Number(e.tokens||0),0);
         el.innerHTML = `
           <div class="section-head"><div><h2>Telemetry & Performance</h2><div class="subtle">Token usage, latency, agent performance, quality scores, and workflow timings.</div></div><button class="btn" onclick="renderTelemetry()">Reload</button></div>
           <div class="grid four">
             ${metric("Tokens", compactNumber(totalTokens), "total usage", "violet")}
-            ${metric("Latency", msLabel(data?.latency_ms ?? data?.duration_ms ?? data?.total_time_ms), "workflow timing", "cyan")}
-            ${metric("Quality", percent(data?.quality_score ?? data?.score), "content score", "green")}
-            ${metric("Agents", agents.length || data?.agent_count || 0, "performance rows", "blue")}
+            ${metric("Duration", msLabel(data?.total_duration_ms), "total workflow", "cyan")}
+            ${metric("Quality", percent(data?.overall_quality_score), "content score", "green")}
+            ${metric("Retries", data?.total_retries ?? 0, "total across agents", "amber")}
+          </div>
+          <div class="grid four" style="margin-top:8px">
+            ${metric("LLM Calls", data?.total_llm_calls ?? 0, "total requests", "blue")}
+            ${metric("Sources", data?.total_sources ?? 0, "total gathered", "teal")}
+            ${metric("Claims", data?.total_claims ?? 0, "total extracted", "violet")}
+            ${metric("Contradictions", data?.total_contradictions ?? 0, "total detected", "orange")}
           </div>
           <div class="card pad" style="margin-top:14px">
-            <div class="section-head"><h3>Agent Performance</h3><span class="badge blue">${agents.length} agents</span></div>
-            <div class="spark">${sparkBars(agents.map(a => a.token_usage || a.tokens || a.duration_ms || 1))}</div>
+            <div class="section-head"><h3>Agent Performance</h3><span class="badge blue">${agentNames.length} stages</span></div>
+            <div class="spark">${sparkBars(agentNames.map(n => nodeDurations[n] || 1))}</div>
             <div class="table-wrap" style="margin-top:12px"><table><thead><tr><th>Agent</th><th>Status</th><th>Tokens</th><th>Latency</th><th>Quality</th></tr></thead><tbody>
-              ${agents.map(a => `<tr><td>${escapeHtml(a.name || a.agent || "agent")}</td><td><span class="badge ${statusTone(a.status)}">${escapeHtml(a.status || "unknown")}</span></td><td>${compactNumber(a.token_usage || a.tokens || 0)}</td><td>${msLabel(a.duration_ms || a.latency_ms)}</td><td>${percent(a.quality_score ?? a.score)}</td></tr>`).join("") || `<tr><td colspan="5">No agent telemetry returned.</td></tr>`}
+              ${agentNames.map(n => {
+                const dur = nodeDurations[n] || 0;
+                const ev = state.events.find(e => (e.node || "").toLowerCase() === n.toLowerCase() || (e.agent || "").toLowerCase() === n.toLowerCase());
+                return `<tr><td>${escapeHtml(n)}</td><td><span class="badge ${statusTone(ev?.status || "completed")}">${escapeHtml(ev?.status || "completed")}</span></td><td>${compactNumber(ev?.tokens || 0)}</td><td>${msLabel(dur)}</td><td>${percent(data?.overall_quality_score)}</td></tr>`;
+              }).join("") || `<tr><td colspan="5">No agent telemetry returned.</td></tr>`}
             </tbody></table></div>
           </div>
         `;
@@ -2301,7 +2312,7 @@
         <div class="section-head"><div><h2>Settings</h2><div class="subtle">Frontend orchestration, API base URL, stream retry, and local workspace options.</div></div></div>
         <div class="card pad">
           <div class="settings-row"><strong>API Base URL</strong><div class="field"><input class="input" id="apiBaseInput" value="${escapeHtml(state.apiBase)}"></div></div>
-          <div class="settings-row"><strong>SSE Endpoint</strong><div class="mono subtle">GET /projects/{id}/chat/events via EventSource, with snapshot polling fallback</div></div>
+          <div class="settings-row"><strong>Events Source</strong><div class="mono subtle">GET /projects/{id}/chat/events via HTTP polling (5s interval)</div></div>
           <div class="settings-row"><strong>Current Mode</strong><div class="segmented"><button class="${state.generationMode === "v1" ? "active" : ""}" onclick="setMode('v1');renderSettings()">Linear v1</button><button class="${state.generationMode === "v2" ? "active" : ""}" onclick="setMode('v2');renderSettings()">Multi-Agent v2</button></div></div>
           <div style="display:flex;gap:8px;margin-top:14px"><button class="btn primary" onclick="saveSettings()">Save Settings</button><button class="btn" onclick="refreshAll()">Test Refresh</button></div>
         </div>
@@ -2321,52 +2332,16 @@
     function openStream() {
       if (!state.project) return;
       closeStream();
-      const id = projectId();
-      const url = `${state.apiBase}/projects/${encodeURIComponent(id)}/chat/events`;
-      addConsole("stream_connect", url, "frontend");
-      try {
-        const es = new EventSource(url);
-        state.eventSource = es;
-        es.onopen = () => {
-          $("#streamState").textContent = "stream live";
-          addConsole("stream_open", "SSE connection established.", "frontend");
-        };
-        es.onmessage = event => {
-          parseIncomingEvent(event.data);
-        };
-        ["discovery", "verification", "contradiction", "writing", "telemetry", "workflow"].forEach(type => {
-          es.addEventListener(type, event => parseIncomingEvent(event.data, type));
-        });
-        es.onerror = () => {
-          $("#streamState").textContent = "reconnecting";
-          addConsole("stream_error", "SSE connection interrupted; fallback polling active.", "frontend");
-          startPolling();
-        };
-      } catch (err) {
-        addConsole("stream_error", err.message, "frontend");
-        startPolling();
-      }
+      addConsole("stream_start", "Starting event polling.", "frontend");
       startPolling();
       startTelemetryLoop();
       renderShell();
     }
 
-    function parseIncomingEvent(payload, forcedType) {
-      try {
-        const parsed = JSON.parse(payload);
-        if (Array.isArray(parsed)) parsed.forEach(addEvent);
-        else addEvent(forcedType ? { ...parsed, event_type: parsed.event_type || forcedType } : parsed);
-      } catch {
-        addEvent({ node: "stream", event_type: forcedType || "message", message: payload, timestamp: nowIso(), data: { agent: "eventsource" } });
-      }
-    }
-
     function closeStream() {
-      if (state.eventSource) state.eventSource.close();
-      state.eventSource = null;
-      clearTimeout(state.reconnectTimer);
       clearInterval(state.pollTimer);
       clearInterval(state.telemetryTimer);
+      $("#streamState").textContent = "idle";
     }
 
     function startPolling() {
@@ -2382,11 +2357,11 @@
         const data = await endpoints.eventsSnapshot(projectId());
         const events = arrayFrom(data, ["events", "items", "results"]);
         events.forEach(addEvent);
-        $("#streamState").textContent = state.eventSource ? "stream live" : "polling";
+        $("#streamState").textContent = "polling";
       } catch (err) {
         state.offline = true;
         document.body.classList.add("offline");
-        $("#streamState").textContent = "stream degraded";
+        $("#streamState").textContent = "degraded";
       }
     }
 

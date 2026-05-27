@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     # --- LLM ---
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
+    openai_api_key: str = ""
+    openai_model: str = "gpt-4o"
     ollama_base_url: str = "http://localhost:11434"
     ollama_api_key: str = ""
     ollama_model: str = "nemotron-3-super:cloud"

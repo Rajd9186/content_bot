@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from pydantic import BaseModel
 from sqlalchemy import text
 
 from app.config import settings
@@ -7,7 +8,13 @@ from app.database import async_session_factory
 router = APIRouter(tags=["Health"])
 
 
-@router.get("/health")
+class HealthResponse(BaseModel):
+    status: str
+    version: str
+    database: str
+
+
+@router.get("/health", response_model=HealthResponse)
 async def health_check():
     db_ok = False
     try:
@@ -17,8 +24,8 @@ async def health_check():
     except Exception:
         pass
 
-    return {
-        "status": "healthy" if db_ok else "degraded",
-        "version": settings.project_version,
-        "database": "connected" if db_ok else "unreachable",
-    }
+    return HealthResponse(
+        status="healthy" if db_ok else "degraded",
+        version=settings.project_version,
+        database="connected" if db_ok else "unreachable",
+    )

@@ -19,7 +19,8 @@ from app.config import settings
 from app.database import init_db, dispose_engine, async_session_factory, validate_environment
 from app.models.content_version import ContentLock
 from app.routes import projects, content, evidence, verification, chat, enhance, ws, sse, sse_agents
-from app.routes.health import router as health_router
+from app.api.pipeline import router as pipeline_router
+from app.routes.health import router as health_router, HealthResponse
 from app.routes.workflow import register_workflow_routes
 from app.log_config.logger import setup_logging, set_correlation_id
 from app.utils.datetime_utils import utc_now
@@ -169,6 +170,11 @@ app.include_router(sse_agents.router, prefix=settings.api_v1_prefix)
 app.include_router(sse.router, prefix=settings.api_v1_prefix)
 
 # ---------------------------------------------------------------------------
+# V3 Pipeline routes (new typed architecture)
+# ---------------------------------------------------------------------------
+app.include_router(pipeline_router, prefix=settings.api_v1_prefix)
+
+# ---------------------------------------------------------------------------
 # Static files & root endpoint
 # ---------------------------------------------------------------------------
 _static_dir = Path(__file__).resolve().parent / "static"
@@ -190,9 +196,12 @@ async def api_docs_page():
 # ---------------------------------------------------------------------------
 # Health checks
 # ---------------------------------------------------------------------------
-@app.get("/health")
+from app.routes.health import HealthResponse
+
+
+@app.get("/health", response_model=HealthResponse)
 async def health_check():
-    return {"status": "healthy", "version": settings.project_version}
+    return HealthResponse(status="healthy", version=settings.project_version, database="connected")
 
 
 # ---------------------------------------------------------------------------

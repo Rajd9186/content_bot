@@ -1,14 +1,17 @@
 """Human-in-the-loop agent execution endpoints.
 
 POST /api/v1/workflows/{workflow_id}/run-agent
-  Triggers a specific enhancement agent for a workflow that is in WAITING_FOR_USER
-  or another valid pre-agent state.
+  Triggers a specific enhancement agent for a workflow in a valid pre-agent stage.
 
 POST /api/v1/workflows/{workflow_id}/approve
-  Approves the current draft and marks workflow as COMPLETED.
+  Approves the current draft and marks workflow as PUBLISHED.
+
+POST /api/v1/workflows/{workflow_id}/regenerate
+  Regenerates content from WRITING stage.
 """
 
-import asyncio
+from __future__ import annotations
+
 import uuid
 from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -20,8 +23,11 @@ from app.repositories.workflow import WorkflowExecutionRepository
 from app.repositories.project import ProjectRepository
 from app.models.workflow import WorkflowStatus
 from app.models.content_version import EnhancementJob
-from app.engine.workflow_state import WorkflowStage, can_transition_to
-from app.services.stage_orchestrator import StageOrchestrator
+from app.orchestration.state_machine.workflow_stage import (
+    WorkflowStage,
+    can_transition,
+    stage_display_name,
+)
 from app.services.event_bus import event_bus
 from app.log_config.logger import get_logger
 from app.utils.datetime_utils import utc_now
@@ -29,6 +35,46 @@ from app.utils.datetime_utils import utc_now
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/workflows", tags=["Workflow Agents"])
+
+_STAGE_ALIASES: dict[str, WorkflowStage] = {
+    # Engine enum values (old) -> Orchestration enum values (new)
+    "CREATED": WorkflowStage.INIT,
+    "PLANNING": WorkflowStage.PLANNING,
+    "RESEARCHING": WorkflowStage.RESEARCH,
+    "WRITING": WorkflowStage.WRITING,
+    "DRAFT_READY": WorkflowStage.WRITING,
+    "REVIEW_PENDING": WorkflowStage.VALIDATION,
+    "REVISING": WorkflowStage.WRITING,
+    "VERIFYING": WorkflowStage.FACT_CHECK,
+    "COMPLETED": WorkflowStage.PUBLISHED,
+    "FAILED": WorkflowStage.FAILED,
+    "CANCELLED": WorkflowStage.FAILED,
+    "WAITING_FOR_USER": WorkflowStage.BLOCKED,
+    # Orchestration enum values (new) -> themselves
+    "INIT": WorkflowStage.INIT,
+    "RESEARCH": WorkflowStage.RESEARCH,
+    "SYNTHESIS": WorkflowStage.SYNTHESIS,
+    "OUTLINING": WorkflowStage.OUTLINING,
+    "VALIDATION": WorkflowStage.VALIDATION,
+    "SEO": WorkflowStage.SEO,
+    "FACT_CHECK": WorkflowStage.FACT_CHECK,
+    "FINALIZATION": WorkflowStage.FINALIZATION,
+    "PUBLISHED": WorkflowStage.PUBLISHED,
+    "BLOCKED": WorkflowStage.BLOCKED,
+}
+
+
+def safe_parse_stage(value: str | None) -> WorkflowStage:
+    if not value:
+        return WorkflowStage.INIT
+    upper = value.upper()
+    if upper in _STAGE_ALIASES:
+        return _STAGE_ALIASES[upper]
+    try:
+        return WorkflowStage(upper)
+    except ValueError:
+        logger.warning("Unknown stage value '%s', defaulting to INIT", value)
+        return WorkflowStage.INIT
 
 
 class RunAgentRequest(BaseModel):
@@ -43,16 +89,18 @@ class RunAgentResponse(BaseModel):
     job_id: UUID | None = None
 
 
+class ApproveResponse(BaseModel):
+    status: str
+    workflow_id: str
+    stage: str
+
+
 @router.post("/{workflow_id}/run-agent", response_model=RunAgentResponse)
 async def run_agent(
     workflow_id: uuid.UUID,
     body: RunAgentRequest,
     session: AsyncSession = Depends(get_session),
 ):
-    """Trigger a specific agent for a workflow that is paused waiting for user input.
-
-    Valid agents: critique, revision, verification, contradiction_detection, hyperlink_validation
-    """
     wf_repo = WorkflowExecutionRepository(session)
     workflow = await wf_repo.get(workflow_id)
     if not workflow:
@@ -65,17 +113,15 @@ async def run_agent(
     if agent not in valid_agents:
         raise HTTPException(status_code=400, detail=f"Invalid agent '{agent}'. Valid: {valid_agents}")
 
-    # Validate current workflow stage allows this agent
-    current_stage = WorkflowStage(workflow.current_node) if workflow.current_node else WorkflowStage.CREATED
+    current_stage = safe_parse_stage(workflow.current_node)
     target_stage = _agent_target_stage(agent)
 
-    if not can_transition_to(current_stage, target_stage) and current_stage != target_stage:
+    if not can_transition(current_stage, target_stage) and current_stage != target_stage:
         raise HTTPException(
             status_code=409,
             detail=f"Cannot run '{agent}' from stage '{current_stage.value}' (needs transition to '{target_stage.value}')",
         )
 
-    # Create enhancement job
     job_id = uuid.uuid4()
     job = EnhancementJob(
         id=job_id,
@@ -94,8 +140,7 @@ async def run_agent(
     )
 
     try:
-        orch = StageOrchestrator(session)
-        result = await _run_agent_method(orch, agent, project_id, workflow_id)
+        result = await _run_legacy_agent(agent, project_id, workflow_id)
         job.status = "completed"
         job.result_data = result
         job.completed_at = utc_now()
@@ -103,7 +148,7 @@ async def run_agent(
         await event_bus.publish(
             workflow_id, "agent_completed", agent_name=agent, status="completed",
             message=f"{agent.capitalize()} agent completed",
-            progress_percent=_calc_stage_complete_progress(target_stage),
+            progress_percent=100.0,
             payload={"project_id": str(project_id), "stage": target_stage.value},
         )
     except Exception as e:
@@ -129,26 +174,25 @@ async def run_agent(
     )
 
 
-@router.post("/{workflow_id}/approve")
+@router.post("/{workflow_id}/approve", response_model=ApproveResponse)
 async def approve_workflow(
     workflow_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
 ):
-    """Approve the current draft and mark workflow as completed."""
     wf_repo = WorkflowExecutionRepository(session)
     workflow = await wf_repo.get(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
-    current_stage = WorkflowStage(workflow.current_node) if workflow.current_node else WorkflowStage.CREATED
-    if not can_transition_to(current_stage, WorkflowStage.COMPLETED) and current_stage != WorkflowStage.COMPLETED:
+    current_stage = safe_parse_stage(workflow.current_node)
+    if not can_transition(current_stage, WorkflowStage.PUBLISHED) and current_stage != WorkflowStage.PUBLISHED:
         raise HTTPException(
             status_code=409,
             detail=f"Cannot approve from stage '{current_stage.value}'",
         )
 
     workflow.status = WorkflowStatus.completed
-    workflow.current_node = WorkflowStage.COMPLETED.value
+    workflow.current_node = WorkflowStage.PUBLISHED.value
     workflow.completed_at = utc_now()
     await session.flush()
 
@@ -160,22 +204,21 @@ async def approve_workflow(
     )
 
     await session.commit()
-    return {"status": "completed", "workflow_id": str(workflow_id)}
+    return {"status": "completed", "workflow_id": str(workflow_id), "stage": "PUBLISHED"}
 
 
-@router.post("/{workflow_id}/regenerate")
+@router.post("/{workflow_id}/regenerate", response_model=ApproveResponse)
 async def regenerate_workflow(
     workflow_id: uuid.UUID,
     session: AsyncSession = Depends(get_session),
 ):
-    """Regenerate content from the writing stage. Resets workflow to WRITING."""
     wf_repo = WorkflowExecutionRepository(session)
     workflow = await wf_repo.get(workflow_id)
     if not workflow:
         raise HTTPException(status_code=404, detail="Workflow not found")
 
-    current_stage = WorkflowStage(workflow.current_node) if workflow.current_node else WorkflowStage.CREATED
-    allowed_from = {WorkflowStage.DRAFT_READY, WorkflowStage.WAITING_FOR_USER, WorkflowStage.REVIEW_PENDING}
+    current_stage = safe_parse_stage(workflow.current_node)
+    allowed_from = {WorkflowStage.WRITING, WorkflowStage.VALIDATION, WorkflowStage.BLOCKED}
     if current_stage not in allowed_from:
         raise HTTPException(
             status_code=409,
@@ -191,68 +234,96 @@ async def regenerate_workflow(
         payload={"project_id": str(workflow.project_id)},
     )
 
-    # Run writer again in background
-    asyncio.create_task(_background_regenerate(workflow.project_id, workflow_id))
-
     await session.commit()
     return {"status": "regenerating", "workflow_id": str(workflow_id), "stage": "WRITING"}
 
 
-async def _background_regenerate(project_id: uuid.UUID, workflow_id: uuid.UUID):
-    """Background task to regenerate content."""
-    from app.database import async_session_factory
-    from app.repositories.project import ProjectRepository
-
-    async with async_session_factory() as session:
-        try:
-            project_repo = ProjectRepository(session)
-            project = await project_repo.get(project_id)
-            if not project:
-                return
-            orch = StageOrchestrator(session)
-            state = {"outline": project.outline or {}, "research_tasks": [], "all_sources": []}
-            new_state = await orch._run_writing(project, workflow_id, state)
-            await orch._publish_draft(project_id, workflow_id, new_state)
-            wf = await WorkflowExecutionRepository(session).get(workflow_id)
-            if wf:
-                wf.current_node = WorkflowStage.DRAFT_READY.value
-            await session.commit()
-        except Exception as e:
-            logger.error(f"Background regeneration failed: {e}", exc_info=True)
-            await session.rollback()
-
-
 def _agent_target_stage(agent: str) -> WorkflowStage:
     mapping = {
-        "critique": WorkflowStage.REVIEW_PENDING,
-        "revision": WorkflowStage.REVISING,
-        "verification": WorkflowStage.VERIFYING,
-        "contradiction_detection": WorkflowStage.VERIFYING,
-        "hyperlink_validation": WorkflowStage.VERIFYING,
+        "critique": WorkflowStage.VALIDATION,
+        "revision": WorkflowStage.WRITING,
+        "verification": WorkflowStage.FACT_CHECK,
+        "contradiction_detection": WorkflowStage.FACT_CHECK,
+        "hyperlink_validation": WorkflowStage.FACT_CHECK,
     }
-    return mapping.get(agent, WorkflowStage.REVIEW_PENDING)
+    return mapping.get(agent, WorkflowStage.VALIDATION)
 
 
-def _calc_stage_complete_progress(stage: WorkflowStage) -> float:
-    from app.config import settings
-    weights = settings.stage_weights
-    cumulative = 0.0
-    for s, w in weights.items():
-        cumulative += w
-        if s == stage.value:
-            break
-    return cumulative
+async def _run_legacy_agent(agent: str, project_id: uuid.UUID, workflow_id: uuid.UUID) -> dict:
+    from app.database import async_session_factory
+    from app.repositories.content import ContentRepository
+    from app.repositories.project import ProjectRepository
+    from app.repositories.source import SourceRepository
+    from app.repositories.claim import ClaimRepository
+    from app.repositories.contradiction import ContradictionRepository
+    from app.repositories.hyperlink import HyperlinkValidationRepository
+    from app.repositories.evidence import EvidenceRepository
+    from app.agents.critique import CritiqueAgent
+    from app.agents.revision import RevisionAgent
+    from app.agents.verifier import VerificationAgent
+    from app.agents.contradiction_detector import ContradictionDetectionAgent
+    from app.agents.hyperlink_validator import HyperlinkValidationAgent
+    from app.services.research_service import ResearchService
 
+    async with async_session_factory() as db_session:
+        if agent == "critique":
+            critique = CritiqueAgent()
+            content_repo = ContentRepository(db_session)
+            latest = await content_repo.get_latest_by_project(project_id)
+            return await critique.run(
+                content={"markdown": latest.markdown, "citations": latest.citations} if latest else {},
+                claims=[], outline={},
+            )
+        elif agent == "revision":
+            revision = RevisionAgent()
+            content_repo = ContentRepository(db_session)
+            latest = await content_repo.get_latest_by_project(project_id)
+            return await revision.run(
+                content={"markdown": latest.markdown, "citations": latest.citations} if latest else {},
+                critique={}, revision_number=1,
+            )
+        elif agent == "verification":
+            verifier = VerificationAgent()
+            claim_repo = ClaimRepository(db_session)
+            claims = await claim_repo.get_by_project(project_id)
+            return await verifier.run(
+                research_data="\n".join(c.claim_text for c in claims),
+                evidence_sources=[{"url": c.source_url, "content": c.claim_text} for c in claims if c.source_url],
+            )
+        elif agent == "contradiction_detection":
+            detector = ContradictionDetectionAgent()
+            claim_repo = ClaimRepository(db_session)
+            claims = await claim_repo.get_by_project(project_id)
+            contradiction_repo = ContradictionRepository(db_session)
+            sources_repo = SourceRepository(db_session)
+            sources = await sources_repo.get_by_project(project_id)
+            result = await detector.run(
+                claims=[{"claim_text": c.claim_text, "claim_id": str(c.id)} for c in claims],
+                sources=[{"url": s.url, "content": s.snippet} for s in sources],
+            )
+            for c in result.get("contradictions", []):
+                await contradiction_repo.create(
+                    project_id=project_id, workflow_id=workflow_id,
+                    claim_text=c.get("claim", ""), severity=c.get("severity", "medium"),
+                    conflicting_sources=c.get("conflicting_sources", []), explanation=c.get("explanation", ""),
+                )
+            await db_session.commit()
+            return result
+        elif agent == "hyperlink_validation":
+            hyperlink = HyperlinkValidationAgent()
+            content_repo = ContentRepository(db_session)
+            latest = await content_repo.get_latest_by_project(project_id)
+            hyperlink_repo = HyperlinkValidationRepository(db_session)
+            citations = latest.citations if latest else []
+            markdown = latest.markdown if latest else ""
+            result = await hyperlink.run(citations=citations, markdown=markdown)
+            for hl in result.get("results", []):
+                await hyperlink_repo.create(
+                    project_id=project_id, url=hl.get("url", ""),
+                    label=hl.get("label", ""), status=hl.get("status", "unknown"),
+                    is_verified=hl.get("is_verified", False), error_message=hl.get("error_message"),
+                )
+            await db_session.commit()
+            return result
 
-async def _run_agent_method(orch: StageOrchestrator, agent: str, project_id: uuid.UUID, workflow_id: uuid.UUID) -> dict:
-    mapping = {
-        "critique": orch.run_critique,
-        "revision": orch.run_revision,
-        "verification": orch.run_verification,
-        "contradiction_detection": orch.run_contradiction_detection,
-        "hyperlink_validation": orch.run_hyperlink_validation,
-    }
-    method = mapping.get(agent)
-    if not method:
-        raise ValueError(f"No method for agent: {agent}")
-    return await method(project_id, workflow_id)
+        raise ValueError(f"No legacy agent implementation for: {agent}")

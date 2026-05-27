@@ -32,7 +32,7 @@ class ProjectCreate(BaseModel):
     @field_validator("content_type")
     @classmethod
     def validate_content_type(cls, v: str) -> str:
-        allowed = {"blog_post", "article", "research_paper", "report", "white_paper", "case_study"}
+        allowed = {"blog_post", "article", "research_paper", "research_article", "report", "white_paper", "case_study"}
         if v.lower() not in allowed:
             raise ValueError(f"Content type must be one of: {allowed}")
         return v.lower()

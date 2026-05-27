@@ -28,6 +28,7 @@ class ContentGenerateResponse(BaseModel):
     citations: list[dict] | None = Field(default=None)
     seo_metadata: dict | None = Field(default=None)
     overall_confidence: float | None = Field(default=None)
+    quality_score: float | None = Field(default=None)
     claims: list[dict] = Field(default_factory=list)
     verification_summary: dict = Field(default_factory=dict)
 

@@ -1,55 +1,17 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
-from app.database import get_session, async_session_factory
+from app.database import get_session
 from app.repositories.project import ProjectRepository
 from app.repositories.content import ContentRepository
 from app.repositories.workflow import WorkflowExecutionRepository
 from app.schemas.content import ContentResponse, ContentGenerateResponse, ContentStatusResponse
-from app.services.content_generator import ContentGeneratorService
-from app.services.stage_orchestrator import StageOrchestrator
-from app.models.project import Project
-from app.models.workflow import WorkflowExecution
 from app.log_config.logger import get_logger
 
 logger = get_logger(__name__)
 
 router = APIRouter(prefix="/projects/{project_id}/content", tags=["Content"])
-
-
-async def run_orchestrator(project_id: uuid.UUID):
-    """Background task that runs the staged multi-agent workflow for a project.
-
-    Opens its own session so the request session is not held during the
-    potentially long-running orchestration.
-    """
-    async with async_session_factory() as session:
-        try:
-            orchestrator = StageOrchestrator(session)
-            project_repo = ProjectRepository(session)
-            project = await project_repo.get(project_id)
-            if not project:
-                logger.error(f"Project {project_id} not found during background orchestration")
-                return
-
-            logger.info("Starting background staged orchestration", extra={"project_id": str(project_id)})
-            await orchestrator.run_auto_pipeline(project)
-            await session.commit()
-            logger.info("Staged orchestration completed and committed", extra={"project_id": str(project_id)})
-        except Exception as e:
-            logger.error(
-                f"Background staged orchestration failed for project {project_id}: {e}",
-                exc_info=True,
-            )
-            try:
-                await session.rollback()
-                project_repo = ProjectRepository(session)
-                await project_repo.update_status(project_id, "failed")
-                await session.commit()
-            except Exception:
-                pass
 
 
 @router.get("", response_model=list[ContentResponse])
@@ -130,10 +92,10 @@ async def get_latest_content(
 @router.post("/generate", response_model=ContentGenerateResponse)
 async def generate_content(
     project_id: uuid.UUID,
-    background_tasks: BackgroundTasks,
     session: AsyncSession = Depends(get_session),
-    mode: str = Query("v2", description="'v1' for linear pipeline, 'v2' for multi-agent workflow"),
 ):
+    from app.services.content_orchestrator import ContentOrchestrator
+
     project_repo = ProjectRepository(session)
     project = await project_repo.get(project_id)
     if project is None:
@@ -142,17 +104,30 @@ async def generate_content(
             detail=f"Project {project_id} not found",
         )
 
-    if mode == "v1":
-        service = ContentGeneratorService(session)
-        result = await service.generate_full_content(project)
-        return result
+    if not project.topic:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Project must have a topic before generating content",
+        )
 
-    await project_repo.update_status(project_id, "planning")
-
-    background_tasks.add_task(run_orchestrator, project_id)
+    orchestrator = ContentOrchestrator()
+    output = await orchestrator.run_full_pipeline(
+        project_id=str(project_id),
+        topic=project.topic,
+        title=project.title or project.topic,
+        content_type=project.content_type or "article",
+        tone=project.tone or "professional",
+        target_audience=project.target_audience or "general",
+        points_to_cover=project.points_to_cover or [],
+        seo_keywords=project.seo_keywords or [],
+    )
 
     return ContentGenerateResponse(
         project_id=project_id,
-        status="started",
-        message="Content generation started in background",
+        status="completed",
+        markdown=output.markdown,
+        word_count=output.word_count,
+        quality_score=output.quality_score,
+        citations=output.citations,
+        message=f"Content generated: {output.word_count} words, {len(output.citations)} citations",
     )
