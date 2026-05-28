@@ -1,0 +1,82 @@
+# AI Content Intelligence Platform — Production Stack
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aci-postgres
+    environment:
+      POSTGRES_USER: ${APP_DATABASE_USER:-postgres}
+      POSTGRES_PASSWORD: ${APP_DATABASE_PASSWORD}
+      POSTGRES_DB: ${APP_DATABASE_NAME:-ai_content_intel}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_DATABASE_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: aci-redis
+    command: redis-server --requirepass ${APP_REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${APP_REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant:v1.8.0
+    container_name: aci-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    restart: always
+
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    container_name: aci-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENVIRONMENT=production
+      - APP_DEBUG=false
+      - APP_DATABASE_URL=postgresql+asyncpg://${APP_DATABASE_USER}:${APP_DATABASE_PASSWORD}@postgres:5432/${APP_DATABASE_NAME}
+      - APP_REDIS_URL=redis://:${APP_REDIS_PASSWORD}@redis:6379
+      - APP_CORS_ORIGINS=${APP_CORS_ORIGINS}
+      - APP_LOG_LEVEL=info
+      - APP_JWT_SECRET=${APP_JWT_SECRET}
+      - APP_OTLP_ENDPOINT=${APP_OTLP_ENDPOINT:-http://otel-collector:4318}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: always
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+      target: runner
+    container_name: aci-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:

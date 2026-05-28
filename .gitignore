@@ -1,0 +1,54 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+*.egg
+.ruff_cache/
+.pytest_cache/
+
+# ── Node ──
+node_modules/
+.pnpm-store/
+.next/
+
+# ── Build ──
+dist/
+build/
+*.tsbuildinfo
+.next/
+
+# ── Environment ──
+.env
+.env.local
+.env.*.local
+.env.production
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Logs ──
+*.log
+logs/
+
+# ── Docker ──
+docker-compose.override.yml
+
+# ── Coverage ──
+coverage/
+htmlcov/
+
+# ── Prisma ──
+packages/database/generated/
+
+# ── Generated Types ──
+frontend/src/types/generated.ts
