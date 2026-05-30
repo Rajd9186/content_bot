@@ -7,7 +7,12 @@ const getBaseURL = () => {
     const stored = localStorage.getItem("acip-api-url");
     if (stored) return stored;
   }
-  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  // Ensure it ends with /api/v1 if it doesn't already
+  if (url && !url.includes("/api/v1")) {
+    url = url.replace(/\/$/, "") + "/api/v1";
+  }
+  return url;
 };
 
 const api = axios.create({
