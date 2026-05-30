@@ -2,23 +2,26 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
-from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Optional
+from abc import ABC
+from datetime import UTC, datetime
+from typing import Any
 
 from app.agents.contracts import (
-    AgentContract, AgentInput, AgentOutput, AgentStatus,
-    RetryPolicy, TimeoutPolicy, TokenUsage, ValidationResult,
+    AgentContract,
+    AgentInput,
+    AgentOutput,
+    AgentStatus,
+    AgentTelemetry,
+    ValidationResult,
 )
-from app.agents.prompt.engine import PromptContext, PromptEngine, prompt_engine
+from app.agents.prompt.engine import PromptContext, prompt_engine
 from app.agents.provider.base import BaseProvider, ProviderRequest
-from app.agents.provider.factory import ProviderFactory, provider_factory
+from app.agents.provider.factory import provider_factory
 from app.agents.retry.policy import RetryPolicyExecutor
-from app.agents.telemetry.collector import TelemetryCollector, telemetry_collector
+from app.agents.telemetry.collector import telemetry_collector
 from app.agents.validation.parser import ResponseParser
+from app.agents.validation.recovery import fallback_generator
 from app.agents.validation.schema import SchemaValidator
-from app.agents.validation.recovery import FallbackGenerator, fallback_generator
 
 logger = logging.getLogger(__name__)
 
@@ -28,7 +31,7 @@ class BaseAgent(ABC):
         self,
         contract: AgentContract,
         provider_name: str = "openai",
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> None:
         self._contract = contract
         self._provider_name = provider_name
@@ -38,7 +41,7 @@ class BaseAgent(ABC):
         self._fallback_generator = fallback_generator
         self._telemetry_collector = telemetry_collector
         self._prompt_engine = prompt_engine
-        self._provider: Optional[BaseProvider] = None
+        self._provider: BaseProvider | None = None
         self._retry_executor = RetryPolicyExecutor(contract.retry_policy)
         self._cancelled = False
 
@@ -64,7 +67,7 @@ class BaseAgent(ABC):
             workflow_id=agent_input.workflow_id,
         )
         telemetry.status = AgentStatus.VALIDATING_INPUT
-        telemetry.started_at = datetime.now(timezone.utc).isoformat()
+        telemetry.started_at = datetime.now(UTC).isoformat()
 
         try:
             validation = await self._validate_input(agent_input)
@@ -93,7 +96,7 @@ class BaseAgent(ABC):
                 telemetry.error = error
 
             telemetry.status = AgentStatus.COMPLETED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.latency_ms = self._compute_latency(telemetry)
             self._telemetry_collector.record(telemetry)
 
@@ -105,7 +108,7 @@ class BaseAgent(ABC):
 
         except asyncio.CancelledError:
             telemetry.status = AgentStatus.CANCELLED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.error = "Agent execution cancelled"
             self._telemetry_collector.record(telemetry)
             return AgentOutput(
@@ -114,7 +117,7 @@ class BaseAgent(ABC):
 
         except Exception as e:
             telemetry.status = AgentStatus.FAILED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.error = str(e)
             self._telemetry_collector.record(telemetry)
             return AgentOutput(
@@ -133,7 +136,7 @@ class BaseAgent(ABC):
 
     async def _execute_with_retry(
         self, prompt_context: PromptContext, agent_input: AgentInput,
-    ) -> tuple[bool, Optional[dict[str, Any]], Optional[str]]:
+    ) -> tuple[bool, dict[str, Any] | None, str | None]:
         return await self._retry_executor.execute_with_retry(
             self._execute_single, prompt_context, agent_input,
             on_retry=self._on_retry,
@@ -141,7 +144,7 @@ class BaseAgent(ABC):
 
     async def _execute_single(
         self, prompt_context: PromptContext, agent_input: AgentInput,
-    ) -> tuple[bool, Optional[dict[str, Any]], Optional[str]]:
+    ) -> tuple[bool, dict[str, Any] | None, str | None]:
         self._check_cancelled()
 
         provider = await self._get_provider()
@@ -153,7 +156,7 @@ class BaseAgent(ABC):
                 provider.execute(request),
                 timeout=timeout_policy.execution_ms / 1000,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False, None, "Provider execution timed out"
 
         if not response.success:
@@ -186,7 +189,7 @@ class BaseAgent(ABC):
 
     async def _parse_output(
         self, content: str, agent_input: AgentInput,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return self._parse_json_output(content)
 
     async def _validate_output(
@@ -194,7 +197,7 @@ class BaseAgent(ABC):
     ) -> ValidationResult:
         return ValidationResult(valid=True)
 
-    def _parse_json_output(self, content: str) -> Optional[dict[str, Any]]:
+    def _parse_json_output(self, content: str) -> dict[str, Any] | None:
         parsed, error = self._response_parser.parse_json(content)
         if error:
             logger.warning("JSON parsing failed for %s: %s", self.name, error)

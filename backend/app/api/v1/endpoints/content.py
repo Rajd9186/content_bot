@@ -2,7 +2,7 @@
 Content API endpoints.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Query
 
 router = APIRouter()
 

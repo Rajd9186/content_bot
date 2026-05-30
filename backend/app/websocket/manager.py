@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 
 from fastapi import WebSocket
 from pydantic import BaseModel, Field
@@ -19,9 +20,9 @@ GLOBAL_EVENTS_CHANNEL = "events:outbox:*"
 class WSMessage(BaseModel):
     type: str
     data: dict[str, Any] = {}
-    correlation_id: Optional[str] = None
+    correlation_id: str | None = None
     timestamp: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
 
 
@@ -29,10 +30,10 @@ class ConnectionManager:
     def __init__(self) -> None:
         self._connections: dict[str, set[WebSocket]] = {}
         self._user_connections: dict[str, set[WebSocket]] = {}
-        self._redis_listener_task: Optional[asyncio.Task[None]] = None
+        self._redis_listener_task: asyncio.Task[None] | None = None
 
     async def connect(self, websocket: WebSocket, workspace_id: str,
-                      user_id: Optional[str] = None) -> None:
+                      user_id: str | None = None) -> None:
         await websocket.accept()
 
         if workspace_id not in self._connections:
@@ -50,7 +51,7 @@ class ConnectionManager:
         )
 
     async def disconnect(self, websocket: WebSocket, workspace_id: str,
-                         user_id: Optional[str] = None) -> None:
+                         user_id: str | None = None) -> None:
         if workspace_id in self._connections:
             self._connections[workspace_id].discard(websocket)
             if not self._connections[workspace_id]:
@@ -118,10 +119,8 @@ class ConnectionManager:
     async def stop_redis_listener(self) -> None:
         if self._redis_listener_task and not self._redis_listener_task.done():
             self._redis_listener_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._redis_listener_task
-            except asyncio.CancelledError:
-                pass
             self._redis_listener_task = None
             logger.info("Redis WS listener stopped")
 

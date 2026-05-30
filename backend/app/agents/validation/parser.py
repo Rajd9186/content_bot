@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ class ResponseParser:
     )
     _markdown_heading_re = re.compile(r"^#{1,6}\s+", re.MULTILINE)
 
-    def parse_json(self, raw: str) -> tuple[Optional[dict[str, Any]], Optional[str]]:
+    def parse_json(self, raw: str) -> tuple[dict[str, Any] | None, str | None]:
         if not raw or not raw.strip():
             return None, "Empty response"
 
@@ -42,7 +42,7 @@ class ResponseParser:
 
         return None, "No valid JSON found in response"
 
-    def parse_markdown(self, raw: str) -> tuple[str, Optional[str]]:
+    def parse_markdown(self, raw: str) -> tuple[str, str | None]:
         if not raw or not raw.strip():
             return "", "Empty response"
 
@@ -58,7 +58,7 @@ class ResponseParser:
 
         return stripped, None
 
-    def _attempt_json_recovery(self, text: str) -> Optional[dict[str, Any]]:
+    def _attempt_json_recovery(self, text: str) -> dict[str, Any] | None:
         text = re.sub(r",\s*([}\]])", r"\1", text)
         text = re.sub(r"'([^']*)'", r'"\1"', text)
         text = re.sub(r"(\w+):", r'"\1":', text)
@@ -73,9 +73,8 @@ class ResponseParser:
         for ch in text:
             if ch in ("{", "["):
                 brace_stack.append(ch)
-            elif ch in ("}", "]"):
-                if brace_stack:
-                    brace_stack.pop()
+            elif ch in ("}", "]") and brace_stack:
+                brace_stack.pop()
 
         if brace_stack:
             closing = "".join(
@@ -107,10 +106,7 @@ class ResponseParser:
                 return True
 
         heading_count = len(self._markdown_heading_re.findall(stripped))
-        if heading_count == 0 and len(stripped.split()) < 50:
-            return True
-
-        return False
+        return bool(heading_count == 0 and len(stripped.split()) < 50)
 
     def _detect_placeholders(self, text: str) -> list[str]:
         patterns = {
@@ -128,7 +124,7 @@ class ResponseParser:
         return found
 
     def has_hallucinated_citations(
-        self, text: str, known_sources: Optional[list[str]] = None,
+        self, text: str, known_sources: list[str] | None = None,
     ) -> list[str]:
         citations = re.findall(r"\[Source:\s*([^\]]+)\]", text)
         if not known_sources:

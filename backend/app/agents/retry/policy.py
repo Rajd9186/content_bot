@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from enum import Enum
-from typing import Any, Callable, Coroutine, Optional
+from collections.abc import Callable, Coroutine
+from enum import StrEnum
+from typing import Any
 
 from app.agents.contracts import RetryPolicy
 from app.agents.retry.strategy import FullJitterBackoff
@@ -11,7 +12,7 @@ from app.agents.retry.strategy import FullJitterBackoff
 logger = logging.getLogger(__name__)
 
 
-class RetryReason(str, Enum):
+class RetryReason(StrEnum):
     TIMEOUT = "timeout"
     RATE_LIMIT = "rate_limit"
     PROVIDER_ERROR = "provider_error"
@@ -30,7 +31,7 @@ class RetryPolicyExecutor:
             jitter_factor=policy.jitter_factor,
         )
         self._attempt = 0
-        self._last_error: Optional[str] = None
+        self._last_error: str | None = None
         self._retry_history: list[dict[str, Any]] = []
 
     @property
@@ -38,7 +39,7 @@ class RetryPolicyExecutor:
         return self._attempt
 
     @property
-    def last_error(self) -> Optional[str]:
+    def last_error(self) -> str | None:
         return self._last_error
 
     @property
@@ -69,11 +70,11 @@ class RetryPolicyExecutor:
 
     async def execute_with_retry(
         self,
-        func: Callable[..., Coroutine[Any, Any, tuple[bool, Any, Optional[str]]]],
+        func: Callable[..., Coroutine[Any, Any, tuple[bool, Any, str | None]]],
         *args: Any,
-        on_retry: Optional[Callable[[int, str], Coroutine[Any, Any, None]]] = None,
+        on_retry: Callable[[int, str], Coroutine[Any, Any, None]] | None = None,
         **kwargs: Any,
-    ) -> tuple[bool, Any, Optional[str]]:
+    ) -> tuple[bool, Any, str | None]:
         self._attempt = 0
         self._retry_history = []
 

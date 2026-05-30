@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
-from app.agents.provider.base import BaseProvider
-from app.agents.provider.openai import OpenAIProvider
 from app.agents.provider.anthropic import AnthropicProvider
+from app.agents.provider.base import BaseProvider
 from app.agents.provider.groq import GroqProvider
 from app.agents.provider.local import LocalProvider
 from app.agents.provider.nvidia import NvidiaProvider
 from app.agents.provider.ollama import OllamaProvider
+from app.agents.provider.openai import OpenAIProvider
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +20,10 @@ class ProviderFactory:
     def register(self, name: str, provider: BaseProvider) -> None:
         self._providers[name] = provider
 
-    def get(self, name: str) -> Optional[BaseProvider]:
+    def get(self, name: str) -> BaseProvider | None:
         return self._providers.get(name)
 
-    def get_or_create(self, name: str, model: Optional[str] = None) -> BaseProvider:
+    def get_or_create(self, name: str, model: str | None = None) -> BaseProvider:
         existing = self._providers.get(name)
         if existing:
             return existing
@@ -32,7 +31,7 @@ class ProviderFactory:
         self._providers[name] = provider
         return provider
 
-    def _create(self, name: str, model: Optional[str] = None) -> BaseProvider:
+    def _create(self, name: str, model: str | None = None) -> BaseProvider:
         normalized = name.lower().replace("_", "-")
         if normalized in ("openai", "gpt-4o", "gpt-4", "gpt-3.5"):
             return OpenAIProvider(model or "gpt-4o")
@@ -43,7 +42,8 @@ class ProviderFactory:
         elif normalized in ("nvidia", "nemotron"):
             return NvidiaProvider(model or "nvidia/nemotron-3-super-120b-a12b")
         elif normalized in ("ollama", "gpt-oss"):
-            return OllamaProvider(model or ("gpt-oss:120b" if normalized == "gpt-oss" else "llama3.2"))
+            default_ollama = "gpt-oss:120b" if normalized == "gpt-oss" else "llama3.2"
+            return OllamaProvider(model or default_ollama)
         elif normalized in ("local", "llamacpp"):
             return LocalProvider(model or "local-model")
         else:

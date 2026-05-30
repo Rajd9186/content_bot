@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from app.research.models import ResearchQuery
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class MockSearchProvider(BaseSearchProvider):
     """Mock provider for testing and development"""
-    
+
     def __init__(self) -> None:
         super().__init__("mock")
 
@@ -22,7 +22,7 @@ class MockSearchProvider(BaseSearchProvider):
         research_query: ResearchQuery,
     ) -> list[dict[str, Any]]:
         logger.info("Mock search for: %s", query)
-        
+
         mock_results = [
             {
                 "url": f"https://example.com/article-{i}",
@@ -30,39 +30,45 @@ class MockSearchProvider(BaseSearchProvider):
                 "snippet": self._generate_snippet(query, i),
                 "content": self._generate_content(query, i),
                 "authors": [f"Author {i}"],
-                "published_date": datetime.now(timezone.utc) - timedelta(days=i*5),
+                "published_date": datetime.now(UTC) - timedelta(days=i*5),
                 "domain": "example.com",
                 "source_type": "web",
             }
             for i in range(1, 8)
         ]
-        
+
         academic_result = {
             "url": f"https://arxiv.org/abs/2024.{query.replace(' ', '')}",
             "title": f"Research Study on {query}: A Comprehensive Analysis",
-            "snippet": f"Peer-reviewed research examining {query} in depth with statistical analysis and expert commentary.",
+            "snippet": (
+                f"Peer-reviewed research examining {query} in depth "
+                "with statistical analysis and expert commentary."
+            ),
             "content": f"Full academic paper on {query}",
             "authors": ["Dr. Researcher", "Prof. Expert"],
-            "published_date": datetime.now(timezone.utc) - timedelta(days=30),
+            "published_date": datetime.now(UTC) - timedelta(days=30),
             "domain": "arxiv.org",
             "source_type": "academic",
         }
-        
+
         mock_results.append(academic_result)
-        
+
         news_result = {
             "url": "https://reuters.com/technology/latest",
             "title": f"Breaking: New Developments in {query}",
-            "snippet": f"Industry leaders announce major breakthroughs related to {query}, marking significant progress.",
+            "snippet": (
+                f"Industry leaders announce major breakthroughs related to {query}, "
+                "marking significant progress."
+            ),
             "content": "Full news article",
             "authors": ["News Team"],
-            "published_date": datetime.now(timezone.utc) - timedelta(days=2),
+            "published_date": datetime.now(UTC) - timedelta(days=2),
             "domain": "reuters.com",
             "source_type": "news",
         }
-        
+
         mock_results.append(news_result)
-        
+
         return mock_results
 
     def _generate_snippet(self, query: str, i: int) -> str:

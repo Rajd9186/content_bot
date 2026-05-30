@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import Base, JSONBColumn, utcnow
 
@@ -20,12 +19,12 @@ class ContentItem(Base):
     )
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     slug: Mapped[str] = mapped_column(String(250), nullable=False)
-    source_url: Mapped[Optional[str]] = mapped_column("source_url", String(2048), nullable=True)
+    source_url: Mapped[str | None] = mapped_column("source_url", String(2048), nullable=True)
     status: Mapped[str] = mapped_column(String(32), default="draft", index=True)
-    raw_body: Mapped[Optional[str]] = mapped_column("raw_body", Text, nullable=True)
-    extra_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
+    raw_body: Mapped[str | None] = mapped_column("raw_body", Text, nullable=True)
+    extra_metadata: Mapped[dict | None] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
     version: Mapped[int] = mapped_column(Integer, default=1)
-    correlation_id: Mapped[Optional[str]] = mapped_column(
+    correlation_id: Mapped[str | None] = mapped_column(
         "correlation_id", UUID(as_uuid=False), nullable=True
     )
     created_by: Mapped[str] = mapped_column(
@@ -56,8 +55,8 @@ class ContentVersion(Base):
     )
     version: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
-    raw_body: Mapped[Optional[str]] = mapped_column("raw_body", Text, nullable=True)
-    extra_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
+    raw_body: Mapped[str | None] = mapped_column("raw_body", Text, nullable=True)
+    extra_metadata: Mapped[dict | None] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
     created_by: Mapped[str] = mapped_column(
         "created_by", UUID(as_uuid=False), nullable=False
     )
@@ -77,13 +76,13 @@ class GeneratedContent(Base):
         ForeignKey("content_items.id", ondelete="SET NULL"),
         nullable=True, index=True
     )
-    job_id: Mapped[Optional[str]] = mapped_column(
+    job_id: Mapped[str | None] = mapped_column(
         "job_id", UUID(as_uuid=False), nullable=True, index=True
     )
-    agent_id: Mapped[Optional[str]] = mapped_column("agent_id", String(64), nullable=True)
+    agent_id: Mapped[str | None] = mapped_column("agent_id", String(64), nullable=True)
     content_type: Mapped[str] = mapped_column("content_type", String(64), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    extra_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
+    extra_metadata: Mapped[dict | None] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
     version: Mapped[int] = mapped_column(Integer, default=1)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime(timezone=True), default=utcnow

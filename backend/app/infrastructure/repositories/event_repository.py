@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
-
-from sqlalchemy import select, func, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select
 
 from app.infrastructure.models.event import StoredEvent
 from app.infrastructure.repositories.base import BaseRepository
@@ -22,7 +19,7 @@ class EventRepository(BaseRepository[StoredEvent]):
         result = await self.session.execute(stmt)
         return (result.scalar_one() or 0) + 1
 
-    async def get_by_id(self, event_id: str) -> Optional[StoredEvent]:
+    async def get_by_id(self, event_id: str) -> StoredEvent | None:
         return await self.session.get(StoredEvent, event_id)
 
     async def get_by_type(
@@ -66,8 +63,8 @@ class EventRepository(BaseRepository[StoredEvent]):
         return list(result.scalars().all())
 
     async def get_by_time_range(
-        self, event_type: Optional[str] = None,
-        from_time: Optional[str] = None, to_time: Optional[str] = None,
+        self, event_type: str | None = None,
+        from_time: str | None = None, to_time: str | None = None,
         limit: int = 100,
     ) -> list[StoredEvent]:
         stmt = select(StoredEvent)

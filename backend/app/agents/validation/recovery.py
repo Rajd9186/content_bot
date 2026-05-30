@@ -1,8 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -183,8 +182,8 @@ class FallbackGenerator:
         self, kwargs: dict[str, Any], error: str,
     ) -> dict[str, Any]:
         title = kwargs.get("title", "Content Document")
-        outline = kwargs.get("outline", "")
-        research = kwargs.get("research_synthesis", "")
+        kwargs.get("outline", "")
+        kwargs.get("research_synthesis", "")
 
         if not title or title == "Untitled" or "# Untitled" in title:
             title = "Content Document"

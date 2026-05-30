@@ -4,9 +4,9 @@ import logging
 import re
 import time
 from collections import deque
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class ProviderRouter:
         agent_type: str,
         system_prompt: str,
         user_prompt: str,
-        state: Optional[dict[str, Any]] = None,
+        state: dict[str, Any] | None = None,
     ) -> RoutingDecision:
         estimated_input = estimate_tokens(system_prompt) + estimate_tokens(user_prompt)
         estimated_output = estimate_tokens(
@@ -128,7 +128,7 @@ class ProviderRouter:
         )
 
     async def get_fallback(
-        self, agent_type: str, failed_provider: str, failed_model: str,
+        self, _agent_type: str, failed_provider: str, failed_model: str,
         error: str,
     ) -> RoutingDecision:
         if failed_provider == "groq":
@@ -156,7 +156,10 @@ class ProviderRouter:
             return RoutingDecision(
                 provider=OLLAMA_PROVIDER, model=OLLAMA_MODEL,
                 estimated_input_tokens=0, estimated_output_tokens=0,
-                routing_reason=f"Nvidia {failed_model} failed: {error[:100]}, falling back to Ollama",
+                routing_reason=(
+                    f"Nvidia {failed_model} failed: {error[:100]}, "
+                    "falling back to Ollama"
+                ),
                 fallback_provider=OLLAMA_PROVIDER,
                 fallback_model=OLLAMA_MODEL,
                 execution_priority=1,
@@ -248,7 +251,10 @@ class ProviderRouter:
             provider="groq", model=model,
             estimated_input_tokens=estimated_input,
             estimated_output_tokens=estimated_output,
-            routing_reason=f"Agent '{agent_type}' routed to Groq ({model}) for {complexity.value} task",
+            routing_reason=(
+                f"Agent '{agent_type}' routed to Groq ({model}) "
+                f"for {complexity.value} task"
+            ),
             fallback_provider="nvidia",
             fallback_model=NVIDIA_MODELS[TaskComplexity.MEDIUM][0],
             execution_priority=priority,

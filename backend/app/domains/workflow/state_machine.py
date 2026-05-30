@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from enum import Enum
-from typing import Any, Callable, Coroutine, Dict, List, Optional, Tuple
+from enum import StrEnum
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-class WorkflowStatus(str, Enum):
+class WorkflowStatus(StrEnum):
     DRAFT = "DRAFT"
     QUEUED = "QUEUED"
     VALIDATING = "VALIDATING"
@@ -30,7 +31,7 @@ class WorkflowStatus(str, Enum):
         )
 
 
-class ProcessingStage(str, Enum):
+class ProcessingStage(StrEnum):
     PRE_PROCESS = "PRE_PROCESS"
     AGENT_DISPATCH = "AGENT_DISPATCH"
     AGENT_WORK = "AGENT_WORK"
@@ -38,7 +39,7 @@ class ProcessingStage(str, Enum):
     POST_PROCESS = "POST_PROCESS"
 
 
-class Trigger(str, Enum):
+class Trigger(StrEnum):
     SUBMIT = "submit"
     CANCEL = "cancel"
     DEQUEUE = "dequeue"
@@ -71,7 +72,7 @@ class TransitionDef:
     side_effect_description: str = ""
 
 
-TRANSITION_TABLE: List[TransitionDef] = [
+TRANSITION_TABLE: list[TransitionDef] = [
     TransitionDef("submit", WorkflowStatus.DRAFT, WorkflowStatus.QUEUED,
                   "Owner match, quota check", "Emit workflow.job.started.v1"),
     TransitionDef("dequeue", WorkflowStatus.QUEUED, WorkflowStatus.VALIDATING,
@@ -124,14 +125,14 @@ TRANSITION_TABLE: List[TransitionDef] = [
                   "Retry count exhausted", "Record final error details"),
 ]
 
-TRANSITION_BY_TRIGGER: Dict[str, List[TransitionDef]] = {}
+TRANSITION_BY_TRIGGER: dict[str, list[TransitionDef]] = {}
 for td in TRANSITION_TABLE:
     key = td.trigger
     if key not in TRANSITION_BY_TRIGGER:
         TRANSITION_BY_TRIGGER[key] = []
     TRANSITION_BY_TRIGGER[key].append(td)
 
-TRANSITION_RULES: Dict[WorkflowStatus, set[WorkflowStatus]] = {}
+TRANSITION_RULES: dict[WorkflowStatus, set[WorkflowStatus]] = {}
 for td in TRANSITION_TABLE:
     if td.from_status not in TRANSITION_RULES:
         TRANSITION_RULES[td.from_status] = set()
@@ -147,8 +148,8 @@ SideEffect = Callable[[str, str, str, dict[str, Any]], Coroutine[Any, Any, None]
 
 class StateMachine:
     def __init__(self) -> None:
-        self._guards: Dict[str, List[Guard]] = {}
-        self._side_effects: Dict[str, List[SideEffect]] = {}
+        self._guards: dict[str, list[Guard]] = {}
+        self._side_effects: dict[str, list[SideEffect]] = {}
 
     def add_guard(self, from_status: str, to_status: str, guard: Guard) -> None:
         key = f"{from_status}->{to_status}"
@@ -164,9 +165,9 @@ class StateMachine:
 
     def validate_trigger(
         self, from_status: str, trigger: str,
-    ) -> List[TransitionDef]:
+    ) -> list[TransitionDef]:
         """Get valid target transitions for a given trigger from a status."""
-        results: List[TransitionDef] = []
+        results: list[TransitionDef] = []
         for td in TRANSITION_BY_TRIGGER.get(trigger, []):
             if td.from_status.value == from_status or td.from_status == from_status:
                 results.append(td)
@@ -174,8 +175,8 @@ class StateMachine:
 
     async def can_transition(
         self, from_status: str, to_status: str,
-        job_id: str, workspace_id: str, context: Optional[Dict[str, Any]] = None,
-    ) -> Tuple[bool, str]:
+        job_id: str, workspace_id: str, context: dict[str, Any] | None = None,
+    ) -> tuple[bool, str]:
         ctx = context or {}
         try:
             current = WorkflowStatus(from_status)
@@ -199,7 +200,7 @@ class StateMachine:
 
     async def transition(
         self, from_status: str, to_status: str,
-        job_id: str, workspace_id: str, context: Optional[Dict[str, Any]] = None,
+        job_id: str, workspace_id: str, context: dict[str, Any] | None = None,
     ) -> None:
         ctx = context or {}
         allowed, reason = await self.can_transition(
@@ -214,16 +215,16 @@ class StateMachine:
 
     def find_transition_by_trigger(
         self, from_status: str, trigger: str,
-    ) -> Optional[TransitionDef]:
+    ) -> TransitionDef | None:
         """Find the transition definition matching a trigger from a given status."""
         for td in TRANSITION_TABLE:
             if td.from_status.value == from_status and td.trigger == trigger:
                 return td
         return None
 
-    def get_allowed_triggers(self, from_status: str) -> List[str]:
+    def get_allowed_triggers(self, from_status: str) -> list[str]:
         """Get all valid triggers from a given status."""
-        triggers: List[str] = []
+        triggers: list[str] = []
         for td in TRANSITION_TABLE:
             if td.from_status.value == from_status and td.trigger not in triggers:
                 triggers.append(td.trigger)

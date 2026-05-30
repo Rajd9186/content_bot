@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import contextlib
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
 
 from app.core.database import async_session_factory
 from app.infrastructure.messaging.redis_client import redis_client
-from app.infrastructure.unit_of_work import UnitOfWork
 from app.infrastructure.sse.manager import sse_manager
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.pipeline.graph import WorkflowPipeline, pipeline
-from app.pipeline.state import NodeResult, NodeStatus, PipelineState
+from app.pipeline.state import NodeResult
 
 logger = logging.getLogger(__name__)
 
@@ -32,9 +31,9 @@ class PipelineWorker:
     - Heartbeat updates for zombie detection
     """
 
-    def __init__(self, pipeline_instance: Optional[WorkflowPipeline] = None) -> None:
+    def __init__(self, pipeline_instance: WorkflowPipeline | None = None) -> None:
         self._pipeline = pipeline_instance or pipeline
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._running = False
         self._active_executions: dict[str, asyncio.Task[None]] = {}
         self._semaphore = asyncio.Semaphore(MAX_CONCURRENT_EXECUTIONS)
@@ -51,7 +50,7 @@ class PipelineWorker:
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
-        for wf_id, task in list(self._active_executions.items()):
+        for _wf_id, task in list(self._active_executions.items()):
             if not task.done():
                 task.cancel()
         self._active_executions.clear()
@@ -61,7 +60,7 @@ class PipelineWorker:
         job = {
             "workflow_id": workflow_id,
             "skip_human_review": skip_human_review,
-            "enqueued_at": datetime.now(timezone.utc).isoformat(),
+            "enqueued_at": datetime.now(UTC).isoformat(),
         }
         await redis_client.queue_push_json(PIPELINE_QUEUE, job)
         logger.info("Pipeline job enqueued: workflow=%s", workflow_id)
@@ -145,10 +144,8 @@ class PipelineWorker:
                             result_state = await self._pipeline.execute(state, skip_human_review=skip_human_review)
                         finally:
                             hb_task.cancel()
-                            try:
+                            with contextlib.suppress(asyncio.CancelledError):
                                 await hb_task
-                            except asyncio.CancelledError:
-                                pass
 
                         await uow.pipelines.save_pipeline_state(result_state)
                         await uow.commit()

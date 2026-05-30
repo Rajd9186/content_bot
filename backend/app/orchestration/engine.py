@@ -1,20 +1,29 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Dict, Optional
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
+from typing import Any
 
+from app.orchestration.retry_manager import RetryManager
 from app.orchestration.stages import (
-    WorkflowStage, WorkflowStatus, WorkflowRun, StageResult, StageStatus,
-    STAGE_TRANSITIONS, STAGE_TIMEOUT_SECONDS, STAGE_MAX_RETRIES,
-    STAGE_ORDER, get_next_stage, validate_transition,
+    STAGE_MAX_RETRIES,
+    STAGE_ORDER,
+    STAGE_TIMEOUT_SECONDS,
+    STAGE_TRANSITIONS,
+    StageResult,
+    StageStatus,
+    WorkflowRun,
+    WorkflowStage,
+    WorkflowStatus,
+    get_next_stage,
 )
 
 logger = logging.getLogger(__name__)
 
 StageExecutor = Callable[
-    [WorkflowRun, WorkflowStage, Dict[str, Any]],
-    Coroutine[Any, Any, Dict[str, Any]],
+    [WorkflowRun, WorkflowStage, dict[str, Any]],
+    Coroutine[Any, Any, dict[str, Any]],
 ]
 
 
@@ -30,17 +39,17 @@ class WorkflowEngine:
 
     def __init__(
         self,
-        executor: Optional[StageExecutor] = None,
-        checkpoint_fn: Optional[Callable[[WorkflowRun], Coroutine[Any, Any, None]]] = None,
-        publish_fn: Optional[Callable[[Any], Coroutine[Any, Any, None]]] = None,
-        retry_manager: Optional["RetryManager"] = None,
+        executor: StageExecutor | None = None,
+        checkpoint_fn: Callable[[WorkflowRun], Coroutine[Any, Any, None]] | None = None,
+        publish_fn: Callable[[Any], Coroutine[Any, Any, None]] | None = None,
+        retry_manager: RetryManager | None = None,
     ) -> None:
         self._executor = executor
         self._checkpoint_fn = checkpoint_fn
         self._publish_fn = publish_fn
         self._retry_manager = retry_manager
 
-    async def run(self, run: WorkflowRun, context: Dict[str, Any]) -> WorkflowRun:
+    async def run(self, run: WorkflowRun, context: dict[str, Any]) -> WorkflowRun:
         """Execute the workflow from its current stage through completion."""
         if run.status.is_terminal():
             logger.warning("Workflow %s already in terminal state: %s", run.id, run.status.value)
@@ -86,7 +95,7 @@ class WorkflowEngine:
                 ))
                 break
 
-        run.updated_at = datetime.now(timezone.utc)
+        run.updated_at = datetime.now(UTC)
         run.version += 1
 
         if run.status == WorkflowStatus.COMPLETED:
@@ -100,10 +109,10 @@ class WorkflowEngine:
         return run
 
     async def _execute_stage(
-        self, run: WorkflowRun, stage: WorkflowStage, context: Dict[str, Any],
+        self, run: WorkflowRun, stage: WorkflowStage, context: dict[str, Any],
     ) -> StageResult:
         result = StageResult(stage=stage, status=StageStatus.RUNNING)
-        result.started_at = datetime.now(timezone.utc)
+        result.started_at = datetime.now(UTC)
 
         run.current_stage = stage
         await self._checkpoint(run)
@@ -140,7 +149,7 @@ class WorkflowEngine:
         if success:
             result.status = StageStatus.COMPLETED
             result.output = output
-            result.completed_at = datetime.now(timezone.utc)
+            result.completed_at = datetime.now(UTC)
             await self._publish(WorkflowStageCompletedEvent(
                 correlation_id=run.correlation_id,
                 subject=run.id,
@@ -149,7 +158,7 @@ class WorkflowEngine:
         else:
             result.status = StageStatus.FAILED
             result.error = error
-            result.completed_at = datetime.now(timezone.utc)
+            result.completed_at = datetime.now(UTC)
             await self._publish(WorkflowStageFailedEvent(
                 correlation_id=run.correlation_id,
                 subject=run.id,
@@ -172,7 +181,7 @@ class WorkflowEngine:
         if self._publish_fn:
             await self._publish_fn(event)
 
-    async def resume(self, run: WorkflowRun, context: Dict[str, Any]) -> WorkflowRun:
+    async def resume(self, run: WorkflowRun, context: dict[str, Any]) -> WorkflowRun:
         """Resume a workflow from its last checkpoint."""
         logger.info("Resuming workflow %s from stage %s", run.id, run.current_stage.value)
         return await self.run(run, context)
@@ -181,7 +190,7 @@ class WorkflowEngine:
         """Cancel a running workflow."""
         run.status = WorkflowStatus.CANCELLED
         run.error = reason
-        run.updated_at = datetime.now(timezone.utc)
+        run.updated_at = datetime.now(UTC)
         run.version += 1
         await self._checkpoint(run)
         await self._publish(WorkflowCancelledEvent(
@@ -201,7 +210,7 @@ class WorkflowFailedEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()
 
 
 class WorkflowCompletedEvent:
@@ -213,7 +222,7 @@ class WorkflowCompletedEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()
 
 
 class WorkflowStageStartedEvent:
@@ -225,7 +234,7 @@ class WorkflowStageStartedEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()
 
 
 class WorkflowStageCompletedEvent:
@@ -237,7 +246,7 @@ class WorkflowStageCompletedEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()
 
 
 class WorkflowStageFailedEvent:
@@ -249,7 +258,7 @@ class WorkflowStageFailedEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()
 
 
 class WorkflowCancelledEvent:
@@ -261,4 +270,4 @@ class WorkflowCancelledEvent:
         self.source = "/system/orchestration"
         self.specversion = "1.0"
         self.id = subject
-        self.time = datetime.now(timezone.utc).isoformat()
+        self.time = datetime.now(UTC).isoformat()

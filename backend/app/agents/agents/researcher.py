@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from app.agents.base import BaseAgent
 from app.agents.contracts import (
-    AgentContract, AgentInput, AgentOutput, RetryPolicy, TimeoutPolicy, ValidationResult,
+    AgentContract,
+    AgentInput,
+    AgentOutput,
+    RetryPolicy,
+    TimeoutPolicy,
+    ValidationResult,
 )
 from app.agents.prompt.engine import PromptContext
 from app.agents.registry import agent_registry
@@ -29,7 +34,7 @@ class ResearchOutput(BaseModel):
 
 class ResearcherAgent(BaseAgent):
     def __init__(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> None:
         contract = AgentContract(
             name="researcher",
@@ -58,16 +63,16 @@ class ResearcherAgent(BaseAgent):
     ) -> dict[str, Any]:
         """Execute Phase 5 research pipeline and return structured findings"""
         kwargs = agent_input.metadata.get("template_kwargs", {})
-        
+
         topic = kwargs.get("topic", kwargs.get("title", "Research Topic"))
         plan_summary = kwargs.get("plan_summary", "")
         research_questions = kwargs.get("research_questions", [])
-        
+
         if isinstance(research_questions, str):
             questions_list = [q.strip() for q in research_questions.split("\n") if q.strip()]
         else:
             questions_list = research_questions or []
-        
+
         research_result = await research_integration.execute_research(
             topic=topic,
             query=plan_summary or topic,
@@ -76,16 +81,16 @@ class ResearcherAgent(BaseAgent):
             topics=questions_list[:5],
             max_results=30,
         )
-        
+
         return research_result
 
     async def _build_prompt(
         self,
         agent_input: AgentInput,
-        research_data: Optional[dict[str, Any]] = None,
+        research_data: dict[str, Any] | None = None,
     ) -> PromptContext:
         kwargs = agent_input.metadata.get("template_kwargs", {})
-        
+
         if research_data:
             synthesis = research_data.get("synthesis")
             if synthesis:
@@ -118,7 +123,7 @@ class ResearcherAgent(BaseAgent):
                 "research_questions": kwargs.get("research_questions", ""),
                 "existing_knowledge": kwargs.get("existing_knowledge", "No prior knowledge provided."),
             }
-        
+
         return await self._prompt_engine.build(
             agent_type="researcher",
             correlation_id=agent_input.correlation_id,
@@ -127,11 +132,11 @@ class ResearcherAgent(BaseAgent):
 
     async def _parse_output(
         self, content: str, agent_input: AgentInput,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         parsed = self._parse_json_output(content)
         if parsed is None:
             return None
-        
+
         findings = parsed.get("findings", [])
         if isinstance(findings, list):
             for f in findings:

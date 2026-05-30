@@ -1,20 +1,25 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.base import BaseAgent
 from app.agents.contracts import (
-    AgentContract, AgentInput, AgentOutput, RetryPolicy, TimeoutPolicy, ValidationResult,
+    AgentContract,
+    AgentInput,
+    AgentOutput,
+    RetryPolicy,
+    TimeoutPolicy,
+    ValidationResult,
 )
-from app.agents.prompt.engine import PromptContext
 from app.agents.prompt.builders import WritingPromptBuilder
+from app.agents.prompt.engine import PromptContext
 from app.agents.registry import agent_registry
 from app.agents.validation.parser import ResponseParser
 
 
 class WriterAgent(BaseAgent):
     def __init__(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> None:
         contract = AgentContract(
             name="writer",
@@ -55,7 +60,7 @@ class WriterAgent(BaseAgent):
 
     async def _parse_output(
         self, content: str, agent_input: AgentInput,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         md_content, md_error = self._parser.parse_markdown(content)
         if md_error:
             if "placeholder" in (md_error or ""):

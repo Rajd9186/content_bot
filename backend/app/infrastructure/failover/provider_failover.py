@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import time
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any, Optional
+from dataclasses import dataclass
+from enum import StrEnum
 
 from app.infrastructure.messaging.redis_client import redis_client
 
@@ -16,7 +14,7 @@ CIRCUIT_RESET_SECONDS = 60
 REDIS_TOKEN_KEY = "provider:tokens:groq"
 
 
-class CircuitState(str, Enum):
+class CircuitState(StrEnum):
     CLOSED = "closed"
     OPEN = "open"
     HALF_OPEN = "half_open"
@@ -147,7 +145,7 @@ class ProviderFailover:
         except Exception as e:
             logger.warning("Redis TPM release failed: %s", e)
 
-    def select_provider(self, agent_type: str, preferred: Optional[str] = None) -> str:
+    def select_provider(self, agent_type: str, preferred: str | None = None) -> str:
         chain = self.get_provider_chain(agent_type)
         if preferred and preferred in chain:
             circuit = self._circuits.get(preferred)

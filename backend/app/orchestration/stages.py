@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Dict, Optional
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, Field
 
 
-class WorkflowStage(str, Enum):
+class WorkflowStage(StrEnum):
     INIT = "INIT"
     PLANNING = "PLANNING"
     RESEARCH = "RESEARCH"
@@ -47,7 +47,7 @@ STAGE_ORDER: list[WorkflowStage] = [
 ]
 
 
-class StageStatus(str, Enum):
+class StageStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -59,16 +59,16 @@ class StageStatus(str, Enum):
 class StageResult(BaseModel):
     stage: WorkflowStage
     status: StageStatus = StageStatus.PENDING
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
-    output: Dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
-    error_code: Optional[str] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+    output: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
+    error_code: str | None = None
     retry_count: int = 0
-    checkpoint_id: Optional[str] = None
+    checkpoint_id: str | None = None
 
 
-class WorkflowStatus(str, Enum):
+class WorkflowStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     COMPLETED = "completed"
@@ -82,18 +82,18 @@ class WorkflowStatus(str, Enum):
 class WorkflowRun(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid4()))
     workspace_id: str
-    content_item_id: Optional[str] = None
+    content_item_id: str | None = None
     correlation_id: str
     status: WorkflowStatus = WorkflowStatus.PENDING
     current_stage: WorkflowStage = WorkflowStage.INIT
-    stage_results: Dict[str, StageResult] = Field(default_factory=dict)
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
+    stage_results: dict[str, StageResult] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    error: str | None = None
     version: int = 1
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
-    def model_dump(self, **kwargs: Any) -> Dict[str, Any]:
+    def model_dump(self, **kwargs: Any) -> dict[str, Any]:
         d = super().model_dump(**kwargs)
         d["status"] = self.status.value
         d["current_stage"] = self.current_stage.value
@@ -103,13 +103,13 @@ class WorkflowRun(BaseModel):
         return d
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> "WorkflowRun":
+    def from_dict(cls, data: dict[str, Any]) -> WorkflowRun:
         if isinstance(data.get("status"), str):
             data["status"] = WorkflowStatus(data["status"])
         if isinstance(data.get("current_stage"), str):
             data["current_stage"] = WorkflowStage(data["current_stage"])
         if isinstance(data.get("stage_results"), dict):
-            parsed: Dict[str, StageResult] = {}
+            parsed: dict[str, StageResult] = {}
             for k, v in data["stage_results"].items():
                 if isinstance(v, dict):
                     if "stage" in v and isinstance(v["stage"], str):
@@ -121,7 +121,7 @@ class WorkflowRun(BaseModel):
         return cls(**data)
 
 
-STAGE_TRANSITIONS: Dict[WorkflowStage, set[WorkflowStage]] = {
+STAGE_TRANSITIONS: dict[WorkflowStage, set[WorkflowStage]] = {
     WorkflowStage.INIT: {WorkflowStage.PLANNING},
     WorkflowStage.PLANNING: {WorkflowStage.RESEARCH},
     WorkflowStage.RESEARCH: {WorkflowStage.SYNTHESIS},
@@ -136,7 +136,7 @@ STAGE_TRANSITIONS: Dict[WorkflowStage, set[WorkflowStage]] = {
 }
 
 
-def get_next_stage(current: WorkflowStage) -> Optional[WorkflowStage]:
+def get_next_stage(current: WorkflowStage) -> WorkflowStage | None:
     """Get the primary (first) next stage in the linear workflow."""
     allowed = STAGE_TRANSITIONS.get(current, set())
     ordered = [s for s in STAGE_ORDER if s in allowed]
@@ -158,7 +158,7 @@ def validate_transition(from_stage: WorkflowStage, to_stage: WorkflowStage) -> N
         )
 
 
-STAGE_TIMEOUT_SECONDS: Dict[WorkflowStage, int] = {
+STAGE_TIMEOUT_SECONDS: dict[WorkflowStage, int] = {
     WorkflowStage.INIT: 30,
     WorkflowStage.PLANNING: 120,
     WorkflowStage.RESEARCH: 300,
@@ -173,7 +173,7 @@ STAGE_TIMEOUT_SECONDS: Dict[WorkflowStage, int] = {
 }
 
 
-STAGE_MAX_RETRIES: Dict[WorkflowStage, int] = {
+STAGE_MAX_RETRIES: dict[WorkflowStage, int] = {
     WorkflowStage.INIT: 1,
     WorkflowStage.PLANNING: 3,
     WorkflowStage.RESEARCH: 3,

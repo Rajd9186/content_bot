@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import math
-import random
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+import random
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from app.infrastructure.unit_of_work import UnitOfWork
 from app.infrastructure.models.telemetry import RetryRecord
+from app.infrastructure.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +45,11 @@ class RetryService:
         target_id: str,
         attempt_number: int,
         max_retries: int = 3,
-        error_code: Optional[str] = None,
-        error_message: Optional[str] = None,
+        error_code: str | None = None,
+        error_message: str | None = None,
     ) -> RetryRecord:
         delay_ms = self.calculate_delay(attempt_number)
-        scheduled_at = datetime.now(timezone.utc) + timedelta(milliseconds=delay_ms)
+        scheduled_at = datetime.now(UTC) + timedelta(milliseconds=delay_ms)
 
         record = RetryRecord(
             id=str(uuid4()),
@@ -77,9 +75,9 @@ class RetryService:
         uow: UnitOfWork,
         original_job_id: str,
         error_code: str,
-        error_message: Optional[str] = None,
+        error_message: str | None = None,
         retry_attempts: int = 0,
-        payload: Optional[dict] = None,
+        payload: dict | None = None,
     ) -> None:
         from app.domains.workflow.models import DeadLetterJob
 

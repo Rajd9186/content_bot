@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.contracts import AgentInput
 from app.research import (
-    research_pipeline, research_synthesis, citation_engine,
-    knowledge_packager, relevance_engine,
+    citation_engine,
+    knowledge_packager,
+    research_pipeline,
+    research_synthesis,
 )
 from app.research.models import ResearchQuery, SourceQuality
 from app.research.providers.mock import MockSearchProvider
@@ -17,7 +19,7 @@ logger = logging.getLogger(__name__)
 class ResearchAgentIntegration:
     """
     Integrates Phase 5 Research Intelligence with Phase 4 Agent Runtime.
-    
+
     Provides research-backed context for all downstream agents:
     - Researcher Agent: Full research pipeline execution
     - Writer Agent: Research-backed content generation
@@ -25,7 +27,7 @@ class ResearchAgentIntegration:
     - Validator Agent: Source validation checklist
     - Fact Checker: Claim extraction and verification
     """
-    
+
     def __init__(self) -> None:
         self._initialized = False
         self._mock_provider_registered = False
@@ -34,18 +36,19 @@ class ResearchAgentIntegration:
         """Initialize research pipeline with available providers"""
         if self._initialized:
             return
-        
+
         # Register mock provider for testing (remove in production)
         if not self._mock_provider_registered:
-            from app.research.providers.factory import search_provider_factory
             import os
-            
+
+            from app.research.providers.factory import search_provider_factory
+
             # Only use mock if no real API keys configured
             if not os.getenv("TAVILY_API_KEY") and not os.getenv("SERPER_API_KEY"):
                 search_provider_factory.register(MockSearchProvider())
                 self._mock_provider_registered = True
                 logger.info("Mock search provider registered (no API keys configured)")
-        
+
         self._initialized = True
         logger.info("Research integration initialized")
 
@@ -54,14 +57,14 @@ class ResearchAgentIntegration:
         topic: str,
         query: str,
         correlation_id: str,
-        workflow_id: Optional[str] = None,
+        workflow_id: str | None = None,
         max_results: int = 50,
-        time_range_days: Optional[int] = 90,
-        topics: Optional[list[str]] = None,
+        time_range_days: int | None = 90,
+        topics: list[str] | None = None,
     ) -> dict[str, Any]:
         """
         Execute complete research pipeline and return knowledge packet.
-        
+
         Args:
             topic: Main research topic
             query: Search query
@@ -70,12 +73,12 @@ class ResearchAgentIntegration:
             max_results: Maximum sources to return
             time_range_days: Filter by recency
             topics: Sub-topics for expanded search
-        
+
         Returns:
             Knowledge packet with research findings, sources, and agent-ready data
         """
         await self.initialize()
-        
+
         # Build research query
         research_query = ResearchQuery(
             query=query,
@@ -85,21 +88,21 @@ class ResearchAgentIntegration:
             source_types=["web", "news", "academic", "blog"],
             min_quality=SourceQuality.LOW,
         )
-        
+
         # Execute pipeline
         logger.info("Executing research pipeline for: %s", query)
         result = await research_pipeline.execute(
             query=research_query,
             correlation_id=correlation_id,
         )
-        
+
         logger.info(
             "Research complete: %d sources found, %d after dedup, %d high quality",
             result.total_found,
             result.total_after_dedup,
             result.total_high_quality,
         )
-        
+
         # Synthesize findings
         logger.info("Synthesizing research findings")
         synthesis = await research_synthesis.synthesize(
@@ -107,11 +110,11 @@ class ResearchAgentIntegration:
             topic=topic,
             query=query,
         )
-        
+
         # Generate citations
         logger.info("Generating citations for %d sources", len(result.sources))
         citations = citation_engine.generate_citations(result.sources)
-        
+
         # Package knowledge for agents
         logger.info("Creating knowledge packet")
         packet = knowledge_packager.package(
@@ -119,7 +122,7 @@ class ResearchAgentIntegration:
             sources=result.sources,
             topic=topic,
         )
-        
+
         return {
             "success": True,
             "topic": topic,
@@ -152,21 +155,21 @@ class ResearchAgentIntegration:
     ) -> dict[str, Any]:
         """
         Extract research parameters from agent input and execute research.
-        
+
         Args:
             agent_input: Phase 4 agent input
             topic_field: Field name for topic in template_kwargs
             query_field: Field name for search query
-        
+
         Returns:
             Research context dictionary
         """
         kwargs = agent_input.metadata.get("template_kwargs", {})
-        
+
         topic = kwargs.get(topic_field, kwargs.get("title", "Research Topic"))
         query = kwargs.get(query_field, topic)
         topics = kwargs.get("topics", kwargs.get("subtopics", []))
-        
+
         return await self.execute_research(
             topic=topic,
             query=query,

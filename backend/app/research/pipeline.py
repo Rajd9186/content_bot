@@ -4,10 +4,16 @@ import asyncio
 import hashlib
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlparse
 
-from app.research.models import ResearchQuery, ResearchResult, ResearchSource, SourceQuality, SourceType
+from app.research.models import (
+    ResearchQuery,
+    ResearchResult,
+    ResearchSource,
+    SourceQuality,
+    SourceType,
+)
 from app.research.providers.base import BaseSearchProvider
 from app.research.providers.factory import SearchProviderFactory
 
@@ -28,7 +34,7 @@ class ResearchPipeline:
     async def execute(
         self,
         query: ResearchQuery,
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> ResearchResult:
         start_time = time.monotonic()
         logger.info("Starting research pipeline for: %s", query.query)
@@ -73,7 +79,7 @@ class ResearchPipeline:
 
     async def _expand_queries(self, query: ResearchQuery) -> list[str]:
         expanded = [query.query]
-        
+
         topic_expansions = []
         for topic in query.topics:
             topic_expansions.extend([
@@ -81,7 +87,7 @@ class ResearchPipeline:
                 f"{topic} {query.query} best practices",
                 f"{query.query} in {topic}",
             ])
-        
+
         query_expansions = [
             f"{query.query} 2025 2026",
             f"{query.query} guide tutorial",
@@ -89,20 +95,20 @@ class ResearchPipeline:
             f"what is {query.query}",
             f"{query.query} benefits challenges",
         ]
-        
+
         expanded.extend(topic_expansions[:5])
         expanded.extend(query_expansions)
-        
+
         if query.expanded_queries:
             expanded.extend(query.expanded_queries)
-        
+
         seen = set()
         unique = []
         for q in expanded:
             if q.lower() not in seen:
                 seen.add(q.lower())
                 unique.append(q)
-        
+
         return unique[:15]
 
     async def _search_all(
@@ -117,7 +123,7 @@ class ResearchPipeline:
             self.register_provider(mock)
 
         semaphore = asyncio.Semaphore(self._max_parallel)
-        
+
         async def search_with_semaphore(provider: BaseSearchProvider, q: str) -> list[dict[str, Any]]:
             async with semaphore:
                 try:
@@ -125,7 +131,7 @@ class ResearchPipeline:
                         provider.search(q, query),
                         timeout=self._timeout_seconds
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     logger.warning("Search timeout for query: %s", q)
                     return []
                 except Exception as e:
@@ -138,12 +144,12 @@ class ResearchPipeline:
                 tasks.append(search_with_semaphore(provider, q))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        
+
         all_results = []
         for result in results:
             if isinstance(result, list):
                 all_results.extend(result)
-        
+
         return all_results
 
     async def _ingest_sources(
@@ -159,7 +165,7 @@ class ResearchPipeline:
                     ingested.append(source)
             except Exception as e:
                 logger.warning("Failed to ingest source: %s", e)
-        
+
         return ingested
 
     def _normalize_source(
@@ -171,14 +177,14 @@ class ResearchPipeline:
         parsed = urlparse(url)
         domain = parsed.netloc.lower()
         canonical = f"{parsed.scheme}://{domain}{parsed.path.rstrip('/')}"
-        
+
         content_hash = hashlib.sha256(
             f"{raw.get('title', '')}:{raw.get('snippet', '')}:{url}".encode()
         ).hexdigest()[:16]
-        
+
         source_type = self._classify_source_type(domain, raw)
         quality = self._assess_quality(domain, raw)
-        
+
         return ResearchSource(
             url=url,
             canonical_url=canonical,
@@ -202,7 +208,7 @@ class ResearchPipeline:
         academic_domains = ["arxiv.org", "scholar.google", "researchgate", "academia.edu"]
         news_domains = ["reuters", "bloomberg", "cnn", "bbc", "nytimes", "wsj"]
         blog_indicators = ["blog", "medium", "substack", "wordpress"]
-        
+
         if any(ad in domain for ad in academic_domains):
             return SourceType.ACADEMIC
         if any(nd in domain for nd in news_domains):
@@ -211,7 +217,7 @@ class ResearchPipeline:
             return SourceType.BLOG
         if "stackexchange" in domain or "reddit" in domain or "quora" in domain:
             return SourceType.FORUM
-        
+
         return SourceType.WEB
 
     def _assess_quality(
@@ -224,24 +230,24 @@ class ResearchPipeline:
             "reuters.com", "bloomberg.com", "nytimes.com", "wsj.com",
             "wikipedia.org", "github.com", "stackoverflow.com",
         ]
-        
+
         spam_indicators = ["clickbait", "viral", "shocking", "miracle"]
-        
+
         if any(ha in domain for ha in high_authority):
             return SourceQuality.HIGH
-        
+
         title = raw.get("title", "").lower()
         snippet = raw.get("snippet", "").lower()
-        
+
         if any(si in title or si in snippet for si in spam_indicators):
             return SourceQuality.SPAM
-        
+
         if raw.get("authors") and raw.get("published_date"):
             return SourceQuality.HIGH
-        
+
         if len(raw.get("snippet", "")) > 100:
             return SourceQuality.MEDIUM
-        
+
         return SourceQuality.LOW
 
     def _passes_filters(
@@ -251,24 +257,21 @@ class ResearchPipeline:
     ) -> bool:
         if query.domains and source.domain not in query.domains:
             return False
-        
+
         if source.domain in query.exclude_domains:
             return False
-        
+
         if source.quality == SourceQuality.SPAM:
             return False
-        
+
         quality_order = {
             SourceQuality.HIGH: 3,
             SourceQuality.MEDIUM: 2,
             SourceQuality.LOW: 1,
             SourceQuality.SPAM: 0,
         }
-        
-        if quality_order[source.quality] < quality_order[query.min_quality]:
-            return False
-        
-        return True
+
+        return not quality_order[source.quality] < quality_order[query.min_quality]
 
     def _deduplicate(
         self,
@@ -277,17 +280,17 @@ class ResearchPipeline:
         seen_hashes = set()
         seen_urls = set()
         deduplicated = []
-        
+
         for source in sources:
             if source.content_hash and source.content_hash in seen_hashes:
                 continue
             if source.canonical_url in seen_urls:
                 continue
-            
+
             seen_hashes.add(source.content_hash)
             seen_urls.add(source.canonical_url)
             deduplicated.append(source)
-        
+
         return sorted(deduplicated, key=lambda s: s.combined_score, reverse=True)
 
 

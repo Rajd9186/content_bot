@@ -26,12 +26,12 @@ class TavilyProvider(BaseSearchProvider):
         if not self._api_key:
             logger.warning("Tavily API key not configured")
             return []
-        
+
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self._api_key}",
         }
-        
+
         body = {
             "query": query,
             "search_depth": "advanced",
@@ -41,22 +41,21 @@ class TavilyProvider(BaseSearchProvider):
             "include_domains": research_query.domains or [],
             "exclude_domains": research_query.exclude_domains or [],
         }
-        
+
         try:
             timeout = aiohttp.ClientTimeout(total=30)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(
-                    self._base_url,
-                    json=body,
-                    headers=headers
-                ) as resp:
-                    if resp.status != 200:
-                        logger.warning("Tavily API error: %d", resp.status)
-                        return []
-                    
-                    data = await resp.json()
-                    return self._normalize_results(data.get("results", []))
-        
+            async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
+                self._base_url,
+                json=body,
+                headers=headers
+            ) as resp:
+                if resp.status != 200:
+                    logger.warning("Tavily API error: %d", resp.status)
+                    return []
+
+                data = await resp.json()
+                return self._normalize_results(data.get("results", []))
+
         except Exception as e:
             logger.error("Tavily search failed: %s", e)
             return []
@@ -66,7 +65,7 @@ class TavilyProvider(BaseSearchProvider):
         results: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         normalized = []
-        
+
         for result in results:
             normalized.append({
                 "url": result.get("url", ""),
@@ -76,5 +75,5 @@ class TavilyProvider(BaseSearchProvider):
                 "score": result.get("score", 0.0),
                 "published_date": result.get("published_date"),
             })
-        
+
         return normalized

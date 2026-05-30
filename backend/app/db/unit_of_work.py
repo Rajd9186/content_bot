@@ -2,14 +2,13 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Optional
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import async_session_factory
-from app.db.repositories.workflow import WorkflowRepository
-from app.db.repositories.event import EventRepository
 from app.db.repositories.content import ContentRepository
+from app.db.repositories.event import EventRepository
+from app.db.repositories.workflow import WorkflowRepository
 
 
 class UnitOfWork:
@@ -39,7 +38,7 @@ class UnitOfWork:
 
 
 @asynccontextmanager
-async def unit_of_work(session: Optional[AsyncSession] = None) -> AsyncGenerator[UnitOfWork, None]:
+async def unit_of_work(session: AsyncSession | None = None) -> AsyncGenerator[UnitOfWork, None]:
     if session:
         yield UnitOfWork(session)
     else:

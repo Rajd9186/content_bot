@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from enum import Enum
-from typing import Any, Optional
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 
-class NodeStatus(str, Enum):
+class NodeStatus(StrEnum):
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -20,32 +20,32 @@ class NodeResult(BaseModel):
     node: str
     status: NodeStatus = NodeStatus.PENDING
     output: dict[str, Any] = Field(default_factory=dict)
-    error: Optional[str] = None
+    error: str | None = None
     retry_count: int = 0
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
+    started_at: str | None = None
+    completed_at: str | None = None
     tokens_used: int = 0
     latency_ms: float = 0.0
 
 
-class ReviewAction(str, Enum):
+class ReviewAction(StrEnum):
     APPROVED = "approved"
     CHANGES_REQUESTED = "changes_requested"
     REJECTED = "rejected"
 
 
 class HumanReview(BaseModel):
-    reviewer_id: Optional[str] = None
-    action: Optional[ReviewAction] = None
+    reviewer_id: str | None = None
+    action: ReviewAction | None = None
     comments: str = ""
-    reviewed_at: Optional[str] = None
+    reviewed_at: str | None = None
 
 
 class PipelineState(BaseModel):
     workflow_id: str
     workspace_id: str = ""
     correlation_id: str = ""
-    content_item_id: Optional[str] = None
+    content_item_id: str | None = None
 
     topic: str = ""
     audience: str = "general"
@@ -61,7 +61,7 @@ class PipelineState(BaseModel):
     compliance_results: dict[str, Any] = Field(default_factory=dict)
     final_content: str = ""
 
-    human_review: Optional[HumanReview] = None
+    human_review: HumanReview | None = None
     node_results: dict[str, NodeResult] = Field(default_factory=dict)
 
     errors: list[str] = Field(default_factory=list)
@@ -69,17 +69,17 @@ class PipelineState(BaseModel):
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     created_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
     updated_at: str = Field(
-        default_factory=lambda: datetime.now(timezone.utc).isoformat()
+        default_factory=lambda: datetime.now(UTC).isoformat()
     )
 
     def add_node_result(self, name: str, result: NodeResult) -> None:
         self.node_results[name] = result
-        self.updated_at = datetime.now(timezone.utc).isoformat()
+        self.updated_at = datetime.now(UTC).isoformat()
 
-    def get_node_result(self, name: str) -> Optional[NodeResult]:
+    def get_node_result(self, name: str) -> NodeResult | None:
         return self.node_results.get(name)
 
     def all_nodes_completed(self) -> bool:

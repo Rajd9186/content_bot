@@ -26,34 +26,33 @@ class SerperProvider(BaseSearchProvider):
         if not self._api_key:
             logger.warning("Serper API key not configured")
             return []
-        
+
         headers = {
             "Content-Type": "application/json",
             "X-API-KEY": self._api_key,
         }
-        
+
         body = {
             "q": query,
             "num": research_query.max_results // 2,
             "gl": "us",
             "hl": "en",
         }
-        
+
         try:
             timeout = aiohttp.ClientTimeout(total=30)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(
-                    self._base_url,
-                    json=body,
-                    headers=headers
-                ) as resp:
-                    if resp.status != 200:
-                        logger.warning("Serper API error: %d", resp.status)
-                        return []
-                    
-                    data = await resp.json()
-                    return self._normalize_results(data.get("organic", []))
-        
+            async with aiohttp.ClientSession(timeout=timeout) as session, session.post(
+                self._base_url,
+                json=body,
+                headers=headers
+            ) as resp:
+                if resp.status != 200:
+                    logger.warning("Serper API error: %d", resp.status)
+                    return []
+
+                data = await resp.json()
+                return self._normalize_results(data.get("organic", []))
+
         except Exception as e:
             logger.error("Serper search failed: %s", e)
             return []
@@ -63,7 +62,7 @@ class SerperProvider(BaseSearchProvider):
         results: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
         normalized = []
-        
+
         for result in results:
             normalized.append({
                 "url": result.get("link", ""),
@@ -71,5 +70,5 @@ class SerperProvider(BaseSearchProvider):
                 "snippet": result.get("snippet", ""),
                 "position": result.get("position", 0),
             })
-        
+
         return normalized

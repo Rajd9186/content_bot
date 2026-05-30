@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import time
 
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_db
 from app.infrastructure.messaging.redis_client import redis_client

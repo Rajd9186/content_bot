@@ -3,15 +3,14 @@ from __future__ import annotations
 import json
 import logging
 import time
-from abc import ABC, abstractmethod
-from datetime import datetime, timezone
-from typing import Any, Optional
+from abc import ABC
+from datetime import UTC, datetime
+from typing import Any
 
-from app.agents.contracts import TokenUsage
 from app.agents.provider.base import ProviderRequest
 from app.agents.provider.factory import ProviderFactory
 from app.pipeline.prompts import build_system_prompt, build_user_prompt
-from app.pipeline.router import RoutingDecision, provider_router
+from app.pipeline.router import provider_router
 from app.pipeline.state import NodeResult, NodeStatus, PipelineState
 
 logger = logging.getLogger(__name__)
@@ -32,14 +31,14 @@ class PipelineAgent(ABC):
     async def execute(
         self,
         state: PipelineState,
-        provider_override: Optional[str] = None,
-        model_override: Optional[str] = None,
+        provider_override: str | None = None,
+        model_override: str | None = None,
     ) -> NodeResult:
         start_time = time.monotonic()
         node_result = NodeResult(
             node=self.agent_type,
             status=NodeStatus.RUNNING,
-            started_at=datetime.now(timezone.utc).isoformat(),
+            started_at=datetime.now(UTC).isoformat(),
         )
 
         try:
@@ -85,7 +84,7 @@ class PipelineAgent(ABC):
             if not response.success:
                 node_result.status = NodeStatus.FAILED
                 node_result.error = response.error or "All routing attempts failed"
-                node_result.completed_at = datetime.now(timezone.utc).isoformat()
+                node_result.completed_at = datetime.now(UTC).isoformat()
                 node_result.latency_ms = (time.monotonic() - start_time) * 1000
                 provider_router.release_premium()
                 return node_result
@@ -106,7 +105,7 @@ class PipelineAgent(ABC):
             node_result.status = NodeStatus.FAILED
             node_result.error = str(e)
 
-        node_result.completed_at = datetime.now(timezone.utc).isoformat()
+        node_result.completed_at = datetime.now(UTC).isoformat()
         node_result.latency_ms = (time.monotonic() - start_time) * 1000
         provider_router.release_premium()
         return node_result

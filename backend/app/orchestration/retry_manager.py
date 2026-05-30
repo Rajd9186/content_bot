@@ -3,20 +3,19 @@ from __future__ import annotations
 import asyncio
 import logging
 import random
-import time
-from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Dict, Optional, Tuple
+from collections.abc import Callable, Coroutine
+from typing import Any
 
 from app.orchestration.stages import (
-    WorkflowStage, WorkflowRun, StageResult, StageStatus,
-    STAGE_TIMEOUT_SECONDS, STAGE_MAX_RETRIES,
+    WorkflowRun,
+    WorkflowStage,
 )
 
 logger = logging.getLogger(__name__)
 
 StageExecutor = Callable[
-    [WorkflowRun, WorkflowStage, Dict[str, Any]],
-    Coroutine[Any, Any, Dict[str, Any]],
+    [WorkflowRun, WorkflowStage, dict[str, Any]],
+    Coroutine[Any, Any, dict[str, Any]],
 ]
 
 
@@ -43,21 +42,21 @@ class RetryManager:
 
     def __init__(
         self,
-        dead_letter_fn: Optional[Callable[[WorkflowRun, WorkflowStage, str, int], Coroutine[Any, Any, None]]] = None,
+        dead_letter_fn: Callable[[WorkflowRun, WorkflowStage, str, int], Coroutine[Any, Any, None]] | None = None,
     ) -> None:
         self._dead_letter_fn = dead_letter_fn
 
     async def execute_with_retry(
         self,
         stage: WorkflowStage,
-        executor: Optional[StageExecutor],
+        executor: StageExecutor | None,
         run: WorkflowRun,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         max_retries: int = 3,
         timeout_s: int = 120,
-    ) -> Tuple[bool, Dict[str, Any], Optional[str], int]:
+    ) -> tuple[bool, dict[str, Any], str | None, int]:
         """Execute a stage with retry logic. Returns (success, output, error, attempts)."""
-        last_error: Optional[str] = None
+        last_error: str | None = None
         attempt = 0
 
         while attempt <= max_retries:
@@ -80,7 +79,7 @@ class RetryManager:
                 )
                 return True, output, None, attempt - 1
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_error = f"Stage '{stage.value}' timed out after {timeout_s}s"
                 logger.warning(
                     "Timeout on stage %s for workflow %s: attempt %d/%d",
@@ -108,9 +107,9 @@ class RetryManager:
         stage: WorkflowStage,
         executor: StageExecutor,
         run: WorkflowRun,
-        context: Dict[str, Any],
+        context: dict[str, Any],
         timeout_s: int = 120,
-    ) -> Tuple[bool, Dict[str, Any], Optional[str]]:
+    ) -> tuple[bool, dict[str, Any], str | None]:
         """Execute a stage with timeout but no retry."""
         try:
             output = await asyncio.wait_for(
@@ -118,7 +117,7 @@ class RetryManager:
                 timeout=timeout_s,
             )
             return True, output, None
-        except asyncio.TimeoutError:
+        except TimeoutError:
             return False, {}, f"Stage '{stage.value}' timed out after {timeout_s}s"
         except Exception as e:
             return False, {}, str(e)

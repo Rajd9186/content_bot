@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
 from app.agents.base import BaseAgent
 from app.agents.contracts import (
-    AgentContract, AgentInput, AgentOutput, RetryPolicy, TimeoutPolicy, ValidationResult,
+    AgentContract,
+    AgentInput,
+    AgentOutput,
+    RetryPolicy,
+    TimeoutPolicy,
+    ValidationResult,
 )
 from app.agents.prompt.engine import PromptContext
 from app.agents.registry import agent_registry
@@ -28,7 +33,7 @@ class ValidationOutput(BaseModel):
 
 class ValidatorAgent(BaseAgent):
     def __init__(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> None:
         contract = AgentContract(
             name="validator",
@@ -65,7 +70,7 @@ class ValidatorAgent(BaseAgent):
 
     async def _parse_output(
         self, content: str, agent_input: AgentInput,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         return self._parse_json_output(content)
 
     async def _validate_output(

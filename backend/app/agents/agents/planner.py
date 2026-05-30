@@ -1,12 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 from app.agents.base import BaseAgent
 from app.agents.contracts import (
-    AgentContract, AgentInput, AgentOutput, RetryPolicy, TimeoutPolicy, ValidationResult,
+    AgentContract,
+    AgentInput,
+    AgentOutput,
+    RetryPolicy,
+    TimeoutPolicy,
+    ValidationResult,
 )
 from app.agents.prompt.engine import PromptContext
 from app.agents.registry import agent_registry
@@ -19,12 +24,12 @@ class PlanOutput(BaseModel):
     themes: list[str]
     research_questions: list[str]
     suggested_structure: list[str]
-    success_criteria: Optional[list[str]] = None
+    success_criteria: list[str] | None = None
 
 
 class PlannerAgent(BaseAgent):
     def __init__(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> None:
         contract = AgentContract(
             name="planner",
@@ -64,7 +69,7 @@ class PlannerAgent(BaseAgent):
 
     async def _parse_output(
         self, content: str, agent_input: AgentInput,
-    ) -> Optional[dict[str, Any]]:
+    ) -> dict[str, Any] | None:
         parsed = self._parse_json_output(content)
         if parsed is None:
             return None

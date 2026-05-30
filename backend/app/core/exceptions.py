@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class AppException(Exception):
@@ -9,8 +9,8 @@ class AppException(Exception):
         code: str,
         message: str,
         status_code: int = 500,
-        details: Optional[List[Dict[str, Any]]] = None,
-        correlation_id: Optional[str] = None,
+        details: list[dict[str, Any]] | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         self.code = code
         self.message = message
@@ -24,8 +24,8 @@ class ValidationError(AppException):
     def __init__(
         self,
         message: str = "Validation failed",
-        details: Optional[List[Dict[str, Any]]] = None,
-        correlation_id: Optional[str] = None,
+        details: list[dict[str, Any]] | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="VALIDATION_ERROR",
@@ -40,7 +40,7 @@ class NotFoundError(AppException):
     def __init__(
         self,
         message: str = "Resource not found",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="NOT_FOUND",
@@ -54,7 +54,7 @@ class UnauthorizedError(AppException):
     def __init__(
         self,
         message: str = "Unauthorized",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="UNAUTHORIZED",
@@ -68,7 +68,7 @@ class ForbiddenError(AppException):
     def __init__(
         self,
         message: str = "Forbidden",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="FORBIDDEN",
@@ -82,8 +82,8 @@ class ConflictError(AppException):
     def __init__(
         self,
         message: str = "Resource conflict",
-        details: Optional[List[Dict[str, Any]]] = None,
-        correlation_id: Optional[str] = None,
+        details: list[dict[str, Any]] | None = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="CONFLICT",
@@ -98,7 +98,7 @@ class RateLimitError(AppException):
     def __init__(
         self,
         message: str = "Rate limit exceeded",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="RATE_LIMITED",
@@ -112,7 +112,7 @@ class ServiceUnavailableError(AppException):
     def __init__(
         self,
         message: str = "Service unavailable",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         super().__init__(
             code="SERVICE_UNAVAILABLE",

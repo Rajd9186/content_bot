@@ -6,7 +6,7 @@ import logging
 import os
 import random
 import time
-from typing import Any, Awaitable, Callable, Optional
+from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -60,7 +60,7 @@ class DistributedLock:
         self._max_retries = max_retries
         self._watchdog_interval_ms = watchdog_interval_ms
         self._lock_value = f"{os.getpid()}:{random.random()}:{time.time()}"
-        self._watchdog_task: Optional[asyncio.Task[None]] = None
+        self._watchdog_task: asyncio.Task[None] | None = None
         self._acquired = False
 
     async def acquire(self) -> bool:
@@ -101,7 +101,7 @@ class DistributedLock:
             self._acquired = False
             return False
 
-    async def extend(self, ttl_ms: Optional[int] = None) -> bool:
+    async def extend(self, ttl_ms: int | None = None) -> bool:
         """Extend the lock TTL if we still own it."""
         ttl = ttl_ms or self._ttl_ms
         try:
@@ -140,8 +140,8 @@ class DistributedLock:
 
 class RedisClient:
     def __init__(self) -> None:
-        self._client: Optional[aioredis.Redis] = None
-        self._pubsub: Optional[aioredis.Redis] = None
+        self._client: aioredis.Redis | None = None
+        self._pubsub: aioredis.Redis | None = None
 
     async def connect(self) -> None:
         self._client = aioredis.from_url(
@@ -207,17 +207,17 @@ class RedisClient:
             max_retries=max_retries, watchdog_interval_ms=watchdog_interval_ms,
         )
 
-    async def acquire_lock(self, lock_key: str, ttl_ms: int = 30000) -> Optional[DistributedLock]:
+    async def acquire_lock(self, lock_key: str, ttl_ms: int = 30000) -> DistributedLock | None:
         """Acquire a distributed lock. Returns None if acquisition fails."""
         lock = self.lock(lock_key, ttl_ms=ttl_ms)
         acquired = await lock.acquire()
         return lock if acquired else None
 
     # ── Cache ─────────────────────────────────────────────────
-    async def cache_get(self, key: str) -> Optional[str]:
+    async def cache_get(self, key: str) -> str | None:
         return await self.client.get(key)
 
-    async def cache_get_json(self, key: str) -> Optional[Any]:
+    async def cache_get_json(self, key: str) -> Any | None:
         val = await self.client.get(key)
         return json.loads(val) if val else None
 
@@ -252,13 +252,13 @@ class RedisClient:
 
     async def queue_pop(
         self, queue: str, timeout: int = 5,
-    ) -> Optional[str]:
+    ) -> str | None:
         result = await self.client.blpop(queue, timeout=timeout)
         return result[1] if result else None
 
     async def queue_pop_json(
         self, queue: str, timeout: int = 5,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         result = await self.queue_pop(queue, timeout)
         return json.loads(result) if result else None
 

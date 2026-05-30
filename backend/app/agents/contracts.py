@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from enum import Enum, auto
-from typing import Any, Callable, Coroutine, Dict, List, Optional, TypeVar
+from collections.abc import Callable, Coroutine
+from enum import StrEnum
+from typing import Any, TypeVar
 
 from pydantic import BaseModel, Field
 
 
-class AgentStatus(str, Enum):
+class AgentStatus(StrEnum):
     PENDING = "PENDING"
     VALIDATING_INPUT = "VALIDATING_INPUT"
     CONSTRUCTING_PROMPT = "CONSTRUCTING_PROMPT"
@@ -33,15 +32,15 @@ class TokenUsage(BaseModel):
 class AgentTelemetry(BaseModel):
     agent_name: str = ""
     status: AgentStatus = AgentStatus.PENDING
-    started_at: Optional[str] = None
-    completed_at: Optional[str] = None
+    started_at: str | None = None
+    completed_at: str | None = None
     latency_ms: float = 0.0
     token_usage: TokenUsage = TokenUsage()
     retry_count: int = 0
     fallback_used: bool = False
-    error: Optional[str] = None
-    correlation_id: Optional[str] = None
-    workflow_id: Optional[str] = None
+    error: str | None = None
+    correlation_id: str | None = None
+    workflow_id: str | None = None
 
 
 class ValidationResult(BaseModel):
@@ -70,9 +69,9 @@ class TimeoutPolicy(BaseModel):
 
 class AgentInput(BaseModel):
     correlation_id: str
-    workflow_id: Optional[str] = None
-    workspace_id: Optional[str] = None
-    content_item_id: Optional[str] = None
+    workflow_id: str | None = None
+    workspace_id: str | None = None
+    content_item_id: str | None = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -80,7 +79,7 @@ class AgentOutput(BaseModel):
     success: bool = False
     data: dict[str, Any] = Field(default_factory=dict)
     telemetry: AgentTelemetry = Field(default_factory=AgentTelemetry)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class AgentContract(BaseModel):
@@ -101,8 +100,8 @@ class AgentContract(BaseModel):
 class ProviderConfig(BaseModel):
     name: str
     model: str
-    api_key_env: Optional[str] = None
-    base_url: Optional[str] = None
+    api_key_env: str | None = None
+    base_url: str | None = None
     max_tokens: int = 4096
     temperature: float = 0.1
     timeout_ms: int = 60000

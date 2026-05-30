@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
-from app.agents.base import BaseAgent
 from app.agents.contracts import AgentInput, AgentOutput
-from app.agents.registry import agent_registry
 from app.agents.pipeline import ExecutionPipeline
+from app.agents.registry import agent_registry
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +18,12 @@ class OrchestrationAgentAdapter:
         self,
         agent_name: str,
         correlation_id: str,
-        workflow_id: Optional[str] = None,
-        workspace_id: Optional[str] = None,
-        content_item_id: Optional[str] = None,
-        template_kwargs: Optional[dict[str, Any]] = None,
+        workflow_id: str | None = None,
+        workspace_id: str | None = None,
+        content_item_id: str | None = None,
+        template_kwargs: dict[str, Any] | None = None,
         provider_name: str = "openai",
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> AgentOutput:
         agent = agent_registry.get_or_create(
             name=agent_name,
@@ -54,9 +53,9 @@ class OrchestrationAgentAdapter:
         stage_name: str,
         context: dict[str, Any],
         correlation_id: str,
-        workflow_id: Optional[str] = None,
+        workflow_id: str | None = None,
         provider_name: str = "openai",
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> AgentOutput:
         agent_name = self._stage_to_agent(stage_name)
         return await self.execute_agent(

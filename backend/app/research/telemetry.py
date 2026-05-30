@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ class ResearchTelemetry:
         return {
             **self._metrics.to_dict(),
             "uptime_seconds": (
-                datetime.now(timezone.utc) - datetime.now(timezone.utc)
+                datetime.now(UTC) - datetime.now(UTC)
             ).total_seconds(),
         }
 

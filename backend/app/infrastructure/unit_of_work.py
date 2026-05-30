@@ -2,16 +2,19 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 if TYPE_CHECKING:
-    from app.domains.workflow.repository import WorkflowRepository
-    from app.domains.content.repository import ContentRepository
     from app.domains.agent.repository import AgentRepository
+    from app.domains.content.repository import ContentRepository
+    from app.domains.workflow.repository import WorkflowRepository
     from app.infrastructure.repositories.event_repository import EventRepository
-    from app.infrastructure.repositories.pipeline_repository import PipelineRepository, CheckpointRepository
+    from app.infrastructure.repositories.pipeline_repository import (
+        CheckpointRepository,
+        PipelineRepository,
+    )
 
 
 class UnitOfWork:
@@ -66,7 +69,7 @@ class UnitOfWork:
     async def rollback(self) -> None:
         await self._session.rollback()
 
-    def __enter__(self) -> "UnitOfWork":
+    def __enter__(self) -> UnitOfWork:
         return self
 
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:

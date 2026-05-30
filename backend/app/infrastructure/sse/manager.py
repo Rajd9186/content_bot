@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 import time
-from typing import Any, Dict, Optional, Set
+from typing import Any
 
 from app.infrastructure.messaging.redis_client import redis_client
 
@@ -27,10 +27,10 @@ class SSEConnectionManager:
     """
 
     def __init__(self) -> None:
-        self._connections: Dict[str, Set[asyncio.Queue[str]]] = {}
+        self._connections: dict[str, set[asyncio.Queue[str]]] = {}
         self._total_connections = 0
-        self._listener_task: Optional[asyncio.Task[None]] = None
-        self._heartbeat_task: Optional[asyncio.Task[None]] = None
+        self._listener_task: asyncio.Task[None] | None = None
+        self._heartbeat_task: asyncio.Task[None] | None = None
         self._running = False
 
     async def start(self) -> None:
@@ -49,7 +49,7 @@ class SSEConnectionManager:
             self._listener_task.cancel()
         if self._heartbeat_task and not self._heartbeat_task.done():
             self._heartbeat_task.cancel()
-        for workflow_id, queues in self._connections.items():
+        for _workflow_id, queues in self._connections.items():
             for q in queues:
                 await q.put(": disconnected\n\n")
         self._connections.clear()
@@ -109,7 +109,7 @@ class SSEConnectionManager:
         status: str = "",
         tokens_used: int = 0,
         latency_ms: float = 0.0,
-        error: Optional[str] = None,
+        error: str | None = None,
         **extra: Any,
     ) -> None:
         data: dict[str, Any] = {}

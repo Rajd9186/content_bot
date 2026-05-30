@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import logging
-import time
-from contextlib import contextmanager
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.contracts import AgentTelemetry, TokenUsage
 
@@ -23,7 +21,7 @@ class TelemetryCollector:
         self._hooks.append(hook)
 
     def get_records(
-        self, correlation_id: Optional[str] = None,
+        self, correlation_id: str | None = None,
     ) -> list[AgentTelemetry]:
         if correlation_id:
             return [
@@ -32,7 +30,7 @@ class TelemetryCollector:
             ]
         return list(self._records)
 
-    def get_latest(self, agent_name: str) -> Optional[AgentTelemetry]:
+    def get_latest(self, agent_name: str) -> AgentTelemetry | None:
         for record in reversed(self._records):
             if record.agent_name == agent_name:
                 return record
@@ -41,8 +39,8 @@ class TelemetryCollector:
     def create_telemetry(
         self,
         agent_name: str,
-        correlation_id: Optional[str] = None,
-        workflow_id: Optional[str] = None,
+        correlation_id: str | None = None,
+        workflow_id: str | None = None,
     ) -> AgentTelemetry:
         return AgentTelemetry(
             agent_name=agent_name,
@@ -64,7 +62,7 @@ class TelemetryCollector:
                 logger.error("Telemetry hook failed: %s", e)
 
     def summary(
-        self, correlation_id: Optional[str] = None,
+        self, correlation_id: str | None = None,
     ) -> dict[str, Any]:
         records = self.get_records(correlation_id)
         if not records:

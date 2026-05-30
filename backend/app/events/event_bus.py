@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Coroutine, Optional, TYPE_CHECKING
+from collections.abc import Callable, Coroutine
+from typing import TYPE_CHECKING, Any
 
+from app.events.event_types import EVENT_REGISTRY, BaseEvent
 from app.infrastructure.models.event import StoredEvent
-from app.events.event_types import BaseEvent, EVENT_REGISTRY
 
 if TYPE_CHECKING:
     from app.infrastructure.unit_of_work import UnitOfWork
@@ -43,9 +44,9 @@ class EventStore:
     async def replay(
         self,
         uow: UnitOfWork,
-        event_type: Optional[str] = None,
-        aggregate_type: Optional[str] = None,
-        aggregate_id: Optional[str] = None,
+        event_type: str | None = None,
+        aggregate_type: str | None = None,
+        aggregate_id: str | None = None,
         limit: int = 100,
     ) -> list[BaseEvent]:
         if event_type:

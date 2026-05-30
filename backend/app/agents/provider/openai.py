@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import aiohttp
-import json
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import Any
+
+import aiohttp
 
 from app.agents.contracts import TokenUsage
 from app.agents.provider.base import BaseProvider, ProviderRequest, ProviderResponse

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,11 +27,12 @@ class BaseRepository(Generic[T]):
         await self.session.delete(instance)
         await self.session.flush()
 
-    async def get_by_id(self, entity_id: Any) -> Optional[T]:
+    async def get_by_id(self, entity_id: Any) -> T | None:
         raise NotImplementedError
 
     async def exists(self, **filters: Any) -> bool:
-        from sqlalchemy import select, exists as sa_exists
+        from sqlalchemy import exists as sa_exists
+        from sqlalchemy import select
 
         stmt = sa_exists(
             select(self.__class__.__orig_bases__[0].__args__[0]).filter_by(**filters)
@@ -40,7 +41,7 @@ class BaseRepository(Generic[T]):
         return result.scalar() or False
 
     async def count(self, **filters: Any) -> int:
-        from sqlalchemy import select, func
+        from sqlalchemy import func, select
 
         query = select(func.count()).select_from(
             self.__class__.__orig_bases__[0].__args__[0]  # type: ignore

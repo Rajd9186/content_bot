@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from sqlalchemy import TypeDecorator, JSON
+from sqlalchemy import JSON, TypeDecorator
 from sqlalchemy.dialects.postgresql import JSONB as PGJSONB
 from sqlalchemy.orm import DeclarativeBase
 
@@ -20,4 +20,4 @@ class Base(DeclarativeBase):
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)

@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import String, Integer, Float, DateTime, Text, ForeignKey, Boolean, Index
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.models.base import Base, JSONBColumn, utcnow
 
@@ -21,7 +20,7 @@ class AgentConfig(Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     agent_type: Mapped[str] = mapped_column("agent_type", String(64), nullable=False)
     model: Mapped[str] = mapped_column(String(64), default="gpt-4o")
-    prompt_template: Mapped[Optional[str]] = mapped_column(
+    prompt_template: Mapped[str | None] = mapped_column(
         "prompt_template", Text, nullable=True
     )
     temperature: Mapped[float] = mapped_column(Float, default=0.1)
@@ -51,27 +50,27 @@ class AgentExecution(Base):
         ForeignKey("workflow_jobs.id", ondelete="SET NULL"),
         nullable=True, index=True
     )
-    agent_config_id: Mapped[Optional[str]] = mapped_column(
+    agent_config_id: Mapped[str | None] = mapped_column(
         "agent_config_id", UUID(as_uuid=False),
         ForeignKey("agent_configs.id", ondelete="SET NULL"),
         nullable=True
     )
     status: Mapped[str] = mapped_column(String(32), default="pending", index=True)
-    input_payload: Mapped[Optional[dict]] = mapped_column(
+    input_payload: Mapped[dict | None] = mapped_column(
         "input_payload", JSONBColumn, nullable=True
     )
-    output_payload: Mapped[Optional[dict]] = mapped_column(
+    output_payload: Mapped[dict | None] = mapped_column(
         "output_payload", JSONBColumn, nullable=True
     )
-    started_at: Mapped[Optional[datetime]] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         "started_at", DateTime(timezone=True), nullable=True
     )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         "completed_at", DateTime(timezone=True), nullable=True
     )
-    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tokens_used: Mapped[Optional[int]] = mapped_column("tokens_used", Integer, nullable=True)
-    cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tokens_used: Mapped[int | None] = mapped_column("tokens_used", Integer, nullable=True)
+    cost: Mapped[float | None] = mapped_column(Float, nullable=True)
     correlation_id: Mapped[str] = mapped_column(
         "correlation_id", UUID(as_uuid=False), nullable=False
     )
@@ -93,20 +92,20 @@ class AgentCall(Base):
     )
     provider: Mapped[str] = mapped_column(String(32), nullable=False)
     model: Mapped[str] = mapped_column(String(64), nullable=False)
-    request_payload: Mapped[Optional[dict]] = mapped_column(
+    request_payload: Mapped[dict | None] = mapped_column(
         "request_payload", JSONBColumn, nullable=True
     )
-    response_payload: Mapped[Optional[dict]] = mapped_column(
+    response_payload: Mapped[dict | None] = mapped_column(
         "response_payload", JSONBColumn, nullable=True
     )
-    prompt_tokens: Mapped[Optional[int]] = mapped_column("prompt_tokens", Integer, nullable=True)
-    completion_tokens: Mapped[Optional[int]] = mapped_column(
+    prompt_tokens: Mapped[int | None] = mapped_column("prompt_tokens", Integer, nullable=True)
+    completion_tokens: Mapped[int | None] = mapped_column(
         "completion_tokens", Integer, nullable=True
     )
-    total_tokens: Mapped[Optional[int]] = mapped_column("total_tokens", Integer, nullable=True)
-    latency_ms: Mapped[Optional[int]] = mapped_column("latency_ms", Integer, nullable=True)
+    total_tokens: Mapped[int | None] = mapped_column("total_tokens", Integer, nullable=True)
+    latency_ms: Mapped[int | None] = mapped_column("latency_ms", Integer, nullable=True)
     status: Mapped[str] = mapped_column(String(32), nullable=False)
-    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime(timezone=True), default=utcnow
     )

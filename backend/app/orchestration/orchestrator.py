@@ -1,22 +1,25 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Dict, Optional
+from collections.abc import Callable, Coroutine
+from typing import Any
 from uuid import uuid4
 
-from app.orchestration.stages import (
-    WorkflowStage, WorkflowStatus, WorkflowRun, StageResult, StageStatus,
-    STAGE_ORDER,
-)
-from app.orchestration.engine import WorkflowEngine, StageExecutor
-from app.orchestration.retry_manager import RetryManager
-from app.orchestration.validators import StageValidator, WorkflowInputValidator, ValidationError
+from app.events.event_bus import event_bus
+from app.orchestration.engine import StageExecutor, WorkflowEngine
 from app.orchestration.events import (
-    WorkflowStartedEvent, WorkflowCompletedEvent,
-    WorkflowFailedEvent, WorkflowCancelledEvent,
+    WorkflowStartedEvent,
 )
-from app.events.event_bus import event_bus, event_store
+from app.orchestration.retry_manager import RetryManager
+from app.orchestration.stages import (
+    STAGE_ORDER,
+    StageResult,
+    StageStatus,
+    WorkflowRun,
+    WorkflowStage,
+    WorkflowStatus,
+)
+from app.orchestration.validators import StageValidator, ValidationError, WorkflowInputValidator
 
 logger = logging.getLogger(__name__)
 
@@ -34,10 +37,10 @@ class Orchestrator:
 
     def __init__(
         self,
-        engine: Optional[WorkflowEngine] = None,
-        checkpoint_persister: Optional[Callable[[WorkflowRun], Coroutine[Any, Any, None]]] = None,
-        event_publisher: Optional[Callable[[Any], Coroutine[Any, Any, None]]] = None,
-        dead_letter_handler: Optional[Callable[[WorkflowRun, WorkflowStage, str, int], Coroutine[Any, Any, None]]] = None,
+        engine: WorkflowEngine | None = None,
+        checkpoint_persister: Callable[[WorkflowRun], Coroutine[Any, Any, None]] | None = None,
+        event_publisher: Callable[[Any], Coroutine[Any, Any, None]] | None = None,
+        dead_letter_handler: Callable[[WorkflowRun, WorkflowStage, str, int], Coroutine[Any, Any, None]] | None = None,
     ) -> None:
         self._stage_validator = StageValidator()
         self._input_validator = WorkflowInputValidator()
@@ -61,8 +64,8 @@ class Orchestrator:
         self,
         workspace_id: str,
         correlation_id: str,
-        content_item_id: Optional[str] = None,
-        metadata: Optional[Dict[str, Any]] = None,
+        content_item_id: str | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> WorkflowRun:
         """Create a new workflow run in INIT stage."""
         errors = self._input_validator.validate_create(workspace_id, correlation_id, metadata)
@@ -94,7 +97,7 @@ class Orchestrator:
         self,
         run: WorkflowRun,
         executor: StageExecutor,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowRun:
         """Execute the workflow from its current stage through completion."""
         self._engine._executor = executor
@@ -105,7 +108,7 @@ class Orchestrator:
         self,
         run: WorkflowRun,
         executor: StageExecutor,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowRun:
         """Resume a workflow from its last checkpointed stage."""
         errors = self._input_validator.validate_resume(run)
@@ -129,7 +132,7 @@ class Orchestrator:
 
     async def get_stage_result(
         self, run: WorkflowRun, stage: WorkflowStage,
-    ) -> Optional[StageResult]:
+    ) -> StageResult | None:
         """Get the result for a specific stage."""
         return run.stage_results.get(stage.value)
 

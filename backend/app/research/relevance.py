@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+from datetime import UTC, datetime
 
 from app.research.models import ResearchSource
 
@@ -22,23 +21,23 @@ class RelevanceEngine:
         self,
         sources: list[ResearchSource],
         query: str,
-        keywords: Optional[list[str]] = None,
+        keywords: list[str] | None = None,
     ) -> list[ResearchSource]:
         keywords = keywords or self._extract_keywords(query)
-        
+
         for source in sources:
             source.semantic_score = self._score_semantic(source, query)
             source.keyword_score = self._score_keywords(source, keywords)
             source.recency_score = self._score_recency(source)
             source.authority_score = self._score_authority(source)
-            
+
             source.combined_score = (
                 source.semantic_score * self._weights["semantic"] +
                 source.keyword_score * self._weights["keyword"] +
                 source.recency_score * self._weights["recency"] +
                 source.authority_score * self._weights["authority"]
             )
-        
+
         return sorted(sources, key=lambda s: s.combined_score, reverse=True)
 
     def _extract_keywords(self, query: str) -> list[str]:
@@ -49,61 +48,61 @@ class RelevanceEngine:
             "could", "should", "may", "might", "must", "shall", "can", "need",
             "what", "which", "who", "whom", "whose", "where", "when", "why", "how",
         }
-        
+
         words = query.lower().split()
         keywords = [
             w.strip(".,!?;:\"'()[]{}") for w in words
             if w.lower() not in stop_words and len(w) > 2
         ]
-        
+
         return list(set(keywords))[:10]
 
     def _score_semantic(self, source: ResearchSource, query: str) -> float:
         query_lower = query.lower()
         title_lower = source.title.lower()
         snippet_lower = source.snippet.lower()
-        
+
         score = 0.0
-        
+
         if query_lower in title_lower:
             score += 0.5
-        
+
         title_words = set(title_lower.split())
         query_words = set(query_lower.split())
         overlap = len(title_words & query_words)
         if overlap > 0:
             score += min(0.3, overlap * 0.05)
-        
+
         if query_lower in snippet_lower:
             score += 0.2
-        
+
         snippet_words = set(snippet_lower.split())
         overlap = len(snippet_words & query_words)
         if overlap > 0:
             score += min(0.2, overlap * 0.02)
-        
+
         return min(1.0, score)
 
     def _score_keywords(self, source: ResearchSource, keywords: list[str]) -> float:
         if not keywords:
             return 0.0
-        
+
         title_lower = source.title.lower()
         snippet_lower = source.snippet.lower()
         text = f"{title_lower} {snippet_lower}"
-        
+
         matches = sum(1 for kw in keywords if kw in text)
         ratio = matches / len(keywords) if keywords else 0.0
-        
+
         return min(1.0, ratio)
 
     def _score_recency(self, source: ResearchSource) -> float:
         if not source.published_date:
             return 0.3
-        
-        now = datetime.now(timezone.utc)
+
+        now = datetime.now(UTC)
         days_old = (now - source.published_date).days
-        
+
         if days_old <= 7:
             return 1.0
         elif days_old <= 30:
@@ -122,22 +121,22 @@ class RelevanceEngine:
             base_score = 0.5
         else:
             base_score = 0.2
-        
+
         authority_domains = [
             "arxiv.org", "nature.com", "science.org", "ieee.org",
             "reuters.com", "bloomberg.com", "nytimes.com",
             "wikipedia.org", "github.com",
         ]
-        
+
         if any(ad in source.domain for ad in authority_domains):
             base_score = min(1.0, base_score + 0.2)
-        
+
         if source.authors:
             base_score = min(1.0, base_score + 0.1)
-        
+
         if source.published_date:
             base_score = min(1.0, base_score + 0.05)
-        
+
         return base_score
 
     def filter_by_threshold(

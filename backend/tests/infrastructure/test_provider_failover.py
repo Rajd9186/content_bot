@@ -65,13 +65,14 @@ class TestCircuitBreaker:
 
 class TestProviderFailover:
     def test_initial_circuits(self, failover: ProviderFailover) -> None:
-        assert len(failover._circuits) == 3
+        assert len(failover._circuits) == 4
         assert "openai" in failover._circuits
+        assert "nvidia" in failover._circuits
         assert "groq" in failover._circuits
         assert "ollama" in failover._circuits
 
     def test_initial_state_all_closed(self, failover: ProviderFailover) -> None:
-        for provider in ["openai", "groq", "ollama"]:
+        for provider in ["openai", "nvidia", "groq", "ollama"]:
             assert failover.get_circuit_state(provider) == CircuitState.CLOSED
 
     def test_record_success_keeps_closed(self, failover: ProviderFailover) -> None:
@@ -117,7 +118,7 @@ class TestProviderFailover:
             failover.record_failure("openai")
         provider = failover.select_provider("research")
         assert provider != "openai"
-        assert provider in ("groq", "ollama")
+        assert provider in ("nvidia", "groq", "ollama")
 
     def test_select_provider_with_preferred(self, failover: ProviderFailover) -> None:
         provider = failover.select_provider("research", preferred="groq")
@@ -135,6 +136,7 @@ class TestProviderFailover:
     def test_circuit_states_property(self, failover: ProviderFailover) -> None:
         states = failover.circuit_states
         assert "openai" in states
+        assert "nvidia" in states
         assert "groq" in states
         assert "ollama" in states
         assert all(v == "closed" for v in states.values())

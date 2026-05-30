@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import uuid
 
-from starlette.datastructures import MutableHeaders
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
 from starlette.responses import Response

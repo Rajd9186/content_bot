@@ -3,17 +3,20 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from datetime import datetime, timezone
-from enum import Enum, auto
-from typing import Any, Callable, Coroutine, Optional
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
+from enum import StrEnum
+from typing import Any
 
-from app.agents.contracts import (
-    AgentInput, AgentOutput, AgentStatus, TokenUsage,
-)
 from app.agents.base import BaseAgent
-from app.agents.provider.base import ProviderRequest, ProviderResponse
-from app.agents.prompt.engine import PromptContext, prompt_engine
-from app.agents.provider.factory import provider_factory
+from app.agents.contracts import (
+    AgentInput,
+    AgentOutput,
+    AgentStatus,
+    TokenUsage,
+)
+from app.agents.prompt.engine import PromptContext
+from app.agents.provider.base import ProviderResponse
 from app.agents.retry.policy import RetryPolicyExecutor
 from app.agents.telemetry.collector import telemetry_collector
 from app.agents.validation.parser import ResponseParser
@@ -22,7 +25,7 @@ from app.agents.validation.recovery import fallback_generator
 logger = logging.getLogger(__name__)
 
 
-class PipelineStage(str, Enum):
+class PipelineStage(StrEnum):
     INPUT_VALIDATION = "input_validation"
     PROMPT_CONSTRUCTION = "prompt_construction"
     PROVIDER_SELECTION = "provider_selection"
@@ -36,7 +39,7 @@ class PipelineStage(str, Enum):
 
 
 StageHook = Callable[
-    [PipelineStage, AgentInput, Optional[dict[str, Any]]],
+    [PipelineStage, AgentInput, dict[str, Any] | None],
     Coroutine[Any, Any, None],
 ]
 
@@ -56,11 +59,11 @@ class ExecutionPipeline:
             correlation_id=agent_input.correlation_id,
             workflow_id=agent_input.workflow_id,
         )
-        telemetry.started_at = datetime.now(timezone.utc).isoformat()
+        telemetry.started_at = datetime.now(UTC).isoformat()
 
         stage_data: dict[str, Any] = {}
         fallback_used = False
-        final_error: Optional[str] = None
+        final_error: str | None = None
 
         try:
             stage_data["input"] = agent_input
@@ -91,7 +94,7 @@ class ExecutionPipeline:
                 self._agent.contract.retry_policy
             )
 
-            async def execute_attempt() -> tuple[bool, Any, Optional[str]]:
+            async def execute_attempt() -> tuple[bool, Any, str | None]:
                 nonlocal retry_count
                 retry_count += 1
                 return await self._execute_llm_attempt(stage_data, provider_responses)
@@ -136,7 +139,7 @@ class ExecutionPipeline:
             )
 
             telemetry.status = AgentStatus.COMPLETED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.latency_ms = self._compute_total_latency(telemetry)
             telemetry.fallback_used = fallback_used
             telemetry.error = final_error
@@ -151,7 +154,7 @@ class ExecutionPipeline:
 
         except asyncio.CancelledError:
             telemetry.status = AgentStatus.CANCELLED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.error = "Pipeline execution cancelled"
             telemetry_collector.record(telemetry)
             return AgentOutput(
@@ -160,7 +163,7 @@ class ExecutionPipeline:
 
         except Exception as e:
             telemetry.status = AgentStatus.FAILED
-            telemetry.completed_at = datetime.now(timezone.utc).isoformat()
+            telemetry.completed_at = datetime.now(UTC).isoformat()
             telemetry.error = str(e)
             telemetry_collector.record(telemetry)
             return AgentOutput(
@@ -232,7 +235,7 @@ class ExecutionPipeline:
         self,
         stage_data: dict[str, Any],
         provider_responses: list[ProviderResponse],
-    ) -> tuple[bool, Optional[dict[str, Any]], Optional[str]]:
+    ) -> tuple[bool, dict[str, Any] | None, str | None]:
         provider = stage_data.get("provider")
         request = stage_data.get("provider_request")
 

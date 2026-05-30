@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 from app.pipeline.agents.base import PipelineAgent
 from app.pipeline.state import NodeResult, PipelineState
@@ -16,8 +16,8 @@ class ResearchAgent(PipelineAgent):
     async def execute(
         self,
         state: PipelineState,
-        provider_override: Optional[str] = None,
-        model_override: Optional[str] = None,
+        provider_override: str | None = None,
+        model_override: str | None = None,
     ) -> NodeResult:
         result = await super().execute(state, provider_override, model_override)
         return result

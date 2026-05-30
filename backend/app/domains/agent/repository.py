@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-from typing import Optional
+from sqlalchemy import func, select
 
-from sqlalchemy import select, func
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.domains.agent.models import AgentConfig, AgentExecution, AgentCall
+from app.domains.agent.models import AgentConfig, AgentExecution
 from app.infrastructure.repositories.base import BaseRepository
 
 
 class AgentRepository(BaseRepository[AgentConfig]):
-    async def get_by_id(self, config_id: str) -> Optional[AgentConfig]:
+    async def get_by_id(self, config_id: str) -> AgentConfig | None:
         return await self.session.get(AgentConfig, config_id)
 
     async def get_by_workspace(

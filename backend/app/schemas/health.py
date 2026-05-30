@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Dict
-
 from pydantic import BaseModel
 
 
@@ -13,4 +11,4 @@ class HealthResponse(BaseModel):
 
 class ReadinessResponse(BaseModel):
     status: str
-    checks: Dict[str, str]
+    checks: dict[str, str]

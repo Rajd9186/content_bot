@@ -1,10 +1,9 @@
 import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import String, Integer, DateTime, Text, ForeignKey, Index, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.models.base import Base, JSONBColumn, utcnow
 
@@ -18,18 +17,18 @@ class WorkflowJob(Base):
     workspace_id: Mapped[str] = mapped_column(
         "workspace_id", UUID(as_uuid=False), nullable=False, index=True
     )
-    content_item_id: Mapped[Optional[str]] = mapped_column(
+    content_item_id: Mapped[str | None] = mapped_column(
         "content_item_id", UUID(as_uuid=False), nullable=True
     )
     status: Mapped[str] = mapped_column(String(32), default="DRAFT", index=True)
-    processing_stage: Mapped[Optional[str]] = mapped_column(
+    processing_stage: Mapped[str | None] = mapped_column(
         "processing_stage", String(32), nullable=True
     )
     retry_count: Mapped[int] = mapped_column("retry_count", Integer, default=0)
     max_retries: Mapped[int] = mapped_column("max_retries", Integer, default=3)
     timeout_ms: Mapped[int] = mapped_column("timeout_ms", Integer, default=300000)
-    error_code: Mapped[Optional[str]] = mapped_column("error_code", String(64), nullable=True)
-    error_message: Mapped[Optional[str]] = mapped_column(
+    error_code: Mapped[str | None] = mapped_column("error_code", String(64), nullable=True)
+    error_message: Mapped[str | None] = mapped_column(
         "error_message", Text, nullable=True
     )
     version: Mapped[int] = mapped_column(Integer, default=1)
@@ -39,10 +38,10 @@ class WorkflowJob(Base):
     created_by: Mapped[str] = mapped_column(
         "created_by", UUID(as_uuid=False), nullable=False
     )
-    started_at: Mapped[Optional[datetime]] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         "started_at", DateTime(timezone=True), nullable=True
     )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         "completed_at", DateTime(timezone=True), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(
@@ -72,14 +71,14 @@ class WorkflowStep(Base):
     )
     step_type: Mapped[str] = mapped_column("step_type", String(64), nullable=False)
     status: Mapped[str] = mapped_column(String(32), default="pending")
-    started_at: Mapped[Optional[datetime]] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         "started_at", DateTime(timezone=True), nullable=True
     )
-    completed_at: Mapped[Optional[datetime]] = mapped_column(
+    completed_at: Mapped[datetime | None] = mapped_column(
         "completed_at", DateTime(timezone=True), nullable=True
     )
-    output: Mapped[Optional[dict]] = mapped_column(JSONBColumn, nullable=True)
-    error: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    output: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime(timezone=True), default=utcnow
     )
@@ -101,11 +100,11 @@ class ExecutionLog(Base):
         "job_id", UUID(as_uuid=False), ForeignKey("workflow_jobs.id", ondelete="CASCADE"),
         nullable=False, index=True
     )
-    from_status: Mapped[Optional[str]] = mapped_column("from_status", String(32), nullable=True)
+    from_status: Mapped[str | None] = mapped_column("from_status", String(32), nullable=True)
     to_status: Mapped[str] = mapped_column("to_status", String(32), nullable=False)
     transition: Mapped[str] = mapped_column(String(64), nullable=False)
     triggered_by: Mapped[str] = mapped_column("triggered_by", String(128), nullable=False)
-    extra_metadata: Mapped[Optional[dict]] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
+    extra_metadata: Mapped[dict | None] = mapped_column("metadata", JSONBColumn, nullable=True, default=dict)
     correlation_id: Mapped[str] = mapped_column(
         "correlation_id", UUID(as_uuid=False), nullable=False
     )
@@ -130,12 +129,12 @@ class DeadLetterJob(Base):
         "original_job_id", UUID(as_uuid=False), nullable=False, index=True
     )
     error_code: Mapped[str] = mapped_column("error_code", String(64), nullable=False)
-    error_message: Mapped[Optional[str]] = mapped_column("error_message", Text, nullable=True)
+    error_message: Mapped[str | None] = mapped_column("error_message", Text, nullable=True)
     retry_attempts: Mapped[int] = mapped_column("retry_attempts", Integer, default=0)
-    payload: Mapped[Optional[dict]] = mapped_column(JSONBColumn, nullable=True)
+    payload: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
     failed_at: Mapped[datetime] = mapped_column(
         "failed_at", DateTime(timezone=True), default=utcnow
     )
-    resolved_at: Mapped[Optional[datetime]] = mapped_column(
+    resolved_at: Mapped[datetime | None] = mapped_column(
         "resolved_at", DateTime(timezone=True), nullable=True
     )

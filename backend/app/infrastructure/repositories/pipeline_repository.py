@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from sqlalchemy import select, update, and_
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, select, update
 
 from app.infrastructure.models.pipeline import PipelineRun
 from app.infrastructure.models.telemetry import Checkpoint
@@ -19,10 +17,10 @@ from app.pipeline.state import (
 
 
 class PipelineRepository(BaseRepository[PipelineRun]):
-    async def get_by_id(self, entity_id: str) -> Optional[PipelineRun]:
+    async def get_by_id(self, entity_id: str) -> PipelineRun | None:
         return await self.session.get(PipelineRun, entity_id)
 
-    async def get_by_workflow_id(self, workflow_id: str) -> Optional[PipelineRun]:
+    async def get_by_workflow_id(self, workflow_id: str) -> PipelineRun | None:
         stmt = select(PipelineRun).where(PipelineRun.workflow_id == workflow_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
@@ -30,7 +28,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
     async def get_by_workspace(
         self,
         workspace_id: str,
-        status: Optional[str] = None,
+        status: str | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> list[PipelineRun]:
@@ -45,10 +43,10 @@ class PipelineRepository(BaseRepository[PipelineRun]):
         self,
         workflow_id: str,
         status: str,
-        current_node: Optional[str] = None,
-        expected_version: Optional[int] = None,
+        current_node: str | None = None,
+        expected_version: int | None = None,
     ) -> bool:
-        values: dict = {"status": status, "updated_at": datetime.now(timezone.utc)}
+        values: dict = {"status": status, "updated_at": datetime.now(UTC)}
         if current_node is not None:
             values["current_node"] = current_node
         stmt = (
@@ -66,7 +64,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
         stmt = (
             update(PipelineRun)
             .where(PipelineRun.workflow_id == workflow_id)
-            .values(heartbeat_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
+            .values(heartbeat_at=datetime.now(UTC), updated_at=datetime.now(UTC))
         )
         result = await self.session.execute(stmt)
         await self.session.flush()
@@ -87,9 +85,8 @@ class PipelineRepository(BaseRepository[PipelineRun]):
         timeout_minutes: int = 5,
         limit: int = 50,
     ) -> list[PipelineRun]:
-        from sqlalchemy import func
 
-        cutoff = datetime.now(timezone.utc) - __import__("datetime").timedelta(minutes=timeout_minutes)
+        cutoff = datetime.now(UTC) - __import__("datetime").timedelta(minutes=timeout_minutes)
         stmt = (
             select(PipelineRun)
             .where(
@@ -147,13 +144,13 @@ class PipelineRepository(BaseRepository[PipelineRun]):
             existing.total_latency_ms = total_latency
             existing.metadata_ = state.metadata or None
             existing.version = (existing.version or 0) + 1
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             if state.all_nodes_completed():
                 existing.status = "completed"
-                existing.completed_at = datetime.now(timezone.utc)
+                existing.completed_at = datetime.now(UTC)
             elif state.has_failures():
                 existing.status = "failed"
-                existing.completed_at = datetime.now(timezone.utc)
+                existing.completed_at = datetime.now(UTC)
             else:
                 existing.status = "running"
             await self.session.flush()
@@ -185,8 +182,8 @@ class PipelineRepository(BaseRepository[PipelineRun]):
                 total_tokens_used=total_tokens,
                 total_latency_ms=total_latency,
                 metadata_=state.metadata or None,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
             self.session.add(run)
             await self.session.flush()
@@ -249,14 +246,14 @@ class PipelineRepository(BaseRepository[PipelineRun]):
 
 
 class CheckpointRepository(BaseRepository[Checkpoint]):
-    async def get_by_id(self, entity_id: str) -> Optional[Checkpoint]:
+    async def get_by_id(self, entity_id: str) -> Checkpoint | None:
         return await self.session.get(Checkpoint, entity_id)
 
     async def get_by_aggregate(
         self,
         aggregate_type: str,
         aggregate_id: str,
-        checkpoint_type: Optional[str] = None,
+        checkpoint_type: str | None = None,
         limit: int = 10,
     ) -> list[Checkpoint]:
         stmt = select(Checkpoint).where(
@@ -292,7 +289,7 @@ class CheckpointRepository(BaseRepository[Checkpoint]):
         if existing:
             existing.state = state
             existing.version = version
-            existing.updated_at = datetime.now(timezone.utc)
+            existing.updated_at = datetime.now(UTC)
             await self.session.flush()
             return existing
         else:
@@ -312,7 +309,7 @@ class CheckpointRepository(BaseRepository[Checkpoint]):
         aggregate_type: str,
         aggregate_id: str,
         checkpoint_type: str,
-    ) -> Optional[Checkpoint]:
+    ) -> Checkpoint | None:
         stmt = (
             select(Checkpoint)
             .where(

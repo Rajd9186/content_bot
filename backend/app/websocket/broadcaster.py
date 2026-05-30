@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
 
 from app.events.event_types import BaseEvent
 from app.messaging.redis_client import redis_client
@@ -16,14 +14,14 @@ class EventBroadcaster:
     async def broadcast_event(
         self,
         event: BaseEvent,
-        workspace_id: Optional[str] = None,
-        user_id: Optional[str] = None,
+        workspace_id: str | None = None,
+        user_id: str | None = None,
     ) -> None:
         message = WSMessage(
             type=event.type,
             data=event.data,
             correlation_id=event.correlation_id,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
         if workspace_id:
@@ -55,7 +53,7 @@ class EventBroadcaster:
                 "to_stage": to_stage,
             },
             correlation_id=correlation_id,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
         await connection_manager.broadcast_to_workspace(workspace_id, message)
 
@@ -73,7 +71,7 @@ class EventBroadcaster:
                 "status": status,
             },
             correlation_id=correlation_id,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
         await connection_manager.broadcast_to_workspace(workspace_id, message)
 

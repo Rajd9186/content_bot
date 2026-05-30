@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, Callable, Coroutine, Optional
+from collections.abc import Callable, Coroutine
+from datetime import UTC, datetime
+from typing import Any
 
 from app.pipeline.agents.compliance_agent import ComplianceAgent, extract_compliance_output
 from app.pipeline.agents.fact_checker_agent import FactCheckerAgent, extract_fact_check_output
@@ -12,7 +12,7 @@ from app.pipeline.agents.planner_agent import PlannerAgent, extract_plan
 from app.pipeline.agents.research_agent import ResearchAgent, extract_research_data
 from app.pipeline.agents.seo_agent import SEOAgent, extract_seo_output
 from app.pipeline.agents.writer_agent import WriterAgent, extract_writer_output
-from app.pipeline.state import HumanReview, NodeResult, NodeStatus, PipelineState, ReviewAction
+from app.pipeline.state import NodeResult, NodeStatus, PipelineState
 
 logger = logging.getLogger(__name__)
 
@@ -117,8 +117,8 @@ class WorkflowPipeline:
                 "message": "Content ready for human review",
                 "requires_review": True,
             },
-            started_at=datetime.now(timezone.utc).isoformat(),
-            completed_at=datetime.now(timezone.utc).isoformat(),
+            started_at=datetime.now(UTC).isoformat(),
+            completed_at=datetime.now(UTC).isoformat(),
         )
         state.add_node_result("human_review", result)
         await self._notify_progress("human_review", result)

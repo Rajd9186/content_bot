@@ -1,19 +1,26 @@
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
-from typing import Any, Callable, Coroutine, Dict, List, Optional
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+from typing import Any
 
 from app.orchestration.stages import (
-    WorkflowStage, WorkflowStatus, WorkflowRun,
-    STAGE_TRANSITIONS, STAGE_ORDER, STAGE_TIMEOUT_SECONDS, STAGE_MAX_RETRIES,
-    get_next_stage, validate_transition,
+    STAGE_MAX_RETRIES,
+    STAGE_TIMEOUT_SECONDS,
+    STAGE_TRANSITIONS,
+    WorkflowRun,
+    WorkflowStage,
+    validate_transition,
 )
 
 logger = logging.getLogger(__name__)
 
-OrchestrationGuard = Callable[[WorkflowRun, WorkflowStage, Dict[str, Any]], Coroutine[Any, Any, bool]]
-OrchestrationSideEffect = Callable[[WorkflowRun, WorkflowStage, WorkflowStage, Dict[str, Any]], Coroutine[Any, Any, None]]
+OrchestrationGuard = Callable[[WorkflowRun, WorkflowStage, dict[str, Any]], Coroutine[Any, Any, bool]]
+OrchestrationSideEffect = Callable[
+    [WorkflowRun, WorkflowStage, WorkflowStage, dict[str, Any]],
+    Coroutine[Any, Any, None],
+]
 
 
 @dataclass
@@ -28,7 +35,7 @@ class StageTransitionDef:
     max_retries: int = 3
 
 
-STAGE_TRANSITION_TABLE: List[StageTransitionDef] = [
+STAGE_TRANSITION_TABLE: list[StageTransitionDef] = [
     StageTransitionDef(WorkflowStage.INIT, WorkflowStage.PLANNING, "begin",
                        "Content brief present", "Emit workflow started event",
                        timeout_seconds=STAGE_TIMEOUT_SECONDS[WorkflowStage.INIT],
@@ -88,8 +95,8 @@ class OrchestrationStateMachine:
     """
 
     def __init__(self) -> None:
-        self._guards: Dict[str, List[OrchestrationGuard]] = {}
-        self._side_effects: Dict[str, List[OrchestrationSideEffect]] = {}
+        self._guards: dict[str, list[OrchestrationGuard]] = {}
+        self._side_effects: dict[str, list[OrchestrationSideEffect]] = {}
 
     def add_guard(self, from_stage: str, to_stage: str, guard: OrchestrationGuard) -> None:
         key = f"{from_stage}->{to_stage}"
@@ -105,7 +112,7 @@ class OrchestrationStateMachine:
 
     async def can_transition(
         self, run: WorkflowRun, from_stage: WorkflowStage, to_stage: WorkflowStage,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> bool:
         """Check if a stage transition is allowed."""
         try:
@@ -123,7 +130,7 @@ class OrchestrationStateMachine:
 
     async def transition(
         self, run: WorkflowRun, from_stage: WorkflowStage, to_stage: WorkflowStage,
-        context: Optional[Dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         """Execute a stage transition with guard checks and side effects."""
         if not await self.can_transition(run, from_stage, to_stage, context):
@@ -136,18 +143,18 @@ class OrchestrationStateMachine:
         for effect in self._side_effects.get(key, []):
             await effect(run, from_stage, to_stage, ctx)
 
-    def find_transition(self, from_stage: WorkflowStage, to_stage: WorkflowStage) -> Optional[StageTransitionDef]:
+    def find_transition(self, from_stage: WorkflowStage, to_stage: WorkflowStage) -> StageTransitionDef | None:
         """Find the transition definition for a given from/to pair."""
         for td in STAGE_TRANSITION_TABLE:
             if td.from_stage == from_stage and td.to_stage == to_stage:
                 return td
         return None
 
-    def find_transitions_by_trigger(self, trigger: str) -> List[StageTransitionDef]:
+    def find_transitions_by_trigger(self, trigger: str) -> list[StageTransitionDef]:
         """Find all transitions matching a trigger name."""
         return [td for td in STAGE_TRANSITION_TABLE if td.trigger == trigger]
 
-    def get_allowed_transitions(self, from_stage: WorkflowStage) -> List[StageTransitionDef]:
+    def get_allowed_transitions(self, from_stage: WorkflowStage) -> list[StageTransitionDef]:
         """Get all valid transitions from a given stage."""
         allowed = STAGE_TRANSITIONS.get(from_stage, set())
         return [td for td in STAGE_TRANSITION_TABLE if td.from_stage == from_stage and td.to_stage in allowed]

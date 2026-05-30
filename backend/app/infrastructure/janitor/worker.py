@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
-from sqlalchemy import select, and_
+from sqlalchemy import and_, select
 
 from app.core.database import async_session_factory
-from app.domains.workflow.models import WorkflowJob, DeadLetterJob, ExecutionLog
-from app.domains.workflow.state_machine import WorkflowStatus
+from app.domains.workflow.models import DeadLetterJob, ExecutionLog, WorkflowJob
 from app.domains.workflow.repository import WorkflowRepository
+from app.domains.workflow.state_machine import WorkflowStatus
 from app.infrastructure.messaging.redis_client import redis_client
 
 logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class JanitorWorker:
     """
 
     def __init__(self) -> None:
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._running = False
 
     async def start(self) -> None:
@@ -58,10 +58,8 @@ class JanitorWorker:
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
         logger.info("JanitorWorker stopped")
 
     async def _recovery_loop(self) -> None:
@@ -84,7 +82,7 @@ class JanitorWorker:
             return
 
         try:
-            cutoff = datetime.now(timezone.utc) - timedelta(minutes=ZOMBIE_TIMEOUT_MINUTES)
+            cutoff = datetime.now(UTC) - timedelta(minutes=ZOMBIE_TIMEOUT_MINUTES)
 
             async with async_session_factory() as session:
                 repo = WorkflowRepository(session)
@@ -97,10 +95,8 @@ class JanitorWorker:
                 for job in zombies:
                     await self._recover_job(session, repo, job)
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 await lock.release()
-            except Exception:
-                pass
 
     async def _find_zombies(
         self, session, repo: WorkflowRepository, cutoff: datetime,

@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.domains.workflow.service import WorkflowService
 from app.infrastructure.database import get_db
 from app.infrastructure.unit_of_work import UnitOfWork
-from app.domains.workflow.service import WorkflowService
 from app.orchestration.orchestrator import Orchestrator, orchestrator
 
 
@@ -28,7 +28,7 @@ async def get_correlation_id(request: Request) -> str:
     return getattr(request.state, "correlation_id", "")
 
 
-async def get_current_user_id(request: Request) -> Optional[str]:
+async def get_current_user_id(request: Request) -> str | None:
     return getattr(request.state, "user_id", None)
 
 

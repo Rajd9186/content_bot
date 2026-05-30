@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Any, Optional
+from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -12,14 +13,12 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.infrastructure.unit_of_work import UnitOfWork
-from app.infrastructure.sse.manager import sse_manager
 from app.infrastructure.messaging.redis_client import redis_client
-from app.pipeline.graph import WorkflowPipeline, pipeline
+from app.infrastructure.sse.manager import sse_manager
+from app.infrastructure.unit_of_work import UnitOfWork
+from app.pipeline.graph import pipeline
 from app.pipeline.state import (
     HumanReview,
-    NodeResult,
-    NodeStatus,
     PipelineState,
     ReviewAction,
 )
@@ -31,7 +30,7 @@ router = APIRouter(tags=["content-pipeline"])
 _memory_fallback: dict[str, PipelineState] = {}
 
 
-async def _load_state(workflow_id: str, db: AsyncSession) -> Optional[PipelineState]:
+async def _load_state(workflow_id: str, db: AsyncSession) -> PipelineState | None:
     if db:
         try:
             uow = UnitOfWork(db)
@@ -51,10 +50,8 @@ async def _save_state(state: PipelineState, db: AsyncSession) -> bool:
             await uow.commit()
             return True
         except Exception as e:
-            try:
+            with contextlib.suppress(Exception):
                 await uow.rollback()
-            except Exception:
-                pass
             logger.warning("DB persistence failed, using memory fallback: %s", e)
     _memory_fallback[state.workflow_id] = state
     return False
@@ -101,7 +98,7 @@ async def start_pipeline(
     tone: str = Query("professional", description="Writing tone"),
     goals: str = Query("", description="Content goals"),
     workspace_id: str = Query("default", description="Workspace ID"),
-    correlation_id: Optional[str] = None,
+    correlation_id: str | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     workflow_id = str(uuid4())
@@ -115,7 +112,7 @@ async def start_pipeline(
         audience=audience,
         tone=tone,
         goals=goals,
-        created_at=datetime.now(timezone.utc).isoformat(),
+        created_at=datetime.now(UTC).isoformat(),
     )
 
     await _save_state(state, db)
@@ -180,7 +177,7 @@ async def submit_review(
     workflow_id: str,
     action: ReviewAction = Query(...),
     comments: str = Query(""),
-    reviewer_id: Optional[str] = Query(None),
+    reviewer_id: str | None = Query(None),
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     state = await _load_state(workflow_id, db)
@@ -191,7 +188,7 @@ async def submit_review(
         reviewer_id=reviewer_id or "anonymous",
         action=action,
         comments=comments,
-        reviewed_at=datetime.now(timezone.utc).isoformat(),
+        reviewed_at=datetime.now(UTC).isoformat(),
     )
 
     if action == ReviewAction.APPROVED:
@@ -282,7 +279,8 @@ async def stream_pipeline_events(
                 yield f"data: {json.dumps(event)}\n\n"
 
             if state.all_nodes_completed() or state.has_failures():
-                yield f"data: {json.dumps({'type': 'complete', 'status': 'completed' if state.all_nodes_completed() else 'failed'})}\n\n"
+                status = "completed" if state.all_nodes_completed() else "failed"
+                yield f"data: {json.dumps({'type': 'complete', 'status': status})}\n\n"
                 return
 
             while True:
@@ -291,8 +289,8 @@ async def stream_pipeline_events(
                     yield message
                     if '"type": "pipeline_completed"' in message or '"type": "pipeline_failed"' in message:
                         break
-                except asyncio.TimeoutError:
-                    yield f": heartbeat {int(datetime.now(timezone.utc).timestamp())}\n\n"
+                except TimeoutError:
+                    yield f": heartbeat {int(datetime.now(UTC).timestamp())}\n\n"
         finally:
             sse_manager.remove_connection(workflow_id, queue)
 

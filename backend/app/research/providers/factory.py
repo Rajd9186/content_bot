@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Optional
 
 from app.research.providers.base import BaseSearchProvider
 
@@ -16,22 +15,22 @@ class SearchProviderFactory:
         self._providers[provider.name] = provider
         logger.info("Registered search provider: %s", provider.name)
 
-    def get(self, name: str) -> Optional[BaseSearchProvider]:
+    def get(self, name: str) -> BaseSearchProvider | None:
         return self._providers.get(name)
 
     def get_or_create(self, name: str) -> BaseSearchProvider:
         existing = self.get(name)
         if existing:
             return existing
-        
+
         provider = self._create(name)
         if provider:
             self.register(provider)
         return provider
 
-    def _create(self, name: str) -> Optional[BaseSearchProvider]:
+    def _create(self, name: str) -> BaseSearchProvider | None:
         normalized = name.lower().replace("_", "-")
-        
+
         if normalized == "tavily":
             from app.research.providers.tavily import TavilyProvider
             return TavilyProvider()
@@ -41,7 +40,7 @@ class SearchProviderFactory:
         elif normalized == "mock":
             from app.research.providers.mock import MockSearchProvider
             return MockSearchProvider()
-        
+
         logger.warning("Unknown search provider: %s", name)
         return None
 

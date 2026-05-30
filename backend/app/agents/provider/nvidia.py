@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import os
 import time
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.contracts import TokenUsage
 from app.agents.provider.base import BaseProvider, ProviderRequest, ProviderResponse
@@ -44,8 +44,8 @@ class NvidiaProvider(BaseProvider):
 
         try:
             timeout = aiohttp.ClientTimeout(total=request.timeout_ms / 1000)
-            async with aiohttp.ClientSession(timeout=timeout) as session:
-                async with session.post(url, json=body, headers=headers) as resp:
+            async with aiohttp.ClientSession(timeout=timeout) as session, \
+                    session.post(url, json=body, headers=headers) as resp:
                     elapsed = (time.monotonic() - start) * 1000
                     raw = await resp.json()
 

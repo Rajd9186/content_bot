@@ -1,24 +1,29 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 from uuid import uuid4
 
-from app.domains.workflow.repository import WorkflowRepository
-from app.domains.workflow.state_machine import (
-    WorkflowStatus, TRANSITION_RULES, workflow_state_machine,
+from app.domains.workflow.models import (
+    ExecutionLog,
+    WorkflowJob,
+    WorkflowStep,
 )
 from app.domains.workflow.retry_service import retry_service
-from app.domains.workflow.models import (
-    WorkflowJob, WorkflowStep, ExecutionLog, DeadLetterJob,
-)
-from app.infrastructure.unit_of_work import UnitOfWork
-from app.infrastructure.models.telemetry import RetryRecord
-from app.events.event_types import (
-    JobStartedEvent, JobCompletedEvent, JobFailedEvent,
-    JobStageChangedEvent, JobRetriedEvent, JobCanceledEvent,
+from app.domains.workflow.state_machine import (
+    WorkflowStatus,
+    workflow_state_machine,
 )
 from app.events.event_bus import event_bus
+from app.events.event_types import (
+    JobCanceledEvent,
+    JobCompletedEvent,
+    JobFailedEvent,
+    JobRetriedEvent,
+    JobStageChangedEvent,
+    JobStartedEvent,
+)
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.infrastructure.websocket.broadcaster import event_broadcaster
 
 logger = logging.getLogger(__name__)
@@ -34,7 +39,7 @@ class WorkflowService:
         workspace_id: str,
         created_by: str,
         correlation_id: str,
-        content_item_id: Optional[str] = None,
+        content_item_id: str | None = None,
     ) -> WorkflowJob:
         job = WorkflowJob(
             id=str(uuid4()),
@@ -66,7 +71,7 @@ class WorkflowService:
         workspace_id: str,
         triggered_by: str,
         correlation_id: str,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> WorkflowJob:
         job = await self.repo.get_by_id(job_id)
         if not job:
@@ -235,7 +240,7 @@ class WorkflowService:
         return await self.repo.add(step)
 
     async def _log_transition(
-        self, job_id: str, from_status: Optional[str], to_status: str,
+        self, job_id: str, from_status: str | None, to_status: str,
         transition: str, triggered_by: str, correlation_id: str,
     ) -> ExecutionLog:
         log = ExecutionLog(

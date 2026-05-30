@@ -1,4 +1,4 @@
-from app.domains.agent.models import AgentConfig, AgentExecution, AgentCall
+from app.domains.agent.models import AgentCall, AgentConfig, AgentExecution
 from app.domains.agent.repository import AgentRepository
 
 __all__ = [

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 
 class PromptBuilder:
@@ -33,7 +33,7 @@ class ResearchPromptBuilder(PromptBuilder):
         return self
 
     def with_existing_knowledge(
-        self, knowledge: Optional[str] = None,
+        self, knowledge: str | None = None,
     ) -> ResearchPromptBuilder:
         self.set("existing_knowledge", knowledge or "No prior knowledge provided.")
         return self

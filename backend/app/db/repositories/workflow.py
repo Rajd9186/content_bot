@@ -1,20 +1,17 @@
 from __future__ import annotations
 
-from typing import Optional
+from sqlalchemy import and_, select, update
 
-from sqlalchemy import select, update, func, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.db.models.workflow import WorkflowJob, WorkflowStep, ExecutionLog, DeadLetterJob
+from app.db.models.workflow import DeadLetterJob, ExecutionLog, WorkflowJob, WorkflowStep
 from app.db.repositories import BaseRepository
 
 
 class WorkflowRepository(BaseRepository[WorkflowJob]):
-    async def get_by_id(self, job_id: str) -> Optional[WorkflowJob]:
+    async def get_by_id(self, job_id: str) -> WorkflowJob | None:
         return await self.session.get(WorkflowJob, job_id)
 
     async def get_by_workspace(
-        self, workspace_id: str, status: Optional[str] = None,
+        self, workspace_id: str, status: str | None = None,
         limit: int = 50, offset: int = 0,
     ) -> list[WorkflowJob]:
         stmt = select(WorkflowJob).where(
@@ -28,8 +25,8 @@ class WorkflowRepository(BaseRepository[WorkflowJob]):
 
     async def update_status(
         self, job_id: str, status: str, expected_version: int,
-        processing_stage: Optional[str] = None,
-    ) -> Optional[WorkflowJob]:
+        processing_stage: str | None = None,
+    ) -> WorkflowJob | None:
         values = {
             "status": status,
             "version": WorkflowJob.version + 1,

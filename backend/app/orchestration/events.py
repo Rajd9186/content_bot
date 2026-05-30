@@ -1,7 +1,6 @@
 from __future__ import annotations
 
-from app.events.event_types import BaseEvent, EVENT_REGISTRY
-from app.orchestration.stages import WorkflowStage, StageResult
+from app.events.event_types import EVENT_REGISTRY, BaseEvent
 
 
 class OrchestrationEvent(BaseEvent):

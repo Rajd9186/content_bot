@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import hashlib
-import json
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.prompt.templates import get_system_prompt, get_user_prompt
 
@@ -16,7 +15,7 @@ class PromptContext:
         self,
         agent_type: str,
         template_version: str = "1.0",
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> None:
         self.agent_type = agent_type
         self.template_version = template_version
@@ -52,9 +51,9 @@ class PromptEngine:
     async def build(
         self,
         agent_type: str,
-        correlation_id: Optional[str] = None,
-        template_kwargs: Optional[dict[str, Any]] = None,
-        context: Optional[PromptContext] = None,
+        correlation_id: str | None = None,
+        template_kwargs: dict[str, Any] | None = None,
+        context: PromptContext | None = None,
     ) -> PromptContext:
         ctx = context or PromptContext(
             agent_type=agent_type,
@@ -77,9 +76,9 @@ class PromptEngine:
     def build_sync(
         self,
         agent_type: str,
-        correlation_id: Optional[str] = None,
-        template_kwargs: Optional[dict[str, Any]] = None,
-        context: Optional[PromptContext] = None,
+        correlation_id: str | None = None,
+        template_kwargs: dict[str, Any] | None = None,
+        context: PromptContext | None = None,
     ) -> PromptContext:
         ctx = context or PromptContext(
             agent_type=agent_type,
@@ -103,7 +102,7 @@ class PromptEngine:
         self,
         agent_type: str,
         messages: list[dict[str, str]],
-        correlation_id: Optional[str] = None,
+        correlation_id: str | None = None,
     ) -> PromptContext:
         ctx = PromptContext(
             agent_type=agent_type,

@@ -1,4 +1,4 @@
-from app.agents.provider.base import BaseProvider, ProviderResponse, ProviderRequest
+from app.agents.provider.base import BaseProvider, ProviderRequest, ProviderResponse
 from app.agents.provider.factory import ProviderFactory, provider_factory
 
 __all__ = [

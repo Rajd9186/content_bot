@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import logging
 from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
+from datetime import UTC
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,17 +12,16 @@ from fastapi.responses import JSONResponse
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.infrastructure.events.outbox_worker import outbox_worker
+from app.infrastructure.janitor.worker import janitor_worker
+from app.infrastructure.messaging.redis_client import redis_client
+from app.infrastructure.sse.manager import sse_manager
+from app.infrastructure.websocket.manager import connection_manager
+from app.infrastructure.workers.pipeline_worker import pipeline_worker
+from app.infrastructure.workers.recovery_worker import pipeline_recovery_worker
 from app.middleware.correlation import CorrelationIdMiddleware
 from app.middleware.errors import ErrorHandlingMiddleware
 from app.middleware.logging import RequestLoggingMiddleware
-from app.infrastructure.messaging.redis_client import redis_client
-from app.infrastructure.events.outbox_worker import outbox_worker
-from app.infrastructure.janitor.worker import janitor_worker
-from app.infrastructure.websocket.manager import connection_manager
-from app.infrastructure.sse.manager import sse_manager
-from app.infrastructure.workers.pipeline_worker import pipeline_worker
-from app.infrastructure.workers.recovery_worker import pipeline_recovery_worker
-from app.infrastructure.failover.provider_failover import provider_failover
 from app.orchestration.orchestrator import orchestrator
 
 logger = logging.getLogger(__name__)
@@ -46,10 +46,11 @@ async def _checkpoint_persister(run) -> None:
 
 
 async def _dead_letter_handler(run, stage, error, retries) -> None:
+    from datetime import datetime
+
     from app.core.database import async_session_factory
-    from app.infrastructure.unit_of_work import UnitOfWork
     from app.infrastructure.models.telemetry import RetryRecord
-    from datetime import datetime, timezone
+    from app.infrastructure.unit_of_work import UnitOfWork
     try:
         async with async_session_factory() as session:
             uow = UnitOfWork(session)
@@ -60,7 +61,7 @@ async def _dead_letter_handler(run, stage, error, retries) -> None:
                 status="exhausted",
                 error_code="STAGE_FAILED",
                 error_message=error[:1000] if error else "",
-                executed_at=datetime.now(timezone.utc),
+                executed_at=datetime.now(UTC),
             )
             uow.session.add(record)
             await uow.commit()
@@ -117,10 +118,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     await janitor_worker.stop()
     await connection_manager.stop_redis_listener()
 
-    try:
+    with suppress(Exception):
         await redis_client.disconnect()
-    except Exception:
-        pass
     logger.info("Application shutting down")
 
 

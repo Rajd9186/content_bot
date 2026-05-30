@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 class RedisClient:
     def __init__(self) -> None:
-        self._client: Optional[aioredis.Redis] = None
-        self._pubsub: Optional[aioredis.Redis] = None
+        self._client: aioredis.Redis | None = None
+        self._pubsub: aioredis.Redis | None = None
 
     async def connect(self) -> None:
         self._client = aioredis.from_url(
@@ -52,10 +52,10 @@ class RedisClient:
         return self._pubsub
 
     # ── Cache ─────────────────────────────────────────────────
-    async def cache_get(self, key: str) -> Optional[str]:
+    async def cache_get(self, key: str) -> str | None:
         return await self.client.get(key)
 
-    async def cache_get_json(self, key: str) -> Optional[Any]:
+    async def cache_get_json(self, key: str) -> Any | None:
         val = await self.client.get(key)
         return json.loads(val) if val else None
 
@@ -90,13 +90,13 @@ class RedisClient:
 
     async def queue_pop(
         self, queue: str, timeout: int = 5,
-    ) -> Optional[str]:
+    ) -> str | None:
         result = await self.client.blpop(queue, timeout=timeout)
         return result[1] if result else None
 
     async def queue_pop_json(
         self, queue: str, timeout: int = 5,
-    ) -> Optional[Any]:
+    ) -> Any | None:
         result = await self.queue_pop(queue, timeout)
         return json.loads(result) if result else None
 

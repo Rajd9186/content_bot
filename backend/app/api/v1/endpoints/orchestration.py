@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import json
+import contextlib
 import logging
-from typing import Any, Dict, Optional
+from typing import Any
 from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.infrastructure.unit_of_work import UnitOfWork
-from app.infrastructure.sse.manager import sse_manager
-from app.infrastructure.messaging.redis_client import redis_client
 from app.core.deps import get_orchestrator
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.orchestration.orchestrator import Orchestrator
-from app.orchestration.stages import WorkflowStage, WorkflowStatus, WorkflowRun, StageResult
+from app.orchestration.stages import WorkflowRun, WorkflowStage, WorkflowStatus
 from app.orchestration.validators import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -25,14 +23,14 @@ _workflow_run_cache: dict[str, WorkflowRun] = {}
 
 
 async def stub_executor(
-    run: WorkflowRun, stage: WorkflowStage, context: Dict[str, Any]
-) -> Dict[str, Any]:
+    run: WorkflowRun, stage: WorkflowStage, context: dict[str, Any]
+) -> dict[str, Any]:
     return {"result": f"{stage.value}_stub", "stage": stage.value}
 
 
 async def _pipeline_adapter_executor(
-    run: WorkflowRun, stage: WorkflowStage, context: Dict[str, Any]
-) -> Dict[str, Any]:
+    run: WorkflowRun, stage: WorkflowStage, context: dict[str, Any]
+) -> dict[str, Any]:
     from app.pipeline.graph import pipeline as pipeline_instance
 
     state_map = {
@@ -82,7 +80,7 @@ async def _pipeline_adapter_executor(
                     "status": node_result.status.value if node_result else "success",
                     "tokens_used": node_result.tokens_used if node_result else 0,
                 }
-            except Exception as e:
+            except Exception:
                 await uow.rollback()
                 raise
     except Exception as e:
@@ -103,10 +101,10 @@ def _get_executor(use_pipeline: bool = False):
     status_code=status.HTTP_201_CREATED,
 )
 async def create_workflow(
-    workspace_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
-    content_item_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    workspace_id: str | None = None,
+    correlation_id: str | None = None,
+    content_item_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
     orchestrator: Orchestrator = Depends(get_orchestrator),
     db: AsyncSession = Depends(get_db),
 ):
@@ -149,22 +147,20 @@ async def create_workflow(
 )
 async def run_workflow(
     workflow_id: str,
-    workspace_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
-    content_item_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    workspace_id: str | None = None,
+    correlation_id: str | None = None,
+    content_item_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
     use_pipeline: bool = Query(False, description="Use real pipeline adapter instead of stub"),
     orchestrator: Orchestrator = Depends(get_orchestrator),
     db: AsyncSession = Depends(get_db),
 ):
     uow = UnitOfWork(db)
     checkpoint = None
-    try:
+    with contextlib.suppress(Exception):
         checkpoint = await uow.checkpoints.get_latest_checkpoint(
             "workflow", workflow_id, "workflow_run"
         )
-    except Exception:
-        pass
 
     if checkpoint and checkpoint.state:
         run = WorkflowRun.from_dict(checkpoint.state)
@@ -213,23 +209,21 @@ async def run_workflow(
 )
 async def resume_workflow(
     workflow_id: str,
-    workspace_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
+    workspace_id: str | None = None,
+    correlation_id: str | None = None,
     current_stage: WorkflowStage = WorkflowStage.INIT,
-    content_item_id: Optional[str] = None,
-    metadata: Optional[Dict[str, Any]] = None,
+    content_item_id: str | None = None,
+    metadata: dict[str, Any] | None = None,
     use_pipeline: bool = Query(False, description="Use real pipeline adapter instead of stub"),
     orchestrator: Orchestrator = Depends(get_orchestrator),
     db: AsyncSession = Depends(get_db),
 ):
     uow = UnitOfWork(db)
     checkpoint = None
-    try:
+    with contextlib.suppress(Exception):
         checkpoint = await uow.checkpoints.get_latest_checkpoint(
             "workflow", workflow_id, "workflow_run"
         )
-    except Exception:
-        pass
 
     if checkpoint and checkpoint.state:
         run = WorkflowRun.from_dict(checkpoint.state)
@@ -278,20 +272,18 @@ async def resume_workflow(
 )
 async def cancel_workflow(
     workflow_id: str,
-    workspace_id: Optional[str] = None,
-    correlation_id: Optional[str] = None,
+    workspace_id: str | None = None,
+    correlation_id: str | None = None,
     reason: str = "manual",
     orchestrator: Orchestrator = Depends(get_orchestrator),
     db: AsyncSession = Depends(get_db),
 ):
     uow = UnitOfWork(db)
     checkpoint = None
-    try:
+    with contextlib.suppress(Exception):
         checkpoint = await uow.checkpoints.get_latest_checkpoint(
             "workflow", workflow_id, "workflow_run"
         )
-    except Exception:
-        pass
 
     if checkpoint and checkpoint.state:
         run = WorkflowRun.from_dict(checkpoint.state)
@@ -342,22 +334,18 @@ async def get_workflow(
     uow = UnitOfWork(db)
 
     checkpoint = None
-    try:
+    with contextlib.suppress(Exception):
         checkpoint = await uow.checkpoints.get_latest_checkpoint(
             "workflow", workflow_id, "workflow_run"
         )
-    except Exception:
-        pass
 
     if checkpoint and checkpoint.state:
         run = WorkflowRun.from_dict(checkpoint.state)
         return _run_to_response(run)
 
     pipeline_run = None
-    try:
+    with contextlib.suppress(Exception):
         pipeline_run = await uow.pipelines.get_by_workflow_id(workflow_id)
-    except Exception:
-        pass
 
     if pipeline_run:
         state = uow.pipelines.to_pipeline_state(pipeline_run)
@@ -402,10 +390,8 @@ async def get_completed_stages(
     uow = UnitOfWork(db)
 
     pipeline_run = None
-    try:
+    with contextlib.suppress(Exception):
         pipeline_run = await uow.pipelines.get_by_workflow_id(workflow_id)
-    except Exception:
-        pass
 
     if pipeline_run:
         state = uow.pipelines.to_pipeline_state(pipeline_run)

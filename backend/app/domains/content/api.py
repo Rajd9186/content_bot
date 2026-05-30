@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, Depends
 
-from app.infrastructure.unit_of_work import UnitOfWork
 from app.core.deps import get_uow
+from app.infrastructure.unit_of_work import UnitOfWork
 
 router = APIRouter(tags=["content"])
 

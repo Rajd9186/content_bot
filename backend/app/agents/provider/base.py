@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.contracts import TokenUsage
 
@@ -11,12 +10,12 @@ from app.agents.contracts import TokenUsage
 @dataclass
 class ProviderRequest:
     model: str
-    system_prompt: Optional[str] = None
+    system_prompt: str | None = None
     messages: list[dict[str, str]] = field(default_factory=list)
     temperature: float = 0.1
     max_tokens: int = 4096
     timeout_ms: int = 60000
-    stop_sequences: Optional[list[str]] = None
+    stop_sequences: list[str] | None = None
 
 
 @dataclass
@@ -25,10 +24,10 @@ class ProviderResponse:
     token_usage: TokenUsage = field(default_factory=TokenUsage)
     latency_ms: float = 0.0
     success: bool = False
-    error: Optional[str] = None
+    error: str | None = None
     provider: str = ""
     model: str = ""
-    raw_response: Optional[Any] = None
+    raw_response: Any | None = None
 
 
 class BaseProvider(ABC):
@@ -51,7 +50,7 @@ class BaseProvider(ABC):
     async def execute_with_retry(
         self, request: ProviderRequest, max_retries: int = 3,
     ) -> ProviderResponse:
-        last_error: Optional[str] = None
+        last_error: str | None = None
         for attempt in range(max_retries + 1):
             resp = await self.execute(request)
             if resp.success:

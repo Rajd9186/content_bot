@@ -2,13 +2,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime, timezone
-from typing import Optional
 
 from app.core.database import async_session_factory
 from app.infrastructure.messaging.redis_client import redis_client
-from app.infrastructure.unit_of_work import UnitOfWork
 from app.infrastructure.sse.manager import sse_manager
+from app.infrastructure.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +43,9 @@ class RecoveryService:
                         else:
                             await uow.pipelines.update_status(run.workflow_id, "pending")
                             if redis_client._client is not None:
-                                from app.infrastructure.workers.pipeline_worker import pipeline_worker
+                                from app.infrastructure.workers.pipeline_worker import (
+                                    pipeline_worker,
+                                )
                                 await pipeline_worker.enqueue(run.workflow_id)
                         recovered += 1
                     await uow.commit()
@@ -95,7 +95,7 @@ class PipelineRecoveryWorker:
     """Background worker that periodically checks for zombie pipeline runs."""
 
     def __init__(self) -> None:
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._running = False
 
     async def start(self) -> None:

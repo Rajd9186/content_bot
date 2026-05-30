@@ -1,16 +1,16 @@
 from __future__ import annotations
 
 import asyncio
-import json
+import contextlib
 import logging
-from typing import Optional
 
 from app.core.database import async_session_factory
-from app.events.event_types import BaseEvent, EVENT_REGISTRY
-from app.infrastructure.messaging.redis_client import redis_client
-from app.infrastructure.repositories.event_repository import EventRepository
-from app.infrastructure.websocket.manager import WSMessage, connection_manager
 from app.events.event_bus import event_bus
+from app.events.event_types import EVENT_REGISTRY
+from app.infrastructure.messaging.redis_client import redis_client
+from app.infrastructure.models.event import StoredEvent
+from app.infrastructure.repositories.event_repository import EventRepository
+from app.infrastructure.websocket.manager import WSMessage
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class OutboxWorker:
     """
 
     def __init__(self) -> None:
-        self._task: Optional[asyncio.Task[None]] = None
+        self._task: asyncio.Task[None] | None = None
         self._running = False
 
     async def start(self) -> None:
@@ -47,10 +47,8 @@ class OutboxWorker:
         self._running = False
         if self._task and not self._task.done():
             self._task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._task
-            except asyncio.CancelledError:
-                pass
         logger.info("OutboxWorker stopped")
 
     async def _poll_loop(self) -> None:
@@ -88,13 +86,11 @@ class OutboxWorker:
                             stored.id, stored.event_type, e,
                         )
         finally:
-            try:
+            with contextlib.suppress(Exception):
                 await lock.release()
-            except Exception:
-                pass
 
     async def _publish_event(
-        self, stored: "StoredEvent", repo: EventRepository,
+        self, stored: StoredEvent, repo: EventRepository,
     ) -> None:
         event_class = EVENT_REGISTRY.get(stored.event_type)
         if not event_class:
@@ -120,7 +116,7 @@ class OutboxWorker:
         await event_bus.publish(event)
 
         try:
-            ws_message = WSMessage(
+            WSMessage(
                 type=event.type,
                 data=event.data,
                 correlation_id=event.correlation_id,

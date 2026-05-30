@@ -3,8 +3,8 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import health
 from app.api.v1.endpoints.orchestration import router as orchestration_router
 from app.api.v1.endpoints.pipeline_api import router as content_pipeline_router
-from app.domains.workflow.api import router as workflow_router
 from app.domains.content.api import router as content_router
+from app.domains.workflow.api import router as workflow_router
 
 api_router = APIRouter()
 

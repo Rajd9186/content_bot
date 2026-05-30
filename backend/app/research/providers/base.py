@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from app.research.models import ResearchQuery
 
@@ -31,24 +31,23 @@ class BaseSearchProvider(ABC):
         research_query: ResearchQuery,
         max_retries: int = 2,
     ) -> list[dict[str, Any]]:
-        last_error: Optional[str] = None
-        
+
         for attempt in range(max_retries + 1):
             try:
                 results = await self.search(query, research_query)
                 if results:
                     return results
             except Exception as e:
-                last_error = str(e)
+                str(e)
                 logger.warning(
                     "Search attempt %d failed for %s: %s",
                     attempt + 1, query, e
                 )
-            
+
             if attempt < max_retries:
                 import asyncio
                 await asyncio.sleep(1.0 * (attempt + 1))
-        
+
         logger.warning(
             "All %d search attempts failed for: %s",
             max_retries + 1, query

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Union
+import os
 
 from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     DEBUG: bool = Field(default=True)
 
     # CORS
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = Field(default=[
+    BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = Field(default=[
         "http://localhost:3000",
         "http://localhost:8000",
     ])
@@ -33,17 +33,20 @@ class Settings(BaseSettings):
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(
-        cls, v: Union[str, List[str]]
-    ) -> Union[List[str], str]:
+        cls, v: str | list[str]
+    ) -> list[str] | str:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         if isinstance(v, (list, str)):
             return v
         raise ValueError(v)
 
-    # Database
+    # Database — fall back to DATABASE_URL (Render auto-inject) if APP_DATABASE_URL not set
     DATABASE_URL: str = Field(
-        default="postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel"
+        default_factory=lambda: os.environ.get(
+            "DATABASE_URL",
+            "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel",
+        )
     )
     DATABASE_POOL_SIZE: int = Field(default=20)
     DATABASE_MAX_OVERFLOW: int = Field(default=10)

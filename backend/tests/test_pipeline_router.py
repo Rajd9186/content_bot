@@ -144,7 +144,7 @@ async def test_fallback_rate_limit_uses_smaller_model(router) -> None:
     assert decision.model != "llama-3.3-70b-versatile"
 
 
-async def test_fallback_rate_limit_exhausted_tpm_goes_ollama() -> None:
+async def test_fallback_rate_limit_exhausted_tpm_goes_nvidia() -> None:
     tracker = TokenBudgetTracker(tpm_limit=100)
     tracker.record_usage(100)
     router = ProviderRouter()
@@ -153,15 +153,15 @@ async def test_fallback_rate_limit_exhausted_tpm_goes_ollama() -> None:
         "writer", "groq", "llama-3.3-70b-versatile",
         "Rate limit reached for model llama-3.3-70b-versatile on tokens per minute",
     )
-    assert decision.provider == OLLAMA_PROVIDER
+    assert decision.provider == "nvidia"
 
 
-async def test_fallback_non_rate_limit_goes_ollama(router) -> None:
+async def test_fallback_non_rate_limit_goes_nvidia(router) -> None:
     decision = await router.get_fallback(
         "writer", "groq", "llama-3.3-70b-versatile",
         "Internal server error",
     )
-    assert decision.provider == OLLAMA_PROVIDER
+    assert decision.provider == "nvidia"
 
 
 async def test_route_unknown_agent_defaults_ollama(router) -> None:

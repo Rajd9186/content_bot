@@ -6,10 +6,24 @@ requires-python = ">=3.11"
 
 [tool.ruff]
 target-version = "py311"
-line-length = 100
+line-length = 120
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "N", "W", "UP", "B", "SIM", "ARG"]
+select = ["E", "F", "I", "W", "UP", "B", "SIM", "ARG"]
+ignore = [
+    "ARG001",    # Unused function argument — common FastAPI shared-signature pattern
+    "ARG002",    # Unused method argument — common FastAPI shared-signature pattern
+    "ARG005",    # Unused lambda argument — harmless
+    "B008",      # Depends/Query in defaults — required by FastAPI
+    "B024",      # ABC without abstract methods — base class pattern
+    "B904",      # raise-without-from-inside-except — intentional in many cases
+    "N818",      # Exception name suffix — existing pattern
+    "SIM102",    # Collapsible if — readability preference
+    "SIM103",    # Needless bool — readability preference
+    "SIM105",    # suppressible-exception — readability preference
+    "SIM117",    # Multiple with statements — readability preference
+    "UP042",     # Replace str+Enum with StrEnum — Python 3.11+ choice
+]
 
 [tool.ruff.format]
 quote-style = "double"

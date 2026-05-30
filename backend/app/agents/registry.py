@@ -3,10 +3,10 @@ from __future__ import annotations
 import importlib
 import logging
 import time
-from typing import Any, Optional
+from typing import Any
 
 from app.agents.base import BaseAgent
-from app.agents.contracts import AgentContract, AgentInput, AgentOutput
+from app.agents.contracts import AgentContract
 
 logger = logging.getLogger(__name__)
 
@@ -23,17 +23,17 @@ class AgentRegistration:
         self.agent_class = agent_class
         self.contract = contract
         self.module_path = module_path
-        self._instance: Optional[BaseAgent] = None
+        self._instance: BaseAgent | None = None
         self._health_status: str = "unknown"
         self._last_health_check: float = 0.0
 
     def create_instance(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> BaseAgent:
         return self.agent_class(provider_name=provider_name, model=model)
 
     def get_or_create_instance(
-        self, provider_name: str = "openai", model: Optional[str] = None,
+        self, provider_name: str = "openai", model: str | None = None,
     ) -> BaseAgent:
         if self._instance is None:
             self._instance = self.create_instance(provider_name, model)
@@ -77,7 +77,7 @@ class AgentRegistry:
     def register(
         self,
         agent_class: type[BaseAgent],
-        contract: Optional[AgentContract] = None,
+        contract: AgentContract | None = None,
     ) -> None:
         if contract is None:
             instance = agent_class()
@@ -96,14 +96,14 @@ class AgentRegistry:
         )
         logger.info("Registered agent: %s (v%s)", name, contract.version)
 
-    def get(self, name: str) -> Optional[AgentRegistration]:
+    def get(self, name: str) -> AgentRegistration | None:
         return self._registrations.get(name)
 
     def create(
         self,
         name: str,
         provider_name: str = "openai",
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> BaseAgent:
         registration = self.get(name)
         if registration is None:
@@ -116,7 +116,7 @@ class AgentRegistry:
         self,
         name: str,
         provider_name: str = "openai",
-        model: Optional[str] = None,
+        model: str | None = None,
     ) -> BaseAgent:
         registration = self.get(name)
         if registration is None:
@@ -153,7 +153,7 @@ class AgentRegistry:
 
     def load_module(self, module_path: str) -> None:
         try:
-            module = importlib.import_module(module_path)
+            importlib.import_module(module_path)
             logger.info("Loaded module: %s", module_path)
         except ImportError as e:
             logger.error("Failed to load module %s: %s", module_path, e)
