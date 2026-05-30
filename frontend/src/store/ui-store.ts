@@ -20,7 +20,7 @@ interface UIState {
 }
 
 const defaultSettings: SettingsState = {
-  apiBaseUrl: "http://localhost:8000",
+  apiBaseUrl: process.env.NEXT_PUBLIC_API_URL?.replace(/\/api\/v1$/, "") || "http://localhost:8000",
   refreshInterval: 5,
   telemetryEnabled: true,
   defaultTone: "professional",
