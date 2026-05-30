@@ -5,13 +5,24 @@ import type { PipelineSSEEvent } from "@/types/api";
 const getBaseURL = () => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("acip-api-url");
-    if (stored) return stored;
+    if (stored) {
+      console.log(`[API] Using stored URL: ${stored}`);
+      return stored;
+    }
   }
-  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+  
+  // Use public env var or fallback
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  console.log(`[API] Environment Variable: ${envUrl}`);
+  
+  let url = envUrl || "http://localhost:8000/api/v1";
+  
   // Ensure it ends with /api/v1 if it doesn't already
   if (url && !url.includes("/api/v1")) {
     url = url.replace(/\/$/, "") + "/api/v1";
   }
+  
+  console.log(`[API] Final Base URL: ${url}`);
   return url;
 };
 
@@ -89,9 +100,12 @@ export function createSSEConnection(
   onError?: (error: Event) => void,
   onOpen?: () => void,
 ): EventSource {
-  const baseUrl = getBaseURL().replace(/\/$/, ""); // Remove trailing slash if present
+  const baseUrl = getBaseURL();
+  const cleanBase = baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
   const cleanPath = path.startsWith("/") ? path : `/${path}`;
-  const url = `${baseUrl}${cleanPath}`;
+  const url = `${cleanBase}${cleanPath}`;
+  
+  console.log(`[SSE] Connecting to: ${url}`);
   const es = new EventSource(url);
   es.onopen = () => onOpen?.();
   es.onmessage = (e) => {
