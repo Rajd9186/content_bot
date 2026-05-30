@@ -71,6 +71,7 @@ def _state_to_response(state: PipelineState) -> dict[str, Any]:
         "review": state.human_review.model_dump() if state.human_review else None,
         "nodes": {
             k: {
+                "node": k,
                 "status": v.status.value,
                 "error": v.error,
                 "tokens_used": v.tokens_used,
@@ -144,6 +145,11 @@ async def run_pipeline(
     state = await _load_state(workflow_id, db)
     if not state:
         raise HTTPException(status_code=404, detail="Workflow not found")
+
+    # Broadcast initial running state
+    await sse_manager.broadcast_pipeline_event(
+        workflow_id, "pipeline_started", status="running"
+    )
 
     if redis_client._client is not None:
         from app.infrastructure.workers.pipeline_worker import pipeline_worker

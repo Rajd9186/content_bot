@@ -48,7 +48,7 @@ async def readiness_check(
 
     if redis_client._client is not None:
         try:
-            await redis_client.client.ping()
+            await redis_client.ping()
             checks["redis"] = "ok"
         except Exception:
             checks["redis"] = "error"
