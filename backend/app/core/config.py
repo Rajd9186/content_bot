@@ -46,7 +46,7 @@ class Settings(BaseSettings):
         default_factory=lambda: os.environ.get(
             "DATABASE_URL",
             "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel",
-        )
+        ).replace("postgresql://", "postgresql+asyncpg://") if os.environ.get("DATABASE_URL") else "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel"
     )
     DATABASE_POOL_SIZE: int = Field(default=20)
     DATABASE_MAX_OVERFLOW: int = Field(default=10)
