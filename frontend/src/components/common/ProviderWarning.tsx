@@ -12,6 +12,7 @@ interface ProviderWarningProps {
 const WARNINGS: Record<string, string> = {
   openai: "OpenAI API key not configured — queries routed to Groq",
   groq: "Groq token limit approached — consider reducing batch size",
+  nvidia: "NVIDIA API key not configured — falling back to Ollama",
   ollama: "Ollama endpoint unreachable — using fallback provider",
 };
 

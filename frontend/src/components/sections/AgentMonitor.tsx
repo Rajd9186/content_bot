@@ -22,6 +22,7 @@ export function AgentMonitor() {
   const mockProviders: import("@/types/api").ProviderHealthStatus[] = [
     { provider: "OpenAI", status: "healthy", model: "gpt-4o", rateLimit: { remaining: 100, limit: 500, resetsInMs: 60000 } },
     { provider: "Groq", status: "healthy", model: "mixtral-8x7b", rateLimit: { remaining: 50, limit: 200, resetsInMs: 60000 } },
+    { provider: "NVIDIA", status: "healthy", model: "nemotron-3-super-120b", rateLimit: { remaining: 80, limit: 300, resetsInMs: 60000 } },
     { provider: "Ollama", status: "down", model: "gpt-oss:120b", rateLimit: null },
   ];
 

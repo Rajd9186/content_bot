@@ -30,6 +30,7 @@ export const TONE_OPTIONS = [
 export const PROVIDER_LABELS: Record<string, string> = {
   openai: "OpenAI",
   groq: "Groq",
+  nvidia: "NVIDIA",
   anthropic: "Anthropic",
   ollama: "Ollama",
 };

@@ -28,6 +28,7 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = Field(default=[
         "http://localhost:3000",
         "http://localhost:8000",
+        "https://content-bot-ui.onrender.com",
     ])
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
