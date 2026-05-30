@@ -28,7 +28,7 @@ logger = logging.getLogger(__name__)
 
 
 async def _checkpoint_persister(run) -> None:
-    from app.core.database import async_session_factory
+    from app.infrastructure.database import async_session_factory
     from app.infrastructure.unit_of_work import UnitOfWork
     try:
         async with async_session_factory() as session:
@@ -48,7 +48,7 @@ async def _checkpoint_persister(run) -> None:
 async def _dead_letter_handler(run, stage, error, retries) -> None:
     from datetime import datetime
 
-    from app.core.database import async_session_factory
+    from app.infrastructure.database import async_session_factory
     from app.infrastructure.models.telemetry import RetryRecord
     from app.infrastructure.unit_of_work import UnitOfWork
     try:
@@ -173,3 +173,4 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
+
