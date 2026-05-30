@@ -1,18 +1,29 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import type { PipelineSSEEvent } from "@/types/api";
 
+// Helper to get the correct API URL
+const getBaseURL = () => {
+  if (typeof window !== "undefined") {
+    const stored = localStorage.getItem("acip-api-url");
+    if (stored) return stored;
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+};
+
 const api = axios.create({
-  baseURL: typeof window !== "undefined"
-    ? localStorage.getItem("acip-api-url") || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
-    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
+  baseURL: getBaseURL(),
   timeout: 0,
   headers: { "Content-Type": "application/json" },
 });
 
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("acip-api-url");
-    if (stored) config.baseURL = stored;
+    // Re-check baseURL in case it was changed in localStorage
+    const currentBase = getBaseURL();
+    if (config.baseURL !== currentBase) {
+      config.baseURL = currentBase;
+    }
+    
     const token = localStorage.getItem("acip-token");
     if (token) config.headers.Authorization = `Bearer ${token}`;
   }
@@ -73,11 +84,9 @@ export function createSSEConnection(
   onError?: (error: Event) => void,
   onOpen?: () => void,
 ): EventSource {
-  const defaultBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-  const baseUrl = typeof window !== "undefined"
-    ? localStorage.getItem("acip-api-url") || defaultBaseUrl
-    : defaultBaseUrl;
-  const url = `${baseUrl}${path}`;
+  const baseUrl = getBaseURL().replace(/\/$/, ""); // Remove trailing slash if present
+  const cleanPath = path.startsWith("/") ? path : `/${path}`;
+  const url = `${baseUrl}${cleanPath}`;
   const es = new EventSource(url);
   es.onopen = () => onOpen?.();
   es.onmessage = (e) => {
