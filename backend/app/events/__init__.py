@@ -11,13 +11,8 @@ from app.events.event_types import (
 )
 from app.events.event_bus import EventStore, EventBus, event_bus, event_store
 
-# Import orchestration events to trigger EVENT_REGISTRY auto-registration
-from app.orchestration.events import (  # noqa: F401
-    WorkflowStartedEvent, WorkflowStageStartedEvent,
-    WorkflowStageCompletedEvent, WorkflowStageFailedEvent,
-    WorkflowCompletedEvent, WorkflowFailedEvent, WorkflowCancelledEvent,
-    ORCHESTRATION_EVENTS,
-)
+# Moved import inside functions or kept separate to break circular dependency if needed, 
+# but for now let's just ensure we don't import orchestration in the top level if it's not needed by bus.
 
 __all__ = [
     "BaseEvent", "EventVersion", "EventSource",
@@ -28,10 +23,6 @@ __all__ = [
     "AgentExecutionStartedEvent", "AgentExecutionCompletedEvent",
     "AgentExecutionFailedEvent",
     "SystemErrorEvent",
-    "WorkflowStartedEvent", "WorkflowStageStartedEvent",
-    "WorkflowStageCompletedEvent", "WorkflowStageFailedEvent",
-    "WorkflowCompletedEvent", "WorkflowFailedEvent", "WorkflowCancelledEvent",
-    "ORCHESTRATION_EVENTS",
     "EVENT_REGISTRY",
     "EventStore", "EventBus", "event_bus", "event_store",
 ]

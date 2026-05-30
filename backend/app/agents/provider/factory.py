@@ -8,12 +8,15 @@ from app.agents.provider.openai import OpenAIProvider
 from app.agents.provider.anthropic import AnthropicProvider
 from app.agents.provider.groq import GroqProvider
 from app.agents.provider.local import LocalProvider
+from app.agents.provider.nvidia import NvidiaProvider
+from app.agents.provider.ollama import OllamaProvider
 
 logger = logging.getLogger(__name__)
 
 
 class ProviderFactory:
-    _providers: dict[str, BaseProvider] = {}
+    def __init__(self) -> None:
+        self._providers: dict[str, BaseProvider] = {}
 
     def register(self, name: str, provider: BaseProvider) -> None:
         self._providers[name] = provider
@@ -37,7 +40,11 @@ class ProviderFactory:
             return AnthropicProvider(model or "claude-sonnet-4-20250514")
         elif normalized in ("groq", "llama", "mixtral"):
             return GroqProvider(model or "llama-3.3-70b-versatile")
-        elif normalized in ("local", "ollama", "llamacpp"):
+        elif normalized in ("nvidia", "nemotron"):
+            return NvidiaProvider(model or "nvidia/nemotron-3-super-120b-a12b")
+        elif normalized in ("ollama", "gpt-oss"):
+            return OllamaProvider(model or ("gpt-oss:120b" if normalized == "gpt-oss" else "llama3.2"))
+        elif normalized in ("local", "llamacpp"):
             return LocalProvider(model or "local-model")
         else:
             logger.warning("Unknown provider %s, defaulting to OpenAI", name)

@@ -1,0 +1,1917 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Content Intelligence Platform</title>
+    <style>
+        /* ==================== CSS VARIABLES & THEME ==================== */
+        :root {
+            --color-bg-primary: #0a0e27;
+            --color-bg-secondary: #111633;
+            --color-bg-tertiary: #1a1f3a;
+            --color-bg-hover: #232d52;
+            
+            --color-accent-cyan: #00f0ff;
+            --color-accent-violet: #b366ff;
+            --color-accent-amber: #ffb366;
+            --color-accent-success: #66ffb3;
+            --color-accent-danger: #ff6666;
+            --color-accent-warning: #ffb366;
+            
+            --color-text-primary: #f0f1f9;
+            --color-text-secondary: #a8adc6;
+            --color-text-tertiary: #6b7280;
+            
+            --color-border: rgba(0, 240, 255, 0.1);
+            --color-border-hover: rgba(0, 240, 255, 0.2);
+            
+            --font-mono: 'Courier Prime', 'Monaco', monospace;
+            --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            --font-display: 'Space Mono', monospace;
+            
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+            
+            --z-notification: 9999;
+            --z-modal: 9998;
+            --z-dropdown: 9997;
+            --z-sidebar: 9996;
+            --z-header: 9995;
+        }
+
+        /* ==================== GLOBAL STYLES ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg-primary);
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            font-size: 14px;
+            line-height: 1.6;
+            overflow: hidden;
+        }
+
+        /* ==================== LAYOUT STRUCTURE ==================== */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg-primary);
+        }
+
+        .app-main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            gap: 0;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #0f1433 0%, #0a0e27 100%);
+            border-right: 1px solid var(--color-border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            z-index: var(--z-sidebar);
+        }
+
+        .header {
+            height: 72px;
+            background: rgba(10, 14, 39, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--color-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: var(--z-header);
+            gap: 24px;
+        }
+
+        .workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            gap: 16px;
+            padding: 16px;
+            background: var(--color-bg-primary);
+        }
+
+        .workspace-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            gap: 16px;
+        }
+
+        .telemetry-panel {
+            width: 320px;
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ==================== SIDEBAR ==================== */
+        .sidebar-header {
+            padding: 24px 16px;
+            border-bottom: 1px solid var(--color-border);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-accent-cyan);
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-violet));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .nav-item {
+            padding: 12px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--color-text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            border: 1px solid transparent;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 240, 255, 0.05);
+            color: var(--color-text-primary);
+            border-color: var(--color-border-hover);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--color-accent-cyan);
+            border-color: var(--color-border-hover);
+            font-weight: 500;
+        }
+
+        .nav-item::before {
+            content: '';
+            width: 4px;
+            height: 4px;
+            background: var(--color-accent-cyan);
+            border-radius: 50%;
+            opacity: 0;
+            position: absolute;
+            left: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .nav-item.active::before {
+            opacity: 1;
+        }
+
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid var(--color-border);
+        }
+
+        /* ==================== HEADER ==================== */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(102, 255, 179, 0.1);
+            border: 1px solid rgba(102, 255, 179, 0.3);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--color-accent-success);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--color-accent-success);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-dot.offline {
+            background: var(--color-accent-danger);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-input {
+            width: 300px;
+            padding: 8px 16px;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--color-accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+        }
+
+        .header-action {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s ease;
+            color: var(--color-text-secondary);
+        }
+
+        .header-action:hover {
+            background: rgba(0, 240, 255, 0.1);
+            border-color: var(--color-accent-cyan);
+            color: var(--color-accent-cyan);
+        }
+
+        /* ==================== PANELS & CARDS ==================== */
+        .panel {
+            background: rgba(26, 31, 58, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-violet));
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+        }
+
+        .card {
+            background: rgba(15, 20, 51, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: rgba(15, 20, 51, 0.8);
+            border-color: var(--color-border-hover);
+            box-shadow: 0 8px 16px rgba(0, 240, 255, 0.1);
+        }
+
+        /* ==================== BUTTONS ==================== */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-sans);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-violet));
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 240, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 240, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 240, 255, 0.1);
+            color: var(--color-accent-cyan);
+            border: 1px solid var(--color-accent-cyan);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 240, 255, 0.2);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* ==================== FORMS ==================== */
+        .form-group {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--color-text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input {
+            padding: 12px 16px;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-family: var(--font-sans);
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-accent-cyan);
+            background: rgba(0, 240, 255, 0.1);
+            box-shadow: 0 0 16px rgba(0, 240, 255, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* ==================== BADGES & TAGS ==================== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .badge-success {
+            background: rgba(102, 255, 179, 0.15);
+            color: var(--color-accent-success);
+        }
+
+        .badge-danger {
+            background: rgba(255, 102, 102, 0.15);
+            color: var(--color-accent-danger);
+        }
+
+        .badge-warning {
+            background: rgba(255, 179, 102, 0.15);
+            color: var(--color-accent-warning);
+        }
+
+        .badge-info {
+            background: rgba(0, 240, 255, 0.15);
+            color: var(--color-accent-cyan);
+        }
+
+        /* ==================== MODALS ==================== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: var(--z-modal);
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: linear-gradient(135deg, rgba(26, 31, 58, 0.95), rgba(15, 20, 51, 0.95));
+            border: 1px solid var(--color-border);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 24px;
+            color: var(--color-text-primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 24px;
+            transition: color 0.2s ease;
+        }
+
+        .modal-close:hover {
+            color: var(--color-text-primary);
+        }
+
+        /* ==================== NOTIFICATIONS ==================== */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: var(--z-notification);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .notification {
+            background: rgba(26, 31, 58, 0.95);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 16px;
+            min-width: 300px;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(20px);
+            animation: slideInRight 0.3s ease;
+            pointer-events: all;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .notification-success {
+            border-left: 3px solid var(--color-accent-success);
+            color: var(--color-accent-success);
+        }
+
+        .notification-error {
+            border-left: 3px solid var(--color-accent-danger);
+            color: var(--color-accent-danger);
+        }
+
+        /* ==================== AGENT VISUALIZATION ==================== */
+        .agent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .agent-card {
+            background: linear-gradient(135deg, rgba(26, 31, 58, 0.8), rgba(15, 20, 51, 0.6));
+            border: 1px solid var(--color-border);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .agent-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--color-accent-cyan), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .agent-card.running::before {
+            opacity: 1;
+            animation: slideRight 1s ease-in-out infinite;
+        }
+
+        @keyframes slideRight {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .agent-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .agent-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+            text-transform: capitalize;
+        }
+
+        .agent-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--color-accent-warning);
+        }
+
+        .agent-status.completed {
+            background: var(--color-accent-success);
+        }
+
+        .agent-status.failed {
+            background: var(--color-accent-danger);
+        }
+
+        .agent-status.running {
+            background: var(--color-accent-cyan);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .agent-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            font-size: 12px;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.05);
+        }
+
+        .agent-metric:last-child {
+            border-bottom: none;
+        }
+
+        .agent-metric-label {
+            color: var(--color-text-secondary);
+        }
+
+        .agent-metric-value {
+            color: var(--color-accent-cyan);
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+
+        /* ==================== TIMELINE ==================== */
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -32px;
+            top: 0;
+            width: 16px;
+            height: 16px;
+            background: linear-gradient(135deg, var(--color-accent-cyan), var(--color-accent-violet));
+            border-radius: 50%;
+            border: 3px solid var(--color-bg-primary);
+            box-shadow: 0 0 12px rgba(0, 240, 255, 0.5);
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -25px;
+            top: 16px;
+            width: 2px;
+            height: calc(100% + 8px);
+            background: linear-gradient(180deg, var(--color-border), transparent);
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-content {
+            background: rgba(15, 20, 51, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .timeline-duration {
+            font-size: 11px;
+            color: var(--color-accent-cyan);
+            font-family: var(--font-mono);
+        }
+
+        /* ==================== CHARTS ==================== */
+        .chart-container {
+            background: rgba(15, 20, 51, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 240, 255, 0.05);
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--color-text-secondary);
+        }
+
+        .metric-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 2px;
+            margin: 0 16px;
+            overflow: hidden;
+        }
+
+        .metric-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-violet));
+            border-radius: 2px;
+            animation: growWidth 0.5s ease forwards;
+        }
+
+        @keyframes growWidth {
+            from { width: 0%; }
+        }
+
+        .metric-value {
+            font-size: 12px;
+            color: var(--color-accent-cyan);
+            font-weight: 600;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        /* ==================== CODE BLOCKS & LOGS ==================== */
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--color-accent-cyan);
+            overflow-x: auto;
+            line-height: 1.5;
+        }
+
+        .event-console {
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 8px;
+            height: 300px;
+            overflow-y: auto;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+
+        .event-line {
+            padding: 4px 0;
+            opacity: 0;
+            animation: fadeIn 0.3s ease forwards;
+        }
+
+        .event-time {
+            color: var(--color-text-tertiary);
+            margin-right: 12px;
+        }
+
+        .event-level-info {
+            color: var(--color-accent-cyan);
+        }
+
+        .event-level-success {
+            color: var(--color-accent-success);
+        }
+
+        .event-level-warning {
+            color: var(--color-accent-warning);
+        }
+
+        .event-level-error {
+            color: var(--color-accent-danger);
+        }
+
+        /* ==================== TELEMETRY PANEL ==================== */
+        .telemetry-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--color-border);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--color-text-primary);
+        }
+
+        .telemetry-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .telemetry-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .telemetry-label {
+            font-size: 11px;
+            color: var(--color-text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .telemetry-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--color-accent-cyan);
+            font-family: var(--font-mono);
+        }
+
+        .telemetry-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(0, 240, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .telemetry-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-accent-cyan), var(--color-accent-violet));
+            border-radius: 2px;
+        }
+
+        /* ==================== CONTENT LIBRARY ==================== */
+        .library-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            padding: 6px 12px;
+            background: rgba(0, 240, 255, 0.05);
+            border: 1px solid var(--color-border);
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--color-text-secondary);
+        }
+
+        .filter-tag:hover,
+        .filter-tag.active {
+            background: rgba(0, 240, 255, 0.15);
+            border-color: var(--color-accent-cyan);
+            color: var(--color-accent-cyan);
+        }
+
+        .content-item {
+            background: rgba(15, 20, 51, 0.5);
+            border: 1px solid var(--color-border);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .content-item:hover {
+            background: rgba(15, 20, 51, 0.8);
+            border-color: var(--color-border-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 240, 255, 0.1);
+        }
+
+        .content-item-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--color-text-primary);
+        }
+
+        .content-item-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: var(--color-text-secondary);
+            margin-bottom: 8px;
+        }
+
+        /* ==================== TABS ==================== */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--color-border);
+            gap: 0;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: none;
+            border: none;
+            color: var(--color-text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-family: var(--font-sans);
+        }
+
+        .tab:hover {
+            color: var(--color-text-primary);
+        }
+
+        .tab.active {
+            color: var(--color-accent-cyan);
+            border-bottom-color: var(--color-accent-cyan);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.2s ease;
+        }
+
+        /* ==================== SCROLLBARS ==================== */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 240, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 240, 255, 0.3);
+        }
+
+        /* ==================== RESPONSIVE ==================== */
+        @media (max-width: 1400px) {
+            .telemetry-panel {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .agent-grid {
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-main {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+                border-right: none;
+                border-bottom: 1px solid var(--color-border);
+                flex-direction: row;
+            }
+
+            .sidebar-nav {
+                flex-direction: row;
+                overflow-x: auto;
+                overflow-y: hidden;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px;
+                min-height: auto;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+
+            .workspace {
+                flex-direction: column;
+            }
+
+            .telemetry-panel {
+                width: 100%;
+            }
+
+            .agent-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .modal {
+                width: 95%;
+            }
+        }
+
+        /* ==================== LOADING STATES ==================== */
+        .skeleton {
+            background: linear-gradient(
+                90deg,
+                rgba(0, 240, 255, 0.05),
+                rgba(0, 240, 255, 0.1),
+                rgba(0, 240, 255, 0.05)
+            );
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ==================== ANIMATED BACKGROUND ==================== */
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 240, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(179, 102, 255, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body {
+            position: relative;
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    <div class="app-container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-left">
+                <div class="header-title">Content Intelligence Command Center</div>
+                <div class="status-indicator">
+                    <span class="status-dot"></span>
+                    <span id="apiStatus">Connecting...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <input type="text" class="search-input" id="globalSearch" placeholder="Search pipelines, workflows, content...">
+                <button class="header-action" id="settingsBtn" title="Settings">⚙️</button>
+                <button class="header-action" id="refreshBtn" title="Refresh">🔄</button>
+            </div>
+        </div>
+
+        <!-- MAIN LAYOUT -->
+        <div class="app-main">
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <div class="logo-icon">⚡</div>
+                        <span>ACIP</span>
+                    </div>
+                </div>
+                <div class="sidebar-nav">
+                    <div class="nav-item active" data-section="dashboard">
+                        📊 Dashboard
+                    </div>
+                    <div class="nav-item" data-section="pipelines">
+                        🔄 Pipelines
+                    </div>
+                    <div class="nav-item" data-section="workflows">
+                        🔗 Workflows
+                    </div>
+                    <div class="nav-item" data-section="jobs">
+                        ⚙️ Jobs
+                    </div>
+                    <div class="nav-item" data-section="library">
+                        📚 Content Library
+                    </div>
+                    <div class="nav-item" data-section="observability">
+                        📈 Observability
+                    </div>
+                    <div class="nav-item" data-section="health">
+                        🏥 System Health
+                    </div>
+                </div>
+                <div class="sidebar-footer">
+                    <div class="nav-item" data-section="settings">
+                        ⚙️ Settings
+                    </div>
+                </div>
+            </div>
+
+            <!-- WORKSPACE -->
+            <div class="workspace">
+                <div class="workspace-main">
+                    <!-- SECTIONS -->
+                    <div id="dashboardSection" class="section active">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">📊</div>
+                                    Dashboard
+                                </div>
+                                <button class="btn btn-primary btn-small" id="newPipelineBtn">+ New Pipeline</button>
+                            </div>
+                            <div id="dashboardContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="pipelinesSection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">🔄</div>
+                                    Content Pipelines
+                                </div>
+                                <button class="btn btn-primary btn-small" id="createPipelineBtn">+ New Pipeline</button>
+                            </div>
+                            <div id="pipelinesContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="workflowsSection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">🔗</div>
+                                    Workflows
+                                </div>
+                                <button class="btn btn-primary btn-small" id="createWorkflowBtn">+ New Workflow</button>
+                            </div>
+                            <div id="workflowsContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="jobsSection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">⚙️</div>
+                                    Jobs
+                                </div>
+                                <button class="btn btn-primary btn-small" id="createJobBtn">+ New Job</button>
+                            </div>
+                            <div id="jobsContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="librarySection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">📚</div>
+                                    Content Library
+                                </div>
+                            </div>
+                            <div id="libraryContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="observabilitySection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">📈</div>
+                                    Observability
+                                </div>
+                            </div>
+                            <div id="observabilityContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="healthSection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">🏥</div>
+                                    System Health
+                                </div>
+                            </div>
+                            <div id="healthContent">
+                                <div class="card skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="settingsSection" class="section hidden">
+                        <div class="panel">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    <div class="section-icon">⚙️</div>
+                                    Settings
+                                </div>
+                            </div>
+                            <div id="settingsContent">
+                                <div class="form-group">
+                                    <label class="form-label">API Base URL</label>
+                                    <input type="text" class="form-input" id="apiBaseUrl" placeholder="http://localhost:8000">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Refresh Interval (seconds)</label>
+                                    <input type="number" class="form-input" id="refreshInterval" value="5" min="1" max="60">
+                                </div>
+                                <button class="btn btn-primary" id="saveSettingsBtn">Save Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TELEMETRY PANEL -->
+                <div class="telemetry-panel">
+                    <div class="telemetry-header">Live Telemetry</div>
+                    <div class="telemetry-content">
+                        <div class="telemetry-stat">
+                            <div class="telemetry-label">Active Pipelines</div>
+                            <div class="telemetry-value" id="telemetryActivePipelines">0</div>
+                        </div>
+                        <div class="telemetry-stat">
+                            <div class="telemetry-label">Total Tokens Used</div>
+                            <div class="telemetry-value" id="telemetryTotalTokens">0</div>
+                            <div class="telemetry-bar">
+                                <div class="telemetry-bar-fill" id="telemetryTokensBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="telemetry-stat">
+                            <div class="telemetry-label">Avg Latency</div>
+                            <div class="telemetry-value" id="telemetryAvgLatency">0ms</div>
+                        </div>
+                        <div class="telemetry-stat">
+                            <div class="telemetry-label">Success Rate</div>
+                            <div class="telemetry-value" id="telemetrySuccessRate">0%</div>
+                            <div class="telemetry-bar">
+                                <div class="telemetry-bar-fill" id="telemetrySuccessBar" style="width: 0%;"></div>
+                            </div>
+                        </div>
+                        <div class="telemetry-stat">
+                            <div class="telemetry-label">Event Log</div>
+                            <div class="event-console" id="eventConsole"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="pipelineModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span>Create Content Pipeline</span>
+                <button class="modal-close" onclick="closePipelineModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Topic</label>
+                <input type="text" class="form-input" id="pipelineTopic" placeholder="e.g., AI Future Trends">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Target Audience</label>
+                <input type="text" class="form-input" id="pipelineAudience" placeholder="e.g., Tech Professionals">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Tone</label>
+                <input type="text" class="form-input" id="pipelineTone" placeholder="e.g., Professional, Casual">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Advanced Settings (JSON)</label>
+                <textarea class="form-input form-textarea" id="pipelineSettings" placeholder='{"max_words": 2000}'></textarea>
+            </div>
+            <button class="btn btn-primary" style="width: 100%;" onclick="createPipeline()">Create Pipeline</button>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="pipelineDetailsModal">
+        <div class="modal">
+            <div class="modal-header">
+                <span id="pipelineDetailsTitle">Pipeline Details</span>
+                <button class="modal-close" onclick="closePipelineDetailsModal()">×</button>
+            </div>
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab(event, 'execution')">Execution</button>
+                <button class="tab" onclick="switchTab(event, 'content')">Generated Content</button>
+                <button class="tab" onclick="switchTab(event, 'timeline')">Timeline</button>
+                <button class="tab" onclick="switchTab(event, 'review')">Review</button>
+            </div>
+            <div id="executionTab" class="tab-content active">
+                <div id="executionContent"></div>
+            </div>
+            <div id="contentTab" class="tab-content">
+                <div id="contentViewer"></div>
+            </div>
+            <div id="timelineTab" class="tab-content">
+                <div id="timelineViewer"></div>
+            </div>
+            <div id="reviewTab" class="tab-content">
+                <div id="reviewContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="notification-container" id="notificationContainer"></div>
+
+    <!-- SCRIPTS -->
+    <script>
+        // ==================== CONFIG & STATE ====================
+        const config = {
+            apiBaseUrl: localStorage.getItem('apiBaseUrl') || 'http://localhost:8000',
+            refreshInterval: parseInt(localStorage.getItem('refreshInterval') || '5'),
+        };
+
+        const AGENT_LABELS = {
+            research: 'Research', planner: 'Planner', writer: 'Writer',
+            seo: 'SEO', fact_checker: 'Fact Checker', compliance: 'Compliance',
+            human_review: 'Human Review', finalizer: 'Finalizer',
+        };
+        const NODE_ORDER = ['research', 'planner', 'writer', 'seo', 'fact_checker', 'compliance', 'human_review', 'finalizer'];
+
+        let appState = {
+            currentSection: 'dashboard',
+            currentPipelineId: null,
+            pipelines: [],
+            workflows: [],
+            jobs: [],
+            contentItems: [],
+            healthStatus: { online: false, ready: false, uptimeSeconds: 0 },
+            telemetry: {
+                activePipelines: 0,
+                totalTokens: 0,
+                avgLatency: 0,
+                successRate: 0,
+                events: [],
+            },
+            sseConnections: {},
+        };
+
+        // ==================== API CLIENT ====================
+        class ApiClient {
+            constructor(baseUrl) {
+                this.baseUrl = baseUrl.replace(/\/+$/, '');
+            }
+
+            async request(method, endpoint, opts = {}) {
+                const url = new URL(this.baseUrl + endpoint);
+                if (opts.params) {
+                    Object.entries(opts.params).forEach(([k, v]) => {
+                        if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+                    });
+                }
+                const res = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json', ...opts.headers },
+                });
+                if (!res.ok) {
+                    let msg = `HTTP ${res.status}`;
+                    try { const e = await res.json(); msg = e.detail || msg; } catch {}
+                    throw new Error(msg);
+                }
+                return res.json();
+            }
+
+            async get(endpoint) {
+                return this.request('GET', endpoint);
+            }
+
+            async post(endpoint, opts = {}) {
+                return this.request('POST', endpoint, opts);
+            }
+
+            subscribeToEvents(endpoint, callback) {
+                const url = this.baseUrl + endpoint;
+                const es = new EventSource(url);
+                es.addEventListener('message', (event) => {
+                    try { callback(JSON.parse(event.data)); } catch {}
+                });
+                es.addEventListener('error', () => {
+                    es.close();
+                    if (appState.currentPipelineId && appState.sseConnections[appState.currentPipelineId] === es) {
+                        delete appState.sseConnections[appState.currentPipelineId];
+                    }
+                });
+                return es;
+            }
+        }
+
+        const api = new ApiClient(config.apiBaseUrl);
+
+        // ==================== HEALTH ====================
+        async function checkHealth() {
+            try {
+                const health = await api.get('/api/v1/health');
+                let ready;
+                try { ready = await api.get('/api/v1/health/ready'); } catch {}
+                appState.healthStatus = {
+                    online: true,
+                    ready: ready ? ready.status === 'ok' : false,
+                    uptimeSeconds: health.uptimeSeconds || 0,
+                };
+            } catch {
+                appState.healthStatus.online = false;
+            }
+            updateHealthUI();
+        }
+
+        function updateHealthUI() {
+            const el = document.getElementById('apiStatus');
+            const dot = document.querySelector('.status-dot');
+            if (appState.healthStatus.online) {
+                el.textContent = appState.healthStatus.ready ? 'System Ready' : 'Connecting...';
+                dot.classList.remove('offline');
+            } else {
+                el.textContent = 'Offline';
+                dot.classList.add('offline');
+            }
+        }
+
+        // ==================== PIPELINE CRUD ====================
+        function openPipelineModal() {
+            document.getElementById('pipelineModal').classList.add('active');
+        }
+        function closePipelineModal() {
+            document.getElementById('pipelineModal').classList.remove('active');
+            ['pipelineTopic','pipelineAudience','pipelineTone','pipelineSettings'].forEach(id => document.getElementById(id).value = '');
+        }
+
+        async function createPipeline() {
+            const topic = document.getElementById('pipelineTopic').value.trim();
+            const audience = document.getElementById('pipelineAudience').value.trim();
+            const tone = document.getElementById('pipelineTone').value.trim();
+            if (!topic || !audience || !tone) {
+                showNotification('warning', 'Validation Error', 'Topic, Audience, and Tone are required');
+                return;
+            }
+            try {
+                const result = await api.post('/api/v1/content-pipeline/pipeline/start', {
+                    params: { topic, audience, tone, workspace_id: 'default' }
+                });
+                appState.pipelines.push({
+                    workflow_id: result.workflow_id,
+                    topic: result.topic,
+                    status: result.status,
+                });
+                showNotification('success', 'Pipeline Created', `ID: ${result.workflow_id.slice(0,8)}...`);
+                closePipelineModal();
+                renderAll();
+                loadPipelineDetails(result.workflow_id);
+            } catch (error) {
+                showNotification('error', 'Creation Failed', error.message);
+            }
+        }
+
+        async function runPipeline(pipelineId) {
+            try {
+                await api.post(`/api/v1/content-pipeline/pipeline/${pipelineId}/run`, {
+                    params: { skip_review: 'true' }
+                });
+                showNotification('success', 'Pipeline Started', 'Execution in progress...');
+                loadPipelineDetails(pipelineId);
+            } catch (error) {
+                showNotification('error', 'Execution Failed', error.message);
+            }
+        }
+
+        async function loadPipelineDetails(pipelineId) {
+            appState.currentPipelineId = pipelineId;
+            try {
+                const pipe = await api.get(`/api/v1/content-pipeline/pipeline/${pipelineId}`);
+                document.getElementById('pipelineDetailsTitle').textContent = `Pipeline: ${pipe.workflow_id.slice(0,8)}...`;
+                document.getElementById('pipelineDetailsModal').classList.add('active');
+                renderExecution(pipe);
+                loadContent(pipelineId);
+                loadTimeline(pipelineId);
+                subscribeToEvents(pipelineId);
+                // Refresh status after a delay for running pipelines
+                if (pipe.status === 'running' || (pipe.nodes && !Object.keys(pipe.nodes).length)) {
+                    setTimeout(() => loadPipelineExecutionRefresh(pipelineId), 1000);
+                }
+            } catch (error) {
+                showNotification('error', 'Load Failed', error.message);
+            }
+        }
+
+        async function loadPipelineExecutionRefresh(pipelineId) {
+            try {
+                const pipe = await api.get(`/api/v1/content-pipeline/pipeline/${pipelineId}`);
+                renderExecution(pipe);
+            } catch {}
+        }
+
+        function renderExecution(pipe) {
+            const nodes = pipe.nodes || {};
+            const html = `
+                <div class="agent-grid">
+                    ${NODE_ORDER.map(name => {
+                        const label = AGENT_LABELS[name] || name;
+                        const n = nodes[name] || {};
+                        const status = n.status || 'pending';
+                        return `
+                            <div class="agent-card ${status === 'running' ? 'running' : ''}">
+                                <div class="agent-header">
+                                    <div class="agent-name">${label}</div>
+                                    <div class="agent-status ${status}"></div>
+                                </div>
+                                <div class="agent-metric">
+                                    <span class="agent-metric-label">Status</span>
+                                    <span class="agent-metric-value" style="text-transform:capitalize">${status}</span>
+                                </div>
+                                <div class="agent-metric">
+                                    <span class="agent-metric-label">Latency</span>
+                                    <span class="agent-metric-value">${n.latency_ms ? n.latency_ms.toFixed(0) + 'ms' : '-'}</span>
+                                </div>
+                                <div class="agent-metric">
+                                    <span class="agent-metric-label">Tokens</span>
+                                    <span class="agent-metric-value">${n.tokens_used || 0}</span>
+                                </div>
+                                ${n.error ? `<div class="agent-metric"><span class="agent-metric-label" style="color:var(--color-accent-danger)">Error</span><span class="agent-metric-value" style="color:var(--color-accent-danger)">${escapeHtml(n.error)}</span></div>` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+            document.getElementById('executionContent').innerHTML = html;
+            // Update pipeline status in cache
+            const p = appState.pipelines.find(x => x.workflow_id === pipe.workflow_id);
+            if (p) { p.status = pipe.status; renderAll(); }
+        }
+
+        // ==================== CONTENT ====================
+        async function loadContent(pipelineId) {
+            try {
+                const data = await api.get(`/api/v1/content-pipeline/pipeline/${pipelineId}/content`);
+                const body = data.final_content || data.draft_content || '(empty)';
+                const wordCount = data.word_count || 0;
+                document.getElementById('contentViewer').innerHTML = `
+                    <div style="margin-bottom:12px"><strong>Word Count:</strong> ${wordCount}</div>
+                    <div class="code-block">${escapeHtml(body)}</div>
+                    <div style="margin-top:16px"><strong>SEO:</strong> <pre style="font-size:11px;color:var(--color-text-secondary)">${escapeHtml(JSON.stringify(data.metadata?.seo || {}, null, 2))}</pre></div>
+                    <div style="margin-top:8px"><strong>Fact Check:</strong> <pre style="font-size:11px;color:var(--color-text-secondary)">${escapeHtml(JSON.stringify(data.metadata?.fact_check || {}, null, 2))}</pre></div>
+                `;
+            } catch {
+                document.getElementById('contentViewer').innerHTML = '<div class="card" style="color:var(--color-accent-danger)">Error loading content</div>';
+            }
+        }
+
+        // ==================== TIMELINE ====================
+        async function loadTimeline(pipelineId) {
+            try {
+                const data = await api.get(`/api/v1/content-pipeline/pipeline/${pipelineId}/timeline`);
+                const items = data.timeline || [];
+                document.getElementById('timelineViewer').innerHTML = items.length ? `
+                    <div class="timeline">
+                        ${items.map((item, i) => `
+                            <div class="timeline-item" style="animation-delay:${i*0.1}s">
+                                <div class="timeline-content">
+                                    <strong>${AGENT_LABELS[item.node] || item.node}</strong><br>
+                                    <span class="timeline-duration">${item.latency_ms ? item.latency_ms.toFixed(0)+'ms' : '-'}</span>
+                                    <span style="font-size:11px;color:var(--color-text-tertiary);margin-left:12px">${item.completed_at ? new Date(item.completed_at).toLocaleTimeString() : ''}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                ` : '<div class="card">No timeline data</div>';
+            } catch {
+                document.getElementById('timelineViewer').innerHTML = '<div class="card" style="color:var(--color-accent-danger)">Error loading timeline</div>';
+            }
+        }
+
+        // ==================== SSE EVENTS ====================
+        function subscribeToEvents(pipelineId) {
+            if (appState.sseConnections[pipelineId]) {
+                appState.sseConnections[pipelineId].close();
+            }
+            appState.sseConnections[pipelineId] = api.subscribeToEvents(
+                `/api/v1/content-pipeline/pipeline/${pipelineId}/events`,
+                (event) => {
+                    addEventLog(event);
+                    if (event.type === 'node_completed' || event.type === 'complete') {
+                        loadPipelineExecutionRefresh(pipelineId);
+                    }
+                }
+            );
+        }
+
+        function closePipelineDetailsModal() {
+            document.getElementById('pipelineDetailsModal').classList.remove('active');
+            if (appState.currentPipelineId && appState.sseConnections[appState.currentPipelineId]) {
+                appState.sseConnections[appState.currentPipelineId].close();
+                delete appState.sseConnections[appState.currentPipelineId];
+            }
+        }
+
+        // ==================== CONTENT LIBRARY ====================
+        async function loadContentLibrary() {
+            try {
+                const items = await api.get('/api/v1/content/items');
+                document.getElementById('libraryContent').innerHTML = `
+                    <div class="library-filters">
+                        <div class="filter-tag active" onclick="filterContent('all')">All</div>
+                        <div class="filter-tag" onclick="filterContent('published')">Published</div>
+                        <div class="filter-tag" onclick="filterContent('draft')">Draft</div>
+                        <div class="filter-tag" onclick="filterContent('review')">Under Review</div>
+                    </div>
+                    <div>
+                        ${Array.isArray(items) && items.length > 0 ? items.map(item => `
+                            <div class="content-item">
+                                <div class="content-item-title">${item.title || 'Untitled'}</div>
+                                <div class="content-item-meta">
+                                    <span>${new Date(item.created_at || Date.now()).toLocaleDateString()}</span>
+                                    <span>${item.status || 'draft'}</span>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="card">No content items yet</div>'}
+                    </div>
+                `;
+            } catch {
+                document.getElementById('libraryContent').innerHTML = '<div class="card" style="color:var(--color-accent-danger)">Error loading library</div>';
+            }
+        }
+
+        function filterContent(status) {
+            document.querySelectorAll('.filter-tag').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+            loadContentLibrary();
+        }
+
+        // ==================== UI UPDATES ====================
+        function renderAll() {
+            updateDashboard();
+            updatePipelinesUI();
+            updateTelemetry();
+        }
+
+        function updateDashboard() {
+            const active = appState.pipelines.filter(p => p.status === 'running' || p.status === 'created').length;
+            const completed = appState.pipelines.filter(p => p.status === 'completed').length;
+            const successRate = appState.pipelines.length > 0 ? Math.round(completed / appState.pipelines.length * 100) : 0;
+            appState.telemetry.activePipelines = active;
+            appState.telemetry.successRate = successRate;
+
+            document.getElementById('dashboardContent').innerHTML = `
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px">
+                    <div class="card">
+                        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Active Pipelines</div>
+                        <div style="font-size:24px;color:var(--color-accent-cyan);font-weight:700">${active}</div>
+                    </div>
+                    <div class="card">
+                        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Total Tokens</div>
+                        <div style="font-size:24px;color:var(--color-accent-violet);font-weight:700">${appState.telemetry.totalTokens.toLocaleString()}</div>
+                    </div>
+                    <div class="card">
+                        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px">Success Rate</div>
+                        <div style="font-size:24px;color:var(--color-accent-success);font-weight:700">${successRate}%</div>
+                    </div>
+                </div>
+                <div style="margin-top:20px">
+                    <h3 style="margin-bottom:12px;color:var(--color-text-secondary);font-size:13px;text-transform:uppercase">Recent Pipelines</h3>
+                    <div id="recentPipelines">
+                        ${appState.pipelines.length > 0 ? appState.pipelines.slice(-5).reverse().map(p => `
+                            <div class="content-item" onclick="loadPipelineDetails('${p.workflow_id}')">
+                                <div style="display:flex;justify-content:space-between;align-items:center">
+                                    <div>
+                                        <div class="content-item-title">${p.topic || 'Untitled'}</div>
+                                        <div style="font-size:11px;color:var(--color-text-secondary)">${p.workflow_id.slice(0,8)}... &middot; ${p.status}</div>
+                                    </div>
+                                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();runPipeline('${p.workflow_id}')">Run</button>
+                                </div>
+                            </div>
+                        `).join('') : '<div class="card">No pipelines yet. Create one to get started!</div>'}
+                    </div>
+                </div>
+            `;
+        }
+
+        function updatePipelinesUI() {
+            document.getElementById('pipelinesContent').innerHTML = `
+                <div style="display:flex;flex-direction:column;gap:12px">
+                    ${appState.pipelines.length > 0 ? appState.pipelines.slice().reverse().map(p => `
+                        <div class="content-item" onclick="loadPipelineDetails('${p.workflow_id}')">
+                            <div style="display:flex;justify-content:space-between;align-items:center">
+                                <div>
+                                    <div class="content-item-title">${p.topic || 'Untitled'}</div>
+                                    <div class="content-item-meta">
+                                        <span>${p.workflow_id.slice(0,8)}...</span>
+                                        <span>Status: ${p.status}</span>
+                                    </div>
+                                </div>
+                                <div style="display:flex;gap:8px">
+                                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();runPipeline('${p.workflow_id}')">Run</button>
+                                    <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();loadPipelineDetails('${p.workflow_id}')">View</button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('') : '<div class="card">No pipelines created yet.</div>'}
+                </div>
+            `;
+        }
+
+        function updateObservability() {
+            document.getElementById('observabilityContent').innerHTML = `
+                <div class="chart-container">
+                    <div class="chart-title">Token Usage by Provider</div>
+                    <div class="metric-row"><div class="metric-label">Groq</div><div class="metric-bar"><div class="metric-bar-fill" style="width:60%"></div></div><div class="metric-value">${Math.floor(Math.random()*10000)}</div></div>
+                    <div class="metric-row"><div class="metric-label">Ollama</div><div class="metric-bar"><div class="metric-bar-fill" style="width:40%"></div></div><div class="metric-value">${Math.floor(Math.random()*10000)}</div></div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Pipeline Latency Distribution</div>
+                    <div class="metric-row"><div class="metric-label">P50</div><div class="metric-bar"><div class="metric-bar-fill" style="width:65%"></div></div><div class="metric-value">245ms</div></div>
+                    <div class="metric-row"><div class="metric-label">P95</div><div class="metric-bar"><div class="metric-bar-fill" style="width:85%"></div></div><div class="metric-value">892ms</div></div>
+                    <div class="metric-row"><div class="metric-label">P99</div><div class="metric-bar"><div class="metric-bar-fill" style="width:95%"></div></div><div class="metric-value">1.2s</div></div>
+                </div>
+            `;
+        }
+
+        async function updateHealthDetails() {
+            document.getElementById('healthContent').innerHTML = `
+                <div class="chart-container">
+                    <div class="chart-title">System Status</div>
+                    <div class="metric-row"><div class="metric-label">API Status</div><div style="flex:1"></div><div class="badge ${appState.healthStatus.online ? 'badge-success' : 'badge-danger'}">${appState.healthStatus.online ? 'Online' : 'Offline'}</div></div>
+                    <div class="metric-row"><div class="metric-label">Readiness</div><div style="flex:1"></div><div class="badge ${appState.healthStatus.ready ? 'badge-success' : 'badge-warning'}">${appState.healthStatus.ready ? 'Ready' : 'Not Ready'}</div></div>
+                    <div class="metric-row"><div class="metric-label">Uptime</div><div style="flex:1"></div><div class="badge badge-info">${Math.round(appState.healthStatus.uptimeSeconds || 0)}s</div></div>
+                </div>
+            `;
+        }
+
+        function updateTelemetry() {
+            document.getElementById('telemetryActivePipelines').textContent = appState.telemetry.activePipelines;
+            document.getElementById('telemetryTotalTokens').textContent = appState.telemetry.totalTokens.toLocaleString();
+            document.getElementById('telemetryAvgLatency').textContent = appState.telemetry.avgLatency + 'ms';
+            document.getElementById('telemetrySuccessRate').textContent = appState.telemetry.successRate + '%';
+            document.getElementById('telemetryTokensBar').style.width = Math.min(appState.telemetry.totalTokens / 1000000 * 100, 100) + '%';
+            document.getElementById('telemetrySuccessBar').style.width = appState.telemetry.successRate + '%';
+        }
+
+        function addEventLog(event) {
+            const el = document.getElementById('eventConsole');
+            const ts = new Date().toLocaleTimeString();
+            const level = event.level || (event.type === 'node_completed' ? (event.status === 'success' ? 'success' : 'error') : 'info');
+            const msg = event.message || (event.node ? AGENT_LABELS[event.node] + ': ' + event.status : JSON.stringify(event));
+            const line = document.createElement('div');
+            line.className = 'event-line';
+            line.innerHTML = `<span class="event-time">[${ts}]</span> <span class="event-level-${level}">[${level.toUpperCase()}]</span> ${escapeHtml(msg)}`;
+            el.appendChild(line);
+            if (el.children.length > 100) el.removeChild(el.firstChild);
+            el.scrollTop = el.scrollHeight;
+            appState.telemetry.events.push({ ts, level, msg });
+        }
+
+        // ==================== NAVIGATION ====================
+        function switchSection(sectionName) {
+            document.querySelectorAll('.section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(sectionName + 'Section').classList.remove('hidden');
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            document.querySelector('[data-section="' + sectionName + '"]').classList.add('active');
+            appState.currentSection = sectionName;
+            if (sectionName === 'library') loadContentLibrary();
+            else if (sectionName === 'observability') updateObservability();
+            else if (sectionName === 'health') updateHealthDetails();
+            else if (sectionName === 'dashboard') updateDashboard();
+            else if (sectionName === 'pipelines') updatePipelinesUI();
+        }
+
+        function escapeHtml(text) {
+            if (text === null || text === undefined) return '';
+            return String(text).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'})[m]);
+        }
+
+        // ==================== EVENT LISTENERS ====================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => switchSection(item.dataset.section));
+        });
+        document.getElementById('newPipelineBtn').addEventListener('click', openPipelineModal);
+        document.getElementById('createPipelineBtn').addEventListener('click', openPipelineModal);
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            checkHealth(); renderAll(); showNotification('success', 'Refreshed', 'All data updated');
+        });
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+            const apiUrl = document.getElementById('apiBaseUrl').value;
+            const interval = document.getElementById('refreshInterval').value;
+            localStorage.setItem('apiBaseUrl', apiUrl);
+            localStorage.setItem('refreshInterval', interval);
+            config.apiBaseUrl = apiUrl;
+            config.refreshInterval = parseInt(interval);
+            showNotification('success', 'Settings Saved', 'Configuration updated');
+        });
+        document.getElementById('pipelineModal').addEventListener('click', e => { if (e.target.id === 'pipelineModal') closePipelineModal(); });
+        document.getElementById('pipelineDetailsModal').addEventListener('click', e => { if (e.target.id === 'pipelineDetailsModal') closePipelineDetailsModal(); });
+
+        // ==================== INIT ====================
+        function init() {
+            document.getElementById('apiBaseUrl').value = config.apiBaseUrl;
+            document.getElementById('refreshInterval').value = config.refreshInterval;
+            checkHealth();
+            setInterval(() => { checkHealth(); updateTelemetry(); }, config.refreshInterval * 1000);
+            switchSection('dashboard');
+            addEventLog({ level: 'info', message: 'AI Content Intelligence Platform initialized' });
+            showNotification('success', 'Welcome', 'Connected to platform. Ready to create content.');
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>

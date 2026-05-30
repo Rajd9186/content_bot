@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import aiohttp
 import json
 import logging
 import os
@@ -20,8 +21,6 @@ class OpenAIProvider(BaseProvider):
         self._base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
 
     async def execute(self, request: ProviderRequest) -> ProviderResponse:
-        import aiohttp
-
         start = time.monotonic()
         url = f"{self._base_url}/chat/completions"
         headers = {

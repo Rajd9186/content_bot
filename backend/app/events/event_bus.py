@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Callable, Coroutine, Optional
+from typing import Any, Callable, Coroutine, Optional, TYPE_CHECKING
 
 from app.infrastructure.models.event import StoredEvent
-from app.infrastructure.unit_of_work import UnitOfWork
 from app.events.event_types import BaseEvent, EVENT_REGISTRY
+
+if TYPE_CHECKING:
+    from app.infrastructure.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
 
@@ -114,17 +116,7 @@ class EventBus:
     async def store_atomic(
         self, uow: UnitOfWork, event: BaseEvent,
     ) -> StoredEvent:
-        """Atomically store an event within a UOW transaction.
-
-        The event is stored with published=False (default). The outbox
-        worker handles eventual publication to EventBus, Redis, and
-        WebSocket subscribers. This eliminates the dual-write risk:
-        if publication fails later, the outbox worker retries.
-
-        Must be called within a UOW context. The caller is responsible
-        for committing the transaction (which happens automatically
-        when using the unit_of_work context manager).
-        """
+        """Atomically store an event within a UOW transaction."""
         stored = await EventStore().save(uow, event)
         return stored
 

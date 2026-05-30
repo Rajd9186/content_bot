@@ -7,7 +7,16 @@ from app.infrastructure.websocket.broadcaster import EventBroadcaster, event_bro
 from app.events.event_bus import EventBus, EventStore, event_bus, event_store
 from app.events.event_types import BaseEvent, EVENT_REGISTRY
 from app.infrastructure.database import async_session_factory, AsyncSession
-from app.infrastructure.unit_of_work import UnitOfWork, unit_of_work
+
+
+def __getattr__(name: str):
+    if name in ("UnitOfWork", "unit_of_work"):
+        from app.infrastructure.unit_of_work import UnitOfWork, unit_of_work
+        if name == "UnitOfWork":
+            return UnitOfWork
+        return unit_of_work
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__ = [
     "Base", "JSONBColumn", "utcnow",

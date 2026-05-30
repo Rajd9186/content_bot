@@ -18,9 +18,54 @@ from app.infrastructure.messaging.redis_client import redis_client
 from app.infrastructure.events.outbox_worker import outbox_worker
 from app.infrastructure.janitor.worker import janitor_worker
 from app.infrastructure.websocket.manager import connection_manager
+from app.infrastructure.sse.manager import sse_manager
+from app.infrastructure.workers.pipeline_worker import pipeline_worker
+from app.infrastructure.workers.recovery_worker import pipeline_recovery_worker
+from app.infrastructure.failover.provider_failover import provider_failover
 from app.orchestration.orchestrator import orchestrator
 
 logger = logging.getLogger(__name__)
+
+
+async def _checkpoint_persister(run) -> None:
+    from app.core.database import async_session_factory
+    from app.infrastructure.unit_of_work import UnitOfWork
+    try:
+        async with async_session_factory() as session:
+            uow = UnitOfWork(session)
+            await uow.checkpoints.save_checkpoint(
+                aggregate_id=run.id,
+                aggregate_type="workflow",
+                checkpoint_type="workflow_run",
+                state=run.model_dump(),
+                version=run.version,
+            )
+            await uow.commit()
+    except Exception as e:
+        logger.warning("Checkpoint persist failed for workflow %s: %s", run.id, e)
+
+
+async def _dead_letter_handler(run, stage, error, retries) -> None:
+    from app.core.database import async_session_factory
+    from app.infrastructure.unit_of_work import UnitOfWork
+    from app.infrastructure.models.telemetry import RetryRecord
+    from datetime import datetime, timezone
+    try:
+        async with async_session_factory() as session:
+            uow = UnitOfWork(session)
+            record = RetryRecord(
+                target_type="workflow_stage",
+                target_id=run.id,
+                attempt_number=retries,
+                status="exhausted",
+                error_code="STAGE_FAILED",
+                error_message=error[:1000] if error else "",
+                executed_at=datetime.now(timezone.utc),
+            )
+            uow.session.add(record)
+            await uow.commit()
+    except Exception as e:
+        logger.warning("Dead letter persist failed: %s", e)
 
 
 @asynccontextmanager
@@ -30,6 +75,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         "Application starting",
         extra={"environment": settings.ENVIRONMENT, "version": settings.VERSION},
     )
+
     if settings.REDIS_URL and settings.REDIS_URL != "redis://localhost:6379":
         try:
             await redis_client.connect()
@@ -41,13 +87,32 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         await outbox_worker.start()
         await janitor_worker.start()
         await connection_manager.start_redis_listener()
+        await pipeline_worker.start()
+        await pipeline_recovery_worker.start()
+        await sse_manager.start()
+
+    try:
+        orchestrator._checkpoint_persister = _checkpoint_persister
+        orchestrator._retry_manager._dead_letter_fn = _dead_letter_handler
+        logger.info("Orchestrator wired with checkpoint persister and dead letter handler")
+    except Exception as e:
+        logger.warning("Failed to wire orchestrator: %s", e)
 
     logger.info("Orchestration engine initialized (singleton)")
-    # TODO: recover incomplete workflows from database on startup
-    # Requires UnitOfWork wired into lifespan context once DB is available
+
+    from app.infrastructure.workers.recovery_worker import recovery_service
+    try:
+        recovered = await recovery_service.recover_on_startup()
+        if recovered > 0:
+            logger.info("Recovered %d incomplete workflows on startup", recovered)
+    except Exception as e:
+        logger.warning("Startup recovery failed: %s", e)
 
     yield
 
+    await pipeline_worker.stop()
+    await pipeline_recovery_worker.stop()
+    await sse_manager.stop()
     await outbox_worker.stop()
     await janitor_worker.stop()
     await connection_manager.stop_redis_listener()
@@ -77,11 +142,12 @@ def create_app() -> FastAPI:
         },
     )
 
+    origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
+    if settings.DEBUG and "null" not in origins:
+        origins.append("null")
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            str(origin) for origin in settings.BACKEND_CORS_ORIGINS
-        ],
+        allow_origins=origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],

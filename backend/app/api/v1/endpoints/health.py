@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.core.deps import get_db
+from app.infrastructure.messaging.redis_client import redis_client
 from app.schemas.health import HealthResponse, ReadinessResponse
 
 router = APIRouter(tags=["Health"])
@@ -45,7 +46,16 @@ async def readiness_check(
     except Exception:
         checks["database"] = "error"
 
-    all_ok = all(v == "ok" for v in checks.values())
+    if redis_client._client is not None:
+        try:
+            await redis_client.client.ping()
+            checks["redis"] = "ok"
+        except Exception:
+            checks["redis"] = "error"
+    else:
+        checks["redis"] = "not_configured"
+
+    all_ok = all(v == "ok" or v == "not_configured" for v in checks.values())
 
     return ReadinessResponse(
         status="ok" if all_ok else "degraded",
