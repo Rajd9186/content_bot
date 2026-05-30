@@ -49,6 +49,9 @@ class Settings(BaseSettings):
             "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel",
         ).replace("postgresql://", "postgresql+asyncpg://") if os.environ.get("DATABASE_URL") else "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_content_intel"
     )
+
+    # Workspace
+    DEFAULT_WORKSPACE_ID: str = "00000000-0000-0000-0000-000000000000"
     DATABASE_POOL_SIZE: int = Field(default=20)
     DATABASE_MAX_OVERFLOW: int = Field(default=10)
     DATABASE_ECHO: bool = Field(default=False)

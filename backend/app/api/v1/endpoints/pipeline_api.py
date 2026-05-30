@@ -98,16 +98,22 @@ async def start_pipeline(
     audience: str = Query("general", description="Target audience"),
     tone: str = Query("professional", description="Writing tone"),
     goals: str = Query("", description="Content goals"),
-    workspace_id: str = Query("default", description="Workspace ID"),
+    workspace_id: str = Query(None, description="Workspace ID"),
     correlation_id: str | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
     workflow_id = str(uuid4())
     corr_id = correlation_id or str(uuid4())
+    
+    # Ensure workspace_id is a valid UUID
+    ws_id = workspace_id
+    if not ws_id or ws_id == "default":
+        from app.core.config import settings
+        ws_id = settings.DEFAULT_WORKSPACE_ID
 
     state = PipelineState(
         workflow_id=workflow_id,
-        workspace_id=workspace_id,
+        workspace_id=ws_id,
         correlation_id=corr_id,
         topic=topic,
         audience=audience,
