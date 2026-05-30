@@ -11,9 +11,18 @@ const getBaseURL = () => {
     }
   }
   
-  // Use public env var or fallback
+  // Directly access the value provided by the bundler
   const envUrl = process.env.NEXT_PUBLIC_API_URL;
-  console.log(`[API] Environment Variable: ${envUrl}`);
+  
+  // Log both to see exactly what the bundler injected
+  console.log('[API] process.env object check:', {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NODE_ENV: process.env.NODE_ENV
+  });
+
+  if (!envUrl) {
+    console.warn('[API] NEXT_PUBLIC_API_URL is undefined. Using local fallback.');
+  }
   
   let url = envUrl || "http://localhost:8000/api/v1";
   
