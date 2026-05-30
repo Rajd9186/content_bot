@@ -3,8 +3,8 @@ import type { PipelineSSEEvent } from "@/types/api";
 
 const api = axios.create({
   baseURL: typeof window !== "undefined"
-    ? localStorage.getItem("acip-api-url") || "http://localhost:8000/api/v1"
-    : "http://localhost:8000/api/v1",
+    ? localStorage.getItem("acip-api-url") || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+    : process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
   timeout: 0,
   headers: { "Content-Type": "application/json" },
 });
@@ -73,9 +73,10 @@ export function createSSEConnection(
   onError?: (error: Event) => void,
   onOpen?: () => void,
 ): EventSource {
+  const defaultBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
   const baseUrl = typeof window !== "undefined"
-    ? localStorage.getItem("acip-api-url") || "http://localhost:8000/api/v1"
-    : "http://localhost:8000/api/v1";
+    ? localStorage.getItem("acip-api-url") || defaultBaseUrl
+    : defaultBaseUrl;
   const url = `${baseUrl}${path}`;
   const es = new EventSource(url);
   es.onopen = () => onOpen?.();
