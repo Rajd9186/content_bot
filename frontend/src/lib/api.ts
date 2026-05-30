@@ -2,6 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 import type { PipelineSSEEvent } from "@/types/api";
 
 // Helper to get the correct API URL
+// Helper to get the correct API URL
 const getBaseURL = () => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("acip-api-url");
@@ -11,27 +12,11 @@ const getBaseURL = () => {
     }
   }
   
-  // Directly access the value provided by the bundler
-  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  // Directly use the production URL for Render deployments
+  // to avoid issues with build-time environment variable injection
+  const url = "https://content-bot-l51d.onrender.com/api/v1";
   
-  // Log both to see exactly what the bundler injected
-  console.log('[API] process.env object check:', {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-    NODE_ENV: process.env.NODE_ENV
-  });
-
-  if (!envUrl) {
-    console.warn('[API] NEXT_PUBLIC_API_URL is undefined. Using local fallback.');
-  }
-  
-  let url = envUrl || "http://localhost:8000/api/v1";
-  
-  // Ensure it ends with /api/v1 if it doesn't already
-  if (url && !url.includes("/api/v1")) {
-    url = url.replace(/\/$/, "") + "/api/v1";
-  }
-  
-  console.log(`[API] Final Base URL: ${url}`);
+  console.log(`[API] Production URL: ${url}`);
   return url;
 };
 
