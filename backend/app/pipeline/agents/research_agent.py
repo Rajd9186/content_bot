@@ -20,6 +20,10 @@ class ResearchAgent(PipelineAgent):
         model_override: str | None = None,
     ) -> NodeResult:
         result = await super().execute(state, provider_override, model_override)
+        if result.status == NodeStatus.SUCCESS:
+            vlog_links = result.output.get("vlog_links", [])
+            if isinstance(vlog_links, list):
+                state.vlog_links = vlog_links
         return result
 
 

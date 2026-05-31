@@ -17,7 +17,7 @@ SYSTEM_PROMPTS: dict[str, str] = {
         "- Flag low-confidence or contradictory information\n"
         "- Never use placeholder text or generic statements\n\n"
         "OUTPUT FORMAT: Valid JSON with keys: summary, key_points, statistics, "
-        "citations, entities, risks, outline_suggestions, gaps, contradictions"
+        "citations, entities, risks, outline_suggestions, gaps, contradictions, vlog_links"
     ),
     "planner": (
         "You are an expert content strategist. Your role is to create a detailed, "
@@ -146,6 +146,7 @@ def build_research_prompt(state: dict[str, Any]) -> str:
         f"Conduct thorough research on this topic. For each finding:\n"
         f"- Write a substantive analysis (minimum 2-3 sentences)\n"
         f"- Include specific data points, dates, statistics\n"
+        f"- Identify and include relevant vlog or video links (YouTube, etc.) in the vlog_links field\n"
         f"- Note source credibility and confidence level\n"
         f"- Identify gaps, contradictions, or areas needing more research\n\n"
         f"Produce ONLY valid JSON matching the expected schema. "

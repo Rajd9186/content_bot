@@ -57,7 +57,20 @@ class WorkflowPipeline:
             state.errors.append(f"{name}: {result.error or 'Unknown error'}")
         elif result.status == NodeStatus.SUCCESS:
             on_success(result)
+        
+        # Enhanced progress notification with SSE broadcast for actions
         await self._notify_progress(name, result)
+        
+        from app.infrastructure.sse.manager import sse_manager
+        await sse_manager.broadcast_pipeline_event(
+            state.workflow_id,
+            "node_progress",
+            node=name,
+            status=result.status,
+            actions=result.actions,
+            tokens_used=result.tokens_used,
+            latency_ms=result.latency_ms
+        )
         return state
 
     async def run_research(self, state: PipelineState) -> PipelineState:

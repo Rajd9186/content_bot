@@ -63,6 +63,13 @@ class PipelineAgent(ABC):
 
             provider = self._provider_factory.get_or_create(provider_name, model)
 
+            # Record the action of starting the agent execution
+            node_result.actions.append({
+                "action": "agent_start",
+                "timestamp": datetime.now(UTC).isoformat(),
+                "details": f"Starting {self.agent_type} using {provider_name}/{model}"
+            })
+
             request = ProviderRequest(
                 model=model,
                 system_prompt=system_prompt,
@@ -72,6 +79,14 @@ class PipelineAgent(ABC):
             )
 
             response = await provider.execute_with_retry(request, max_retries=2)
+
+            # Record the LLM response action
+            node_result.actions.append({
+                "action": "llm_response",
+                "timestamp": datetime.now(UTC).isoformat(),
+                "details": "Received response from LLM provider",
+                "success": response.success
+            })
 
             if not response.success:
                 fallback = await provider_router.get_fallback(
@@ -99,6 +114,13 @@ class PipelineAgent(ABC):
 
             output = self._parse_response(response.content)
             node_result.output = output
+
+            # Record action for successful parsing and validation
+            node_result.actions.append({
+                "action": "parse_output",
+                "timestamp": datetime.now(UTC).isoformat(),
+                "details": f"Successfully parsed {self.agent_type} output"
+            })
 
             validation = agent_output_validator.validate(self.agent_type, output)
             if validation.warnings:

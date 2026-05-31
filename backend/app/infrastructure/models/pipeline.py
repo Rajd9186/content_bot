@@ -46,6 +46,7 @@ class PipelineRun(Base):
     seo_metadata: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
     fact_check_results: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
     compliance_results: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
+    vlog_links: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True, default=list)
     final_content: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     human_review: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)

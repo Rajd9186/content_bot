@@ -22,6 +22,7 @@ class NodeResult(BaseModel):
     node: str
     status: NodeStatus = NodeStatus.PENDING
     output: dict[str, Any] = Field(default_factory=dict)
+    actions: list[dict[str, Any]] = Field(default_factory=list)  # Added to track agentic actions
     error: str | None = None
     retry_count: int = 0
     started_at: str | None = None
@@ -61,6 +62,7 @@ class PipelineState(BaseModel):
     seo_metadata: dict[str, Any] = Field(default_factory=dict)
     fact_check_results: dict[str, Any] = Field(default_factory=dict)
     compliance_results: dict[str, Any] = Field(default_factory=dict)
+    vlog_links: list[dict[str, str]] = Field(default_factory=list)  # Added for vlog/video links
     final_content: str = ""
 
     human_review: HumanReview | None = None
