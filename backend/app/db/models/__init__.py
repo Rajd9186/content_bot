@@ -8,6 +8,13 @@ from app.domains.workflow.models import (
 )
 from app.infrastructure.models.base import Base
 from app.infrastructure.models.event import StoredEvent
+from app.infrastructure.models.project import (
+    PinnedProjectMemory,
+    Project,
+    ProjectConversation,
+    ProjectMemory,
+    ProjectOutput,
+)
 from app.infrastructure.models.telemetry import Checkpoint, RetryRecord, TelemetryMetric
 
 __all__ = [
@@ -17,4 +24,9 @@ __all__ = [
     "AgentConfig", "AgentExecution", "AgentCall",
     "StoredEvent",
     "RetryRecord", "TelemetryMetric", "Checkpoint",
+    "Project",
+    "ProjectConversation",
+    "ProjectOutput",
+    "ProjectMemory",
+    "PinnedProjectMemory",
 ]

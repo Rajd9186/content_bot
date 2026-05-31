@@ -11,6 +11,7 @@ const Settings = dynamic(() => import("@/components/sections/Settings").then((m)
 const AgentMonitor = dynamic(() => import("@/components/sections/AgentMonitor").then((m) => ({ default: m.AgentMonitor })), { ssr: false });
 const Orchestration = dynamic(() => import("@/components/sections/Orchestration").then((m) => ({ default: m.Orchestration })), { ssr: false });
 const SystemMetrics = dynamic(() => import("@/components/sections/SystemMetrics").then((m) => ({ default: m.SystemMetrics })), { ssr: false });
+const ProjectsSection = dynamic(() => import("@/components/sections/Projects").then((m) => ({ default: m.ProjectsSection })), { ssr: false });
 
 const SECTIONS: Record<string, React.ComponentType> = {
   pipeline: ContentPipeline,
@@ -21,6 +22,7 @@ const SECTIONS: Record<string, React.ComponentType> = {
   agents: AgentMonitor,
   orchestration: Orchestration,
   metrics: SystemMetrics,
+  projects: ProjectsSection,
 };
 
 export default function DashboardPage() {

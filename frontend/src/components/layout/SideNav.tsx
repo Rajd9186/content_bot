@@ -13,6 +13,7 @@ interface NavItem {
 const NAV_ITEMS: NavItem[] = [
   { id: "pipeline", icon: "⊞", label: "Content Pipeline" },
   { id: "history", icon: "≡", label: "Pipeline History" },
+  { id: "projects", icon: "📁", label: "Projects" },
   { id: "analytics", icon: "⬡", label: "Analytics" },
   { id: "workspace", icon: "◰", label: "Workspace" },
   { id: "settings", icon: "⚙", label: "Settings" },

@@ -6,3 +6,4 @@ export { Settings } from "./Settings";
 export { AgentMonitor } from "./AgentMonitor";
 export { Orchestration } from "./Orchestration";
 export { SystemMetrics } from "./SystemMetrics";
+export { ProjectsSection } from "./Projects";

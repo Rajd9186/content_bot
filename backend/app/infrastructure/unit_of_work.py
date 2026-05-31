@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 if TYPE_CHECKING:
     from app.domains.agent.repository import AgentRepository
     from app.domains.content.repository import ContentRepository
+    from app.domains.project.repository import ProjectRepository
     from app.domains.workflow.repository import WorkflowRepository
     from app.infrastructure.repositories.event_repository import EventRepository
     from app.infrastructure.repositories.pipeline_repository import (
@@ -62,6 +63,13 @@ class UnitOfWork:
         if not hasattr(self, "_checkpoints"):
             self._checkpoints = CheckpointRepository(self._session)
         return self._checkpoints
+
+    @property
+    def projects(self) -> ProjectRepository:
+        from app.domains.project.repository import ProjectRepository
+        if not hasattr(self, "_projects"):
+            self._projects = ProjectRepository(self._session)
+        return self._projects
 
     async def commit(self) -> None:
         await self._session.commit()

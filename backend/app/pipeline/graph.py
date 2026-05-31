@@ -147,6 +147,12 @@ class WorkflowPipeline:
             "finalizer", self._finalizer_agent, state, _on_success,
         )
 
+    async def run_memory_retrieval(self, state: PipelineState) -> PipelineState:
+        from app.infrastructure.database import async_session_factory
+        from app.pipeline.agents.memory_retrieval_agent import run_memory_retrieval
+
+        return await run_memory_retrieval(state, async_session_factory)
+
     async def execute(
         self,
         state: PipelineState,
@@ -154,6 +160,7 @@ class WorkflowPipeline:
     ) -> PipelineState:
         start_time = time.monotonic()
         steps = [
+            self.run_memory_retrieval,
             self.run_research,
             self.run_planner,
             self.run_writer,

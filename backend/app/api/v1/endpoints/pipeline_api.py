@@ -99,6 +99,7 @@ async def start_pipeline(
     tone: str = Query("professional", description="Writing tone"),
     goals: str = Query("", description="Content goals"),
     workspace_id: str = Query(None, description="Workspace ID"),
+    project_id: str = Query(None, description="Project ID for memory association"),
     correlation_id: str | None = None,
     db: AsyncSession = Depends(get_db),
 ) -> JSONResponse:
@@ -111,6 +112,10 @@ async def start_pipeline(
         from app.core.config import settings
         ws_id = settings.DEFAULT_WORKSPACE_ID
 
+    metadata = {}
+    if project_id:
+        metadata["project_id"] = project_id
+
     state = PipelineState(
         workflow_id=workflow_id,
         workspace_id=ws_id,
@@ -119,6 +124,7 @@ async def start_pipeline(
         audience=audience,
         tone=tone,
         goals=goals,
+        metadata=metadata,
         created_at=datetime.now(UTC).isoformat(),
     )
 
@@ -169,6 +175,27 @@ async def run_pipeline(
         try:
             state = await pipeline.execute(state, skip_human_review=skip_review)
             await _save_state(state, db)
+
+            project_id = state.metadata.get("project_id", "")
+            if project_id and not state.has_failures():
+                try:
+                    from app.services.memory_ingestion import MemoryIngestionService
+                    async with db as session:
+                        ingestion = MemoryIngestionService(session)
+                        await ingestion.ingest_workflow_completion(
+                            project_id=project_id,
+                            prompt=state.topic,
+                            final_content=state.final_content or state.draft_content,
+                            research_data=state.research_data,
+                            fact_check_results=state.fact_check_results,
+                            workflow_execution_id=workflow_id,
+                            content_type="article",
+                            title=state.topic,
+                        )
+                        await session.commit()
+                except Exception as mem_err:
+                    logger.warning("Memory ingestion failed: %s", mem_err)
+
             return JSONResponse(content=_state_to_response(state))
         except Exception as e:
             logger.exception("Pipeline execution failed for %s", workflow_id)
