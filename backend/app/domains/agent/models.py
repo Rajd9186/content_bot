@@ -41,6 +41,9 @@ class AgentConfig(Base):
 
 class AgentExecution(Base):
     __tablename__ = "agent_executions"
+    __table_args__ = (
+        {"extend_existing": True},
+    )
 
     id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())

@@ -9,6 +9,9 @@ from typing import Any
 
 from app.agents.provider.base import ProviderRequest
 from app.agents.provider.factory import ProviderFactory
+from app.infrastructure.metrics.collector import metrics_collector
+from app.pipeline.context_compressor import context_compressor
+from app.pipeline.output_validator import agent_output_validator
 from app.pipeline.prompts import build_system_prompt, build_user_prompt
 from app.pipeline.router import provider_router
 from app.pipeline.state import NodeResult, NodeStatus, PipelineState
@@ -43,8 +46,13 @@ class PipelineAgent(ABC):
 
         try:
             system_prompt = build_system_prompt(self.agent_type)
-            user_prompt = build_user_prompt(self.agent_type, state.model_dump())
             state_dict = state.model_dump()
+            provider_name_hint = self.provider_name
+            compressed_state = context_compressor.compress_for_agent(
+                self.agent_type, state_dict, provider=provider_name_hint,
+                system_prompt=system_prompt,
+            )
+            user_prompt = build_user_prompt(self.agent_type, compressed_state)
 
             decision = await provider_router.route(
                 self.agent_type, system_prompt, user_prompt, state_dict,
@@ -91,12 +99,40 @@ class PipelineAgent(ABC):
 
             output = self._parse_response(response.content)
             node_result.output = output
+
+            validation = agent_output_validator.validate(self.agent_type, output)
+            if validation.warnings:
+                logger.warning(
+                    "Agent %s output warnings: %s",
+                    self.agent_type, validation.warnings,
+                )
+            if not validation:
+                logger.error(
+                    "Agent %s output validation failed: %s",
+                    self.agent_type, validation.errors,
+                )
+                metrics_collector.record_validation_failure(self.agent_type)
+                node_result.status = NodeStatus.FAILED
+                node_result.error = "; ".join(validation.errors)
+                node_result.completed_at = datetime.now(UTC).isoformat()
+                node_result.latency_ms = (time.monotonic() - start_time) * 1000
+                provider_router.release_premium()
+                return node_result
+
             node_result.status = NodeStatus.SUCCESS
+
+            latency = (time.monotonic() - start_time) * 1000
+            metrics_collector.record_agent_latency(
+                self.agent_type, provider_name, latency,
+            )
 
             if response.token_usage:
                 tokens = response.token_usage.total_tokens
                 node_result.tokens_used = tokens
                 provider_router.record_usage(provider_name, tokens)
+                metrics_collector.record_agent_tokens(
+                    self.agent_type, provider_name, tokens,
+                )
 
         except Exception as e:
             logger.exception(

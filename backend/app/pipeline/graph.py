@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections.abc import Callable, Coroutine
 from datetime import UTC, datetime
 from typing import Any
 
+from app.infrastructure.metrics.collector import metrics_collector
 from app.pipeline.agents.compliance_agent import ComplianceAgent, extract_compliance_output
 from app.pipeline.agents.fact_checker_agent import FactCheckerAgent, extract_fact_check_output
 from app.pipeline.agents.finalizer_agent import FinalizerAgent, extract_finalizer_output
@@ -40,72 +42,70 @@ class WorkflowPipeline:
             except Exception as e:
                 logger.warning("Progress callback error: %s", e)
 
-    async def run_research(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running research agent")
-        state.current_node = "research"
-        result = await self._research_agent.execute(state)
-        state.add_node_result("research", result)
-        if result.status == NodeStatus.SUCCESS:
-            state.research_data = extract_research_data(result.output)
-        await self._notify_progress("research", result)
+    async def _run_step(
+        self,
+        name: str,
+        agent: PipelineAgent,
+        state: PipelineState,
+        on_success,
+    ) -> PipelineState:
+        logger.info("Pipeline: running %s agent", name)
+        state.current_node = name
+        result = await agent.execute(state)
+        state.add_node_result(name, result)
+        if result.status == NodeStatus.FAILED:
+            state.errors.append(f"{name}: {result.error or 'Unknown error'}")
+        elif result.status == NodeStatus.SUCCESS:
+            on_success(result)
+        await self._notify_progress(name, result)
         return state
+
+    async def run_research(self, state: PipelineState) -> PipelineState:
+        return await self._run_step(
+            "research", self._research_agent, state,
+            lambda r: setattr(state, "research_data", extract_research_data(r.output)),
+        )
 
     async def run_planner(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running planner agent")
-        state.current_node = "planner"
-        result = await self._planner_agent.execute(state)
-        state.add_node_result("planner", result)
-        if result.status == NodeStatus.SUCCESS:
-            state.plan = extract_plan(result.output)
-        await self._notify_progress("planner", result)
-        return state
+        return await self._run_step(
+            "planner", self._planner_agent, state,
+            lambda r: setattr(state, "plan", extract_plan(r.output)),
+        )
 
     async def run_writer(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running writer agent")
-        state.current_node = "writer"
-        result = await self._writer_agent.execute(state)
-        state.add_node_result("writer", result)
-        if result.status == NodeStatus.SUCCESS:
-            content, metadata = extract_writer_output(result.output)
+        def _on_success(r):
+            content, metadata = extract_writer_output(r.output)
             state.draft_content = content or metadata.get("content", "")
-        await self._notify_progress("writer", result)
-        return state
+        return await self._run_step(
+            "writer", self._writer_agent, state, _on_success,
+        )
 
     async def run_seo(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running SEO agent")
-        state.current_node = "seo"
-        result = await self._seo_agent.execute(state)
-        state.add_node_result("seo", result)
-        if result.status == NodeStatus.SUCCESS:
-            content, metadata = extract_seo_output(result.output)
+        def _on_success(r):
+            content, metadata = extract_seo_output(r.output)
             state.draft_content = content or state.draft_content
             state.seo_metadata = metadata
-        await self._notify_progress("seo", result)
-        return state
+        return await self._run_step(
+            "seo", self._seo_agent, state, _on_success,
+        )
 
     async def run_fact_check(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running fact checker agent")
-        state.current_node = "fact_checker"
-        result = await self._fact_checker_agent.execute(state)
-        state.add_node_result("fact_checker", result)
-        if result.status == NodeStatus.SUCCESS:
-            content, metadata = extract_fact_check_output(result.output)
+        def _on_success(r):
+            content, metadata = extract_fact_check_output(r.output)
             state.draft_content = content or state.draft_content
             state.fact_check_results = metadata
-        await self._notify_progress("fact_checker", result)
-        return state
+        return await self._run_step(
+            "fact_checker", self._fact_checker_agent, state, _on_success,
+        )
 
     async def run_compliance(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running compliance agent")
-        state.current_node = "compliance"
-        result = await self._compliance_agent.execute(state)
-        state.add_node_result("compliance", result)
-        if result.status == NodeStatus.SUCCESS:
-            content, metadata = extract_compliance_output(result.output)
+        def _on_success(r):
+            content, metadata = extract_compliance_output(r.output)
             state.draft_content = content or state.draft_content
             state.compliance_results = metadata
-        await self._notify_progress("compliance", result)
-        return state
+        return await self._run_step(
+            "compliance", self._compliance_agent, state, _on_success,
+        )
 
     async def run_human_review(self, state: PipelineState) -> PipelineState:
         logger.info("Pipeline: awaiting human review")
@@ -125,23 +125,21 @@ class WorkflowPipeline:
         return state
 
     async def run_finalizer(self, state: PipelineState) -> PipelineState:
-        logger.info("Pipeline: running finalizer agent")
-        state.current_node = "finalizer"
-        result = await self._finalizer_agent.execute(state)
-        state.add_node_result("finalizer", result)
-        if result.status == NodeStatus.SUCCESS:
-            final = extract_finalizer_output(result.output)
-            state.final_content = final.get("final_content", result.output.get("content", ""))
+        def _on_success(r):
+            final = extract_finalizer_output(r.output)
+            state.final_content = final.get("final_content", r.output.get("content", ""))
             if not state.final_content:
                 state.final_content = state.draft_content
-        await self._notify_progress("finalizer", result)
-        return state
+        return await self._run_step(
+            "finalizer", self._finalizer_agent, state, _on_success,
+        )
 
     async def execute(
         self,
         state: PipelineState,
         skip_human_review: bool = False,
     ) -> PipelineState:
+        start_time = time.monotonic()
         steps = [
             self.run_research,
             self.run_planner,
@@ -162,6 +160,10 @@ class WorkflowPipeline:
                 )
                 break
             state = await step(state)
+
+        duration_ms = (time.monotonic() - start_time) * 1000
+        workflow_status = "failed" if state.has_failures() else "completed"
+        metrics_collector.record_workflow_duration(duration_ms, workflow_status)
 
         return state
 

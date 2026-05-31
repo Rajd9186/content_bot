@@ -14,6 +14,8 @@ class NodeStatus(StrEnum):
     FAILED = "failed"
     SKIPPED = "skipped"
     RETRYING = "retrying"
+    PAUSED = "paused"
+    CANCELLED = "cancelled"
 
 
 class NodeResult(BaseModel):
@@ -84,12 +86,14 @@ class PipelineState(BaseModel):
 
     def all_nodes_completed(self) -> bool:
         return all(
-            r.status == NodeStatus.SUCCESS
+            r.status in (NodeStatus.SUCCESS, NodeStatus.SKIPPED)
             for r in self.node_results.values()
         )
 
     def has_failures(self) -> bool:
-        return any(
+        """Returns True only if there are actual failed node results or logged errors."""
+        has_failed_nodes = any(
             r.status == NodeStatus.FAILED
             for r in self.node_results.values()
         )
+        return has_failed_nodes or len(self.errors) > 0
