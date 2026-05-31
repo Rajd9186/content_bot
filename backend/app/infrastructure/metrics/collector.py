@@ -71,7 +71,6 @@ class MetricsCollector:
             lines.append(f"{name}_sum{labels} {total:.2f}")
             for quantile in (0.5, 0.9, 0.95, 0.99):
                 idx = min(int(count * quantile), count - 1)
-                lines.append(f'{name}{labels.replace("}", f",quantile=\\"{quantile}\\")}}') if "}" in labels else None
                 safe_labels = labels.replace("}", f',quantile="{quantile}"}}') if labels else f'{{quantile="{quantile}"}}'
                 lines.append(f"{name}{safe_labels} {sorted_vals[idx]:.2f}")
 
