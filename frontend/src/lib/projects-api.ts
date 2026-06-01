@@ -145,10 +145,6 @@ export const projectApi = {
     await api.post(`/projects/${projectId}/memory/pin`, { memory_id: memoryId, priority });
   },
 
-  async unpinMemory(projectId: string, memoryId: string): Promise<void> {
-    await api.delete(`/projects/${projectId}/memory/${memoryId}`);
-  },
-
   async deleteMemory(projectId: string, memoryId: string): Promise<void> {
     await api.delete(`/projects/${projectId}/memory/${memoryId}`);
   },

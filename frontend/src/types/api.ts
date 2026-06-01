@@ -189,6 +189,7 @@ export const AGENT_ORDER: AgentName[] = [
 export type SectionName =
   | "pipeline"
   | "history"
+  | "projects"
   | "analytics"
   | "workspace"
   | "settings"

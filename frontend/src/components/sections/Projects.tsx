@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { ProjectSelector } from './ProjectSelector';
-import { ProjectDashboard } from './ProjectDashboard';
-import { ProjectTimeline } from './ProjectTimeline';
-import { MemoryExplorer } from './MemoryExplorer';
+import { ProjectSelector } from '@/components/projects/ProjectSelector';
+import { ProjectDashboard } from '@/components/projects/ProjectDashboard';
+import { ProjectTimeline } from '@/components/projects/ProjectTimeline';
+import { MemoryExplorer } from '@/components/projects/MemoryExplorer';
 import { Folder, LayoutDashboard, Clock, Brain } from 'lucide-react';
 
 type Tab = 'dashboard' | 'timeline' | 'memories';

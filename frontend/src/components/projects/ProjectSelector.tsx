@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useProjectStore } from '@/store/project-store';
-import { Folder, Plus, Archive, Trash2 } from 'lucide-react';
+import { Folder, Plus, Trash2 } from 'lucide-react';
 
 interface ProjectSelectorProps {
   onSelect?: (projectId: string | null) => void;
