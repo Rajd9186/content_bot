@@ -107,6 +107,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
                 "node": v.node,
                 "status": v.status.value,
                 "output": v.output,
+                "actions": v.actions, # Persist actions
                 "error": v.error,
                 "retry_count": v.retry_count,
                 "started_at": v.started_at,
@@ -135,6 +136,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
             existing.seo_metadata = state.seo_metadata or None
             existing.fact_check_results = state.fact_check_results or None
             existing.compliance_results = state.compliance_results or None
+            existing.vlog_links = state.vlog_links or None # Persist vlog_links
             existing.final_content = state.final_content or None
             existing.human_review = state.human_review.model_dump() if state.human_review else None
             existing.node_results = node_results_data
@@ -174,6 +176,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
                 seo_metadata=state.seo_metadata or None,
                 fact_check_results=state.fact_check_results or None,
                 compliance_results=state.compliance_results or None,
+                vlog_links=state.vlog_links or None, # Persist vlog_links
                 final_content=state.final_content or None,
                 human_review=state.human_review.model_dump() if state.human_review else None,
                 node_results=node_results_data,
@@ -202,6 +205,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
                 completed_at=v.get("completed_at"),
                 tokens_used=v.get("tokens_used", 0),
                 latency_ms=v.get("latency_ms", 0.0),
+                actions=v.get("actions", []), # Restore actions
             )
 
         human_review = None
@@ -234,6 +238,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
             seo_metadata=run.seo_metadata or {},
             fact_check_results=run.fact_check_results or {},
             compliance_results=run.compliance_results or {},
+            vlog_links=run.vlog_links or [], # Restore vlog_links
             final_content=run.final_content or "",
             human_review=human_review,
             node_results=node_results,
