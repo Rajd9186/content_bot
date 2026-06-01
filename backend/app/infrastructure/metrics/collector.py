@@ -47,8 +47,8 @@ class MetricsCollector:
 
     def format_prometheus(self) -> str:
         lines: list[str] = []
-        lines.append(f"# HELP app_uptime_seconds Application uptime in seconds")
-        lines.append(f"# TYPE app_uptime_seconds gauge")
+        lines.append("# HELP app_uptime_seconds Application uptime in seconds")
+        lines.append("# TYPE app_uptime_seconds gauge")
         uptime = time.monotonic() - self._start_time
         lines.append(f"app_uptime_seconds {uptime:.1f}")
 

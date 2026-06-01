@@ -148,6 +148,7 @@ async def update_project(
 @router.delete(
     "/projects/{project_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
     summary="Delete project",
     operation_id="deleteProject",
 )
@@ -257,6 +258,7 @@ async def pin_memory(
 @router.delete(
     "/projects/{project_id}/memory/{memory_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
     summary="Delete a memory",
     operation_id="deleteMemory",
 )

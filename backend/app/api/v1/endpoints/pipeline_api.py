@@ -105,7 +105,7 @@ async def start_pipeline(
 ) -> JSONResponse:
     workflow_id = str(uuid4())
     corr_id = correlation_id or str(uuid4())
-    
+
     # Ensure workspace_id is a valid UUID
     ws_id = workspace_id
     if not ws_id or ws_id == "default":
