@@ -35,7 +35,7 @@ class ProjectRepository:
     async def get_by_owner(self, owner_id: str, include_archived: bool = False) -> list[Project]:
         stmt = select(Project).where(Project.owner_id == owner_id)
         if not include_archived:
-            stmt = stmt.where(not Project.archived)
+            stmt = stmt.where(Project.archived == False)
         stmt = stmt.order_by(Project.updated_at.desc())
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
