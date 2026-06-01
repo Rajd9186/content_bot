@@ -52,7 +52,7 @@ async def create_project(
     service: ProjectService = Depends(get_project_service),
     user_id: str | None = Depends(get_current_user_id),
 ) -> Any:
-    owner_id = user_id or "anonymous"
+    owner_id = user_id or "00000000-0000-0000-0000-000000000000"
     project = await service.create_project(body.name, owner_id, body.description)
     return ProjectResponse(
         id=project.id,
@@ -76,7 +76,7 @@ async def list_projects(
     service: ProjectService = Depends(get_project_service),
     user_id: str | None = Depends(get_current_user_id),
 ) -> Any:
-    owner_id = user_id or "anonymous"
+    owner_id = user_id or "00000000-0000-0000-0000-000000000000"
     projects = await service.get_projects(owner_id, include_archived)
     result = []
     for p in projects:
