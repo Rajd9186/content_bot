@@ -1,7 +1,7 @@
-"""Add project management tables with pgvector support
+"""Add project management tables
 
 Revision ID: 0005
-Revises: 0003
+Revises: 0004
 Create Date: 2026-05-31
 """
 from typing import Sequence, Union
@@ -17,8 +17,6 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.execute("CREATE EXTENSION IF NOT EXISTS vector")
-
     op.create_table(
         "projects",
         sa.Column("id", postgresql.UUID(as_uuid=False), primary_key=True),
@@ -66,7 +64,6 @@ def upgrade() -> None:
                   sa.ForeignKey("projects.id", ondelete="CASCADE"), nullable=False),
         sa.Column("memory_type", sa.String(64), nullable=False),
         sa.Column("content", sa.Text(), nullable=False),
-        sa.Column("embedding", sa.types.TypeDecorator(), nullable=True),
         sa.Column("confidence_score", sa.Float(), nullable=False, server_default="1.0"),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()),
     )
