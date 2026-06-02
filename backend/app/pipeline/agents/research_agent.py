@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from app.pipeline.agents.base import PipelineAgent
-from app.pipeline.state import NodeResult, PipelineState
+from app.pipeline.state import NodeResult, NodeStatus, PipelineState
 
 logger = logging.getLogger(__name__)
 
