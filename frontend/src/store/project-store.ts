@@ -33,8 +33,8 @@ export const useProjectStore = create<ProjectState>()(
         try {
           const projects = await projectApi.list();
           set({ projects, loading: false });
-        } catch (err) {
-          set({ error: 'Failed to load projects', loading: false });
+        } catch {
+          set({ loading: false });
         }
       },
 
@@ -56,8 +56,19 @@ export const useProjectStore = create<ProjectState>()(
         set({ loading: true, error: null });
         try {
           const project = await projectApi.create(name, description);
-          const projects = await projectApi.list();
-          set({ projects, currentProject: project, currentProjectId: project.id, loading: false });
+          set({ currentProject: project, currentProjectId: project.id, loading: false });
+          try {
+            const projects = await projectApi.list();
+            set({ projects });
+          } catch {
+            const summary: ProjectSummary = {
+              id: project.id, name: project.name, description: project.description,
+              archived: project.archived, total_outputs: 0, total_memories: 0, last_activity: null,
+            };
+            set((state) => ({
+              projects: [summary, ...state.projects.filter((p) => p.id !== project.id)],
+            }));
+          }
           return project;
         } catch (err) {
           set({ error: 'Failed to create project', loading: false });
@@ -69,8 +80,12 @@ export const useProjectStore = create<ProjectState>()(
         set({ loading: true, error: null });
         try {
           await projectApi.update(projectId, data);
-          const projects = await projectApi.list();
-          set({ projects, loading: false });
+          try {
+            const projects = await projectApi.list();
+            set({ projects, loading: false });
+          } catch {
+            set({ loading: false });
+          }
           if (get().currentProjectId === projectId) {
             const project = await projectApi.get(projectId);
             set({ currentProject: project });
@@ -85,10 +100,15 @@ export const useProjectStore = create<ProjectState>()(
         set({ loading: true, error: null });
         try {
           await projectApi.delete(projectId);
-          const projects = await projectApi.list();
-          set({ projects, loading: false });
+          set({ projects: get().projects.filter((p) => p.id !== projectId), loading: false });
           if (get().currentProjectId === projectId) {
             set({ currentProject: null, currentProjectId: null });
+          }
+          try {
+            const projects = await projectApi.list();
+            set({ projects });
+          } catch {
+            // list refresh not critical
           }
         } catch (err) {
           set({ error: 'Failed to delete project', loading: false });

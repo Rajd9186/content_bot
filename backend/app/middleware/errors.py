@@ -5,6 +5,7 @@ import traceback
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.responses import Response
 
@@ -47,6 +48,8 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                     },
                 },
             )
+        except StarletteHTTPException:
+            raise
         except Exception as exc:
             correlation_id = getattr(request.state, "correlation_id", "unknown")
             logger.error(

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.models.project import (
@@ -13,6 +14,8 @@ from app.infrastructure.models.project import (
     ProjectMemory,
     ProjectOutput,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ProjectRepository:
@@ -33,12 +36,16 @@ class ProjectRepository:
         return await self._session.get(Project, project_id)
 
     async def get_by_owner(self, owner_id: str, include_archived: bool = False) -> list[Project]:
-        stmt = select(Project).where(Project.owner_id == owner_id)
-        if not include_archived:
-            stmt = stmt.where(Project.archived == False)
-        stmt = stmt.order_by(Project.updated_at.desc())
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
+        try:
+            stmt = select(Project).where(text("owner_id = :owner_id")).params(owner_id=owner_id)
+            if not include_archived:
+                stmt = stmt.where(text("archived = false"))
+            stmt = stmt.order_by(Project.updated_at.desc())
+            result = await self._session.execute(stmt)
+            return list(result.scalars().all())
+        except Exception as e:
+            logger.exception("get_by_owner failed for owner=%s include_archived=%s", owner_id, include_archived)
+            raise
 
     async def update(self, project_id: str, **kwargs: Any) -> Project | None:
         project = await self.get_by_id(project_id)

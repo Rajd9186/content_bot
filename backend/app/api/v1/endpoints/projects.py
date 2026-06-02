@@ -77,10 +77,21 @@ async def list_projects(
     user_id: str | None = Depends(get_current_user_id),
 ) -> Any:
     owner_id = user_id or "00000000-0000-0000-0000-000000000000"
-    projects = await service.get_projects(owner_id, include_archived)
+    try:
+        projects = await service.get_projects(owner_id, include_archived)
+    except Exception as e:
+        logger.exception("list_projects: get_projects failed for owner=%s", owner_id)
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to list projects: {e}",
+        )
     result = []
     for p in projects:
-        dash = await service.get_dashboard(p.id)
+        try:
+            dash = await service.get_dashboard(p.id)
+        except Exception as e:
+            logger.exception("list_projects: get_dashboard failed for project=%s", p.id)
+            dash = {"total_outputs": 0, "total_memories": 0, "last_activity": None}
         result.append(ProjectSummary(
             id=p.id,
             name=p.name,
