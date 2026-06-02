@@ -144,6 +144,9 @@ def create_app() -> FastAPI:
     origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
     if settings.DEBUG and "null" not in origins:
         origins.append("null")
+    app.add_middleware(CorrelationIdMiddleware)
+    app.add_middleware(RequestLoggingMiddleware)
+    app.add_middleware(ErrorHandlingMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=origins,
@@ -152,9 +155,6 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
         expose_headers=["X-Correlation-ID", "X-Process-Time-Ms"],
     )
-    app.add_middleware(CorrelationIdMiddleware)
-    app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(ErrorHandlingMiddleware)
 
     app.include_router(api_router, prefix=settings.API_V1_STR)
 
