@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import get_db
+from app.core.database import async_session_factory, get_db
 from app.infrastructure.messaging.redis_client import redis_client
 from app.infrastructure.sse.manager import sse_manager
 from app.infrastructure.unit_of_work import UnitOfWork
@@ -42,17 +42,23 @@ async def _load_state(workflow_id: str, db: AsyncSession) -> PipelineState | Non
     return _memory_fallback.get(workflow_id)
 
 
-async def _save_state(state: PipelineState, db: AsyncSession) -> bool:
-    if db:
-        try:
-            uow = UnitOfWork(db)
-            await uow.pipelines.save_pipeline_state(state)
-            await uow.commit()
-            return True
-        except Exception as e:
-            with contextlib.suppress(Exception):
-                await uow.rollback()
-            logger.warning("DB persistence failed, using memory fallback: %s", e)
+async def _save_state(state: PipelineState, db: AsyncSession | None = None) -> bool:
+    if not db:
+        async with async_session_factory() as session:
+            return await _do_save_state(state, session)
+    return await _do_save_state(state, db)
+
+
+async def _do_save_state(state: PipelineState, session: AsyncSession) -> bool:
+    try:
+        uow = UnitOfWork(session)
+        await uow.pipelines.save_pipeline_state(state)
+        await uow.commit()
+        return True
+    except Exception as e:
+        with contextlib.suppress(Exception):
+            await uow.rollback()
+        logger.warning("DB persistence failed, using memory fallback: %s", e)
     _memory_fallback[state.workflow_id] = state
     return False
 
@@ -174,14 +180,14 @@ async def run_pipeline(
     else:
         try:
             state = await pipeline.execute(state, skip_human_review=skip_review)
-            await _save_state(state, db)
+            await _save_state(state)
 
             project_id = state.metadata.get("project_id", "")
             if project_id and not state.has_failures():
                 try:
                     from app.services.memory_ingestion import MemoryIngestionService
-                    async with db as session:
-                        ingestion = MemoryIngestionService(session)
+                    async with async_session_factory() as ingestion_session:
+                        ingestion = MemoryIngestionService(ingestion_session)
                         await ingestion.ingest_workflow_completion(
                             project_id=project_id,
                             prompt=state.topic,
@@ -192,7 +198,7 @@ async def run_pipeline(
                             content_type="article",
                             title=state.topic,
                         )
-                        await session.commit()
+                        await ingestion_session.commit()
                 except Exception as mem_err:
                     logger.warning("Memory ingestion failed: %s", mem_err)
 
@@ -200,7 +206,7 @@ async def run_pipeline(
         except Exception as e:
             logger.exception("Pipeline execution failed for %s", workflow_id)
             state.errors.append(str(e))
-            await _save_state(state, db)
+            await _save_state(state)
             return JSONResponse(
                 status_code=500,
                 content={"error": str(e), "workflow_id": workflow_id},
