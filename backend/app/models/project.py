@@ -45,15 +45,21 @@ class Project(Base):
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     points_to_cover: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     tone: Mapped[ContentTone] = mapped_column(
-        SAEnum(ContentTone, name="content_tone"), nullable=False, default=ContentTone.PROFESSIONAL
+        SAEnum(ContentTone, name="content_tone", values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ContentTone.PROFESSIONAL,
     )
     content_type: Mapped[ContentType] = mapped_column(
-        SAEnum(ContentType, name="content_type"), nullable=False, default=ContentType.ARTICLE
+        SAEnum(ContentType, name="content_type", values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ContentType.ARTICLE,
     )
     target_audience: Mapped[str | None] = mapped_column(String(300), nullable=True)
     seo_keywords: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
     status: Mapped[ProjectStatus] = mapped_column(
-        SAEnum(ProjectStatus, name="project_status"), nullable=False, default=ProjectStatus.DRAFT
+        SAEnum(ProjectStatus, name="project_status", values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ProjectStatus.DRAFT,
     )
     outline: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

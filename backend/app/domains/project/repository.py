@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+<<<<<<< HEAD
 import logging
 from datetime import datetime
 from typing import Any
@@ -486,3 +487,89 @@ class ProjectRepository:
         await self._session.flush()
         return prefs
 
+=======
+from typing import List, Optional, Tuple
+from uuid import UUID
+
+from sqlalchemy import select, update, func
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.domains.project.models import Project, ProjectMemory, PinnedProjectMemory
+from app.infrastructure.repositories.base import BaseRepository
+
+class ProjectRepository(BaseRepository[Project]):
+    async def get_by_id(self, project_id: str) -> Optional[Project]:
+        stmt = select(Project).where(Project.id == project_id)
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_by_owner(
+        self, 
+        owner_id: str, 
+        include_archived: bool = False,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[Project]:
+        stmt = select(Project).where(Project.owner_id == owner_id)
+        if not include_archived:
+            stmt = stmt.where(Project.archived == False)
+        stmt = stmt.order_by(Project.updated_at.desc()).limit(limit).offset(offset)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def create(self, project: Project) -> Project:
+        self.session.add(project)
+        await self.session.flush()
+        return project
+
+    async def update(self, project_id: str, **kwargs) -> Optional[Project]:
+        if not kwargs:
+            return await self.get_by_id(project_id)
+        
+        stmt = (
+            update(Project)
+            .where(Project.id == project_id)
+            .values(**kwargs)
+            .returning(Project)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def delete(self, project_id: str) -> bool:
+        project = await self.get_by_id(project_id)
+        if project:
+            await self.session.delete(project)
+            return True
+        return False
+
+    async def search_memories(
+        self, 
+        project_id: str, 
+        query_vector: List[float], 
+        limit: int = 10
+    ) -> List[Tuple[ProjectMemory, float]]:
+        """
+        Perform semantic search using cosine distance.
+        Returns a list of (ProjectMemory, distance) tuples.
+        """
+        # The <=> operator in pgvector performs cosine distance
+        stmt = (
+            select(ProjectMemory, ProjectMemory.embedding.cosine_distance(query_vector).label("distance"))
+            .where(ProjectMemory.project_id == project_id)
+            .order_by("distance")
+            .limit(limit)
+        )
+        result = await self.session.execute(stmt)
+        return result.all()
+
+    async def get_pinned_memories(self, project_id: str) -> List[ProjectMemory]:
+        """Retrieve all memories pinned for a specific project, ordered by priority."""
+        stmt = (
+            select(ProjectMemory)
+            .join(PinnedProjectMemory, ProjectMemory.id == PinnedProjectMemory.memory_id)
+            .where(PinnedProjectMemory.project_id == project_id)
+            .order_by(PinnedProjectMemory.priority.desc())
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+>>>>>>> 009b035 (Implement Phase 8: Project Intelligence Layer)

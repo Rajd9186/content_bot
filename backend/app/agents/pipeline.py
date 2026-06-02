@@ -50,6 +50,16 @@ class ExecutionPipeline:
         self._hooks: list[StageHook] = []
         self._stage_timings: dict[str, float] = {}
 
+        # Register the Memory Ingestion Hook if agent has required UOW
+        if hasattr(self._agent, "_uow") and self._agent._uow:
+            from app.services.memory_ingestion_hook import MemoryIngestionHook
+            from app.services.embedding_service import EmbeddingService
+            
+            # Use the embedding service from the agent
+            embedding_service = getattr(self._agent, "_embedding_service", EmbeddingService())
+            ingestion_hook = MemoryIngestionHook(self._agent._uow, embedding_service)
+            self.add_hook(ingestion_hook)
+
     def add_hook(self, hook: StageHook) -> None:
         self._hooks.append(hook)
 

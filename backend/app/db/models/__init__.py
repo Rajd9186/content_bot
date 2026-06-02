@@ -15,6 +15,7 @@ from app.domains.workflow.models import (
     WorkflowJob,
     WorkflowStep,
 )
+from app.domains.project.models import Project, ProjectMemory, ProjectOutput, PinnedProjectMemory
 from app.infrastructure.models.base import Base
 from app.infrastructure.models.event import StoredEvent
 from app.infrastructure.models.project import (
