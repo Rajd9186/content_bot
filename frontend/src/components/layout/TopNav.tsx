@@ -14,16 +14,32 @@ export function TopNav({ onNewPipeline, children }: TopNavProps) {
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
   const toggleTheme = useUIStore((s) => s.toggleTheme);
   const theme = useUIStore((s) => s.theme);
+  const mobileMenuOpen = useUIStore((s) => s.mobileMenuOpen);
+  const setMobileMenuOpen = useUIStore((s) => s.setMobileMenuOpen);
   const currentId = usePipelineStore((s) => s.currentId);
   const status = usePipelineStore((s) => s.status);
 
   const handleNew = onNewPipeline ?? (() => openModal("pipeline-create"));
 
   return (
-    <header className="flex h-header flex-shrink-0 items-center gap-4 border-b border-border bg-card/30 px-4 backdrop-blur-2xl">
+    <header className="flex h-header flex-shrink-0 items-center gap-3 border-b border-border bg-background/80 backdrop-blur-xl px-4 md:px-6">
+      <button
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="md:hidden rounded-xl p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all btn-press"
+        aria-label="Toggle menu"
+      >
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {mobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
       <button
         onClick={toggleSidebar}
-        className="rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
+        className="hidden md:flex rounded-xl p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all btn-press"
         aria-label="Toggle sidebar"
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -33,31 +49,34 @@ export function TopNav({ onNewPipeline, children }: TopNavProps) {
 
       <button
         onClick={handleNew}
-        className="rounded-lg bg-emerald-500 px-4 py-1.5 text-xs font-medium text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 hover:shadow-emerald-500/40 transition-all"
+        className="rounded-xl bg-gradient-to-r from-violet-600 to-violet-700 px-4 py-2 text-xs font-semibold text-white shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-violet-600 hover:shadow-violet-500/30 active:scale-[0.97] transition-all duration-200"
       >
-        + New Pipeline
+        <span className="hidden sm:inline">+ New Pipeline</span>
+        <span className="sm:hidden">+ New</span>
       </button>
 
-      {children}
+      <div className="flex-1 min-w-0">
+        {children}
+      </div>
 
-      <div className="flex items-center gap-2 ml-auto">
+      <div className="flex items-center gap-2">
         {currentId && status && (
-          <div className="flex items-center gap-2 rounded-lg border border-border bg-black/20 px-3 py-1.5">
+          <div className="hidden sm:flex items-center gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-1.5">
             <span
               className={cn(
                 "h-2 w-2 rounded-full",
                 status.status === "completed" ? "bg-emerald-400" :
                 status.status === "running" ? "bg-blue-400 animate-pulse-soft" :
-                "bg-slate-500",
+                "bg-slate-400",
               )}
             />
-            <span className="text-xs text-muted-foreground capitalize">{status.status}</span>
+            <span className="text-xs text-muted-foreground capitalize font-medium">{status.status}</span>
           </div>
         )}
 
         <button
           onClick={toggleTheme}
-          className="rounded-lg p-2 text-muted-foreground hover:bg-white/5 hover:text-foreground transition-colors"
+          className="rounded-xl p-2 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all btn-press"
           aria-label="Toggle theme"
         >
           {theme === "dark" ? (

@@ -22,26 +22,29 @@ export function PipelineForm() {
   };
 
   return (
-    <div className="rounded-xl border border-border bg-card/40 p-5">
-      <h3 className="mb-4 text-sm font-semibold text-foreground">Create Pipeline</h3>
+    <div className="rounded-2xl border border-border bg-card/60 p-5 backdrop-blur-xl shadow-sm">
+      <h3 className="mb-4 text-sm font-semibold text-foreground flex items-center gap-2">
+        <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse-soft" />
+        Create Pipeline
+      </h3>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Topic</label>
+          <label className="mb-1.5 block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Topic</label>
           <input
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Enter content topic..."
-            className="w-full rounded-lg border border-border bg-black/20 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 transition-colors"
+            className="input-glow w-full rounded-xl border border-border bg-secondary/30 px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/40 focus:border-violet-500/50 focus:outline-none transition-all"
           />
         </div>
 
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Audience</label>
+            <label className="mb-1.5 block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Audience</label>
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
-              className="w-full rounded-lg border border-border bg-black/20 px-2 py-2 text-xs text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-border bg-secondary/30 px-2 py-2.5 text-xs text-foreground focus:border-violet-500/50 focus:outline-none transition-all cursor-pointer"
             >
               {AUDIENCE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -49,11 +52,11 @@ export function PipelineForm() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Tone</label>
+            <label className="mb-1.5 block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Tone</label>
             <select
               value={tone}
               onChange={(e) => setTone(e.target.value)}
-              className="w-full rounded-lg border border-border bg-black/20 px-2 py-2 text-xs text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-border bg-secondary/30 px-2 py-2.5 text-xs text-foreground focus:border-violet-500/50 focus:outline-none transition-all cursor-pointer"
             >
               {TONE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -61,11 +64,11 @@ export function PipelineForm() {
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-[11px] font-medium text-muted-foreground">Provider</label>
+            <label className="mb-1.5 block text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Provider</label>
             <select
               value={provider}
               onChange={(e) => setProvider(e.target.value)}
-              className="w-full rounded-lg border border-border bg-black/20 px-2 py-2 text-xs text-foreground focus:border-emerald-500/50 focus:outline-none focus:ring-1 focus:ring-emerald-500/20"
+              className="w-full rounded-xl border border-border bg-secondary/30 px-2 py-2.5 text-xs text-foreground focus:border-violet-500/50 focus:outline-none transition-all cursor-pointer"
             >
               {Object.entries(PROVIDER_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -77,7 +80,7 @@ export function PipelineForm() {
         <button
           type="submit"
           disabled={loading || !topic.trim()}
-          className="w-full rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600 hover:shadow-emerald-500/40 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
+          className="btn-press w-full rounded-xl bg-gradient-to-r from-violet-600 to-violet-700 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/20 hover:from-violet-500 hover:to-violet-600 hover:shadow-violet-500/30 disabled:cursor-not-allowed disabled:opacity-50 transition-all duration-200"
         >
           {loading ? "Starting..." : "Start Pipeline"}
         </button>

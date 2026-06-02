@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 class ProviderCapacity:
     provider: str
     rpm_limit: int
-    rpm_used: int = 0
     tpm_limit: int
+    rpm_used: int = 0
     tpm_used: int = 0
     active_requests: int = 0
     queue_length: int = 0

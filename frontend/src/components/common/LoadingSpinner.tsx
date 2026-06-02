@@ -11,10 +11,10 @@ export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) 
     <div className={cn("flex items-center justify-center", className)}>
       <div
         className={cn(
-          "animate-spin rounded-full border-2 border-emerald-500/20 border-t-emerald-400",
+          "animate-spin rounded-full border-2 border-violet-500/20 border-t-violet-400",
           sizes[size],
         )}
-        style={{ boxShadow: "0 0 12px rgba(16,185,129,0.15)" }}
+        style={{ boxShadow: "0 0 12px rgba(139, 92, 246, 0.2)" }}
       />
     </div>
   );

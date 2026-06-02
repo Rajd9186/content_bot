@@ -18,25 +18,29 @@ const SECTION_LABELS: Record<string, string> = {
   metrics: "System Metrics",
   skills: "Skills Engine",
   operations: "Operations",
+  projects: "Projects",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const section = useUIStore((s) => s.section);
+  const mobileMenuOpen = useUIStore((s) => s.mobileMenuOpen);
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <SideNav />
-      <div className="flex flex-1 flex-col min-w-0">
+      <div className="flex flex-1 flex-col min-w-0 relative">
         <TopNav>
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground/60">/</span>
-            <span className="text-xs font-medium text-foreground">{SECTION_LABELS[section] ?? section}</span>
+          <div className="hidden sm:flex items-center gap-2 min-w-0">
+            <span className="text-xs text-muted-foreground/50">/</span>
+            <span className="text-xs font-semibold text-foreground truncate">{SECTION_LABELS[section] ?? section}</span>
           </div>
         </TopNav>
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 page-enter">
           {children}
         </main>
-        <Footer />
+        <div className="hidden md:block">
+          <Footer />
+        </div>
       </div>
     </div>
   );

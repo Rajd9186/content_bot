@@ -27,6 +27,12 @@ const defaultSettings: SettingsState = {
   defaultAudience: "general",
 };
 
+function applyTheme(theme: "dark" | "light") {
+  if (typeof document !== "undefined") {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+  }
+}
+
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
@@ -39,13 +45,13 @@ export const useUIStore = create<UIState>()(
       setSection: (section) => set({ section, mobileMenuOpen: false }),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       setTheme: (theme) => {
-        document.documentElement.classList.toggle("dark", theme === "dark");
+        applyTheme(theme);
         set({ theme });
       },
       toggleTheme: () =>
         set((s) => {
           const next = s.theme === "dark" ? "light" : "dark";
-          document.documentElement.classList.toggle("dark", next === "dark");
+          applyTheme(next);
           return { theme: next };
         }),
       setMobileMenuOpen: (mobileMenuOpen) => set({ mobileMenuOpen }),
@@ -56,6 +62,9 @@ export const useUIStore = create<UIState>()(
     }),
     {
       name: "acip-ui",
+      onRehydrateStorage: () => (state) => {
+        if (state) applyTheme(state.theme);
+      },
       partialize: (state) => ({
         theme: state.theme,
         sidebarOpen: state.sidebarOpen,
