@@ -153,6 +153,18 @@ class WorkflowPipeline:
 
         return await run_memory_retrieval(state, async_session_factory)
 
+    async def run_skill_retrieval(self, state: PipelineState) -> PipelineState:
+        from app.infrastructure.database import async_session_factory
+        from app.pipeline.agents.skill_retrieval_agent import run_skill_retrieval
+
+        return await run_skill_retrieval(state, async_session_factory)
+
+    async def run_compliance_evaluation(self, state: PipelineState) -> PipelineState:
+        from app.infrastructure.database import async_session_factory
+        from app.pipeline.agents.compliance_evaluation_agent import run_compliance_evaluation
+
+        return await run_compliance_evaluation(state, async_session_factory)
+
     async def execute(
         self,
         state: PipelineState,
@@ -160,6 +172,7 @@ class WorkflowPipeline:
     ) -> PipelineState:
         start_time = time.monotonic()
         steps = [
+            self.run_skill_retrieval,
             self.run_memory_retrieval,
             self.run_research,
             self.run_planner,
@@ -170,6 +183,7 @@ class WorkflowPipeline:
         ]
         if not skip_human_review:
             steps.append(self.run_human_review)
+        steps.append(self.run_compliance_evaluation)
         steps.append(self.run_finalizer)
 
         for step in steps:

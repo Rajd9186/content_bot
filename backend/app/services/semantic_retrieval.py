@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.models.project import (
@@ -30,37 +30,50 @@ class SemanticRetrievalService:
         memory_type: str | None = None,
     ) -> list[dict[str, Any]]:
         query_embedding = await embedding_service.generate(query)
-        results: list[dict[str, Any]] = []
+        embedding_str = "[" + ",".join(str(v) for v in query_embedding) + "]"
 
-        stmt = select(ProjectMemory).where(
-            ProjectMemory.project_id == project_id
-        )
+        type_filter = ""
+        params: dict[str, Any] = {
+            "project_id": project_id,
+            "threshold": similarity_threshold,
+            "top_k": top_k,
+        }
         if memory_type:
-            stmt = stmt.where(ProjectMemory.memory_type == memory_type)
+            type_filter = "AND memory_type = :memory_type"
+            params["memory_type"] = memory_type
 
-        stmt = stmt.order_by(ProjectMemory.created_at.desc())
-        result = await self._session.execute(stmt)
-        memories = result.scalars().all()
+        sql = text(f"""
+            SELECT id, project_id, memory_type, content, confidence_score, created_at,
+                   1 - (embedding <=> :query_embedding::vector) AS similarity
+            FROM project_memories
+            WHERE project_id = :project_id
+              AND embedding IS NOT NULL
+              AND 1 - (embedding <=> :query_embedding::vector) >= :threshold
+              {type_filter}
+            ORDER BY similarity DESC
+            LIMIT :top_k
+        """)
+        import json as _json
+        result = await self._session.execute(
+            sql,
+            {"query_embedding": embedding_str, **params},
+        )
+        rows = result.all()
 
-        for memory in memories:
-            similarity = embedding_service.cosine_similarity(
-                query_embedding,
-                embedding_service._generate_mock_embedding(memory.content),
-            )
-            if similarity >= similarity_threshold:
-                pinned = await self._is_pinned(memory.id)
-                results.append({
-                    "id": memory.id,
-                    "project_id": memory.project_id,
-                    "memory_type": memory.memory_type,
-                    "content": memory.content,
-                    "confidence_score": memory.confidence_score,
-                    "similarity": similarity,
-                    "pinned": pinned,
-                    "created_at": memory.created_at.isoformat() if memory.created_at else None,
-                })
+        results = []
+        for row in rows:
+            pinned = await self._is_pinned(row.id)
+            results.append({
+                "id": row.id,
+                "project_id": row.project_id,
+                "memory_type": row.memory_type,
+                "content": row.content,
+                "confidence_score": row.confidence_score,
+                "similarity": float(row.similarity) if row.similarity is not None else 0.0,
+                "pinned": pinned,
+                "created_at": row.created_at.isoformat() if row.created_at else None,
+            })
 
-        results.sort(key=lambda x: x["similarity"], reverse=True)
         return results[:top_k]
 
     async def get_pinned_memories(
@@ -96,7 +109,6 @@ class SemanticRetrievalService:
         query: str,
         top_k: int = 5,
     ) -> list[dict[str, Any]]:
-        query_embedding = await embedding_service.generate(query)
         stmt = (
             select(ProjectOutput)
             .where(ProjectOutput.project_id == project_id)
@@ -105,12 +117,13 @@ class SemanticRetrievalService:
         result = await self._session.execute(stmt)
         outputs = result.scalars().all()
 
+        query_embedding = await embedding_service.generate(query)
         scored = []
         for output in outputs:
             text = f"{output.title or ''} {output.content or ''}"
-            emb = embedding_service._generate_mock_embedding(text)
-            similarity = embedding_service.cosine_similarity(query_embedding, emb)
-            scored.append((similarity, output))
+            emb = await embedding_service.generate(text[:5000])
+            sim = embedding_service.cosine_similarity(query_embedding, emb)
+            scored.append((sim, output))
 
         scored.sort(key=lambda x: x[0], reverse=True)
         return [
@@ -132,7 +145,6 @@ class SemanticRetrievalService:
         query: str,
         top_k: int = 5,
     ) -> list[dict[str, Any]]:
-        query_embedding = await embedding_service.generate(query)
         stmt = (
             select(ProjectConversation)
             .where(ProjectConversation.project_id == project_id)
@@ -141,11 +153,12 @@ class SemanticRetrievalService:
         result = await self._session.execute(stmt)
         conversations = result.scalars().all()
 
+        query_embedding = await embedding_service.generate(query)
         scored = []
         for conv in conversations:
-            emb = embedding_service._generate_mock_embedding(conv.prompt)
-            similarity = embedding_service.cosine_similarity(query_embedding, emb)
-            scored.append((similarity, conv))
+            emb = await embedding_service.generate(conv.prompt[:5000])
+            sim = embedding_service.cosine_similarity(query_embedding, emb)
+            scored.append((sim, conv))
 
         scored.sort(key=lambda x: x[0], reverse=True)
         return [

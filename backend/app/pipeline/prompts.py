@@ -137,11 +137,18 @@ def build_research_prompt(state: dict[str, Any]) -> str:
     topic = state.get("topic", "Unknown topic")
     audience = state.get("audience", "general")
     goals = state.get("goals", "")
+    memory_context = state.get("memory_context", "")
+    pinned = state.get("pinned_memories", 0)
+    relevant = state.get("relevant_memories", 0)
+    memory_section = ""
+    if memory_context:
+        memory_section = f"\n### Project Knowledge Context\n{memory_context}\n\n"
     return (
         f"## Research Request\n\n"
         f"### Topic\n{topic}\n\n"
         f"### Target Audience\n{audience}\n\n"
         f"### Content Goals\n{goals}\n\n"
+        f"{memory_section}"
         f"### Instructions\n"
         f"Conduct thorough research on this topic. For each finding:\n"
         f"- Write a substantive analysis (minimum 2-3 sentences)\n"

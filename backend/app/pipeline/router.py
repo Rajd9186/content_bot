@@ -108,24 +108,41 @@ class ProviderRouter:
         user_prompt: str,
         state: dict[str, Any] | None = None,
     ) -> RoutingDecision:
+        from app.infrastructure.providers.provider_scheduler import scheduler
+
         estimated_input = estimate_tokens(system_prompt) + estimate_tokens(user_prompt)
         estimated_output = estimate_tokens(
             (state or {}).get("goals", "")
         ) + 500
         total_estimated = estimated_input + estimated_output
-        preferred = AGENT_ROUTING.get(agent_type, "ollama")
 
-        if preferred == "groq":
-            return self._route_groq(
-                agent_type, estimated_input, estimated_output, total_estimated,
-            )
-        if preferred == "nvidia":
-            return self._route_nvidia(
-                agent_type, estimated_input, estimated_output,
-            )
-        return self._route_ollama(
-            agent_type, estimated_input, estimated_output,
+        provider, model = await scheduler.select_provider_async(
+            agent_type, estimated_tokens=total_estimated,
         )
+
+        return RoutingDecision(
+            provider=provider,
+            model=model,
+            estimated_input_tokens=estimated_input,
+            estimated_output_tokens=estimated_output,
+            routing_reason=f"Intelligent scheduler: {provider} ({model}) for '{agent_type}'",
+            fallback_provider=self._get_fallback_provider_for(provider),
+            fallback_model=self._get_fallback_model_for(provider),
+            execution_priority=3,
+        )
+
+    def _get_fallback_provider_for(self, provider: str) -> str:
+        fallbacks = {"groq": "nvidia", "nvidia": "ollama", "openai": "ollama", "anthropic": "ollama"}
+        return fallbacks.get(provider, "ollama")
+
+    def _get_fallback_model_for(self, provider: str) -> str:
+        models = {
+            "groq": "llama-3.3-70b-versatile",
+            "nvidia": "meta/llama-3.1-70b-instruct",
+            "openai": "gpt-4o",
+            "anthropic": "claude-sonnet-4-20250514",
+        }
+        return models.get(provider, "llama3.2")
 
     async def get_fallback(
         self, _agent_type: str, failed_provider: str, failed_model: str,

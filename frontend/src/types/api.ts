@@ -195,7 +195,9 @@ export type SectionName =
   | "settings"
   | "agents"
   | "orchestration"
-  | "metrics";
+  | "metrics"
+  | "skills"
+  | "operations";
 
 export interface SettingsState {
   apiBaseUrl: string;

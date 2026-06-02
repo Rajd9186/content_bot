@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_current_user_id
 from app.domains.project.service import ProjectService
 from app.infrastructure.database import get_db
+from app.jobs.memory_consolidation import memory_consolidation_job
 from app.schemas.project import (
     ContextAssemblyRequest,
     ContextAssemblyResponse,
@@ -89,7 +90,7 @@ async def list_projects(
     for p in projects:
         try:
             dash = await service.get_dashboard(p.id)
-        except Exception as e:
+        except Exception:
             logger.exception("list_projects: get_dashboard failed for project=%s", p.id)
             dash = {"total_outputs": 0, "total_memories": 0, "last_activity": None}
         result.append(ProjectSummary(
@@ -334,3 +335,13 @@ async def get_project_dashboard(
     if not dash:
         raise HTTPException(status_code=404, detail="Project not found")
     return ProjectDashboard(**dash)
+
+
+@router.post(
+    "/projects/consolidate",
+    summary="Trigger memory consolidation",
+    operation_id="consolidateMemories",
+)
+async def trigger_consolidation() -> dict[str, Any]:
+    stats = await memory_consolidation_job.run()
+    return {"status": "ok", "stats": stats}

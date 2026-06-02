@@ -62,18 +62,36 @@ async def run_memory_retrieval(
                 state.metadata["project_context"] = context.get("project_context", {})
                 state.metadata["relevant_memories"] = context.get("relevant_memories", [])
                 state.metadata["pinned_memories"] = context.get("pinned_memories", [])
+                state.metadata["enhanced_prompt"] = context.get("prompt", state.topic)
 
-                if context.get("project_context", {}).get("pinned_knowledge"):
-                    pin_text = "\n".join(
+                project_ctx = context.get("project_context", {})
+                pinned_knowledge = project_ctx.get("pinned_knowledge", [])
+                relevant_mems = project_ctx.get("relevant_memories", [])
+
+                ctx_parts = []
+                if pinned_knowledge:
+                    ctx_parts.append("Pinned Knowledge:")
+                    ctx_parts.extend(
                         f"- [{p['type']}] {p['content']}"
-                        for p in context["project_context"]["pinned_knowledge"]
+                        for p in pinned_knowledge
                     )
-                    state.metadata["memory_context"] = (
-                        "Project context retrieved. "
-                        f"Pinned knowledge: {pin_text}"
+                if relevant_mems:
+                    ctx_parts.append("Relevant Past Research:")
+                    ctx_parts.extend(
+                        f"- [{m['type']}] {m['content'][:300]}"
+                        for m in relevant_mems[:5]
                     )
-                else:
-                    state.metadata["memory_context"] = "No project context available"
+                related = project_ctx.get("related_outputs", [])
+                if related:
+                    ctx_parts.append("Related Previous Outputs:")
+                    ctx_parts.extend(
+                        f"- {r.get('title', 'Untitled')}"
+                        for r in related[:3]
+                    )
+
+                state.metadata["memory_context"] = (
+                    "\n".join(ctx_parts) if ctx_parts else "No project context available"
+                )
 
                 result.output = {
                     "relevant_memories": context.get("relevant_memories", []),

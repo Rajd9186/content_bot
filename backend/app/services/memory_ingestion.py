@@ -29,11 +29,13 @@ class MemoryIngestionService:
         self._session = session
 
     async def ingest_prompt(
-        self, project_id: str, prompt: str, metadata: dict[str, Any] | None = None
+        self, project_id: str, prompt: str, metadata: dict[str, Any] | None = None,
+        response: str | None = None,
     ) -> ProjectMemory:
         conversation = ProjectConversation(
             project_id=project_id,
             prompt=prompt,
+            response=response,
             user_metadata=metadata,
         )
         self._session.add(conversation)
@@ -107,7 +109,10 @@ class MemoryIngestionService:
         title: str | None = None,
     ) -> list[ProjectMemory]:
         memories = []
-        memories.append(await self.ingest_prompt(project_id, prompt))
+        memories.append(await self.ingest_prompt(
+            project_id, prompt,
+            response=final_content[:5000] if final_content else None,
+        ))
         if final_content:
             memories.append(
                 await self.ingest_output(
@@ -123,11 +128,14 @@ class MemoryIngestionService:
     async def _create_memory(
         self, project_id: str, memory_type: str, content: str
     ) -> ProjectMemory:
+        from app.services.embedding import embedding_service
+        embedding = await embedding_service.generate(content[:5000])
         memory = ProjectMemory(
             project_id=project_id,
             memory_type=memory_type,
             content=content[:10000],
             confidence_score=1.0,
+            embedding=embedding,
         )
         self._session.add(memory)
         return memory

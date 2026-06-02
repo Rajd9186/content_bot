@@ -16,6 +16,8 @@ const SECTION_LABELS: Record<string, string> = {
   agents: "Agent Monitor",
   orchestration: "Orchestration",
   metrics: "System Metrics",
+  skills: "Skills Engine",
+  operations: "Operations",
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

@@ -7,7 +7,8 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database import async_session_factory
-from app.infrastructure.models.project import ProjectMemory
+from app.infrastructure.models.project import Project, ProjectMemory
+from app.services.consolidation import consolidation_service
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +18,12 @@ class MemoryConsolidationJob:
         self._batch_size = 100
 
     async def run(self) -> dict[str, int]:
-        stats = {
+        stats: dict[str, int] = {
             "duplicates_removed": 0,
             "old_memories_summarized": 0,
             "low_value_memories_removed": 0,
+            "embedding_deduplicated": 0,
+            "embedding_summaries": 0,
             "total_processed": 0,
         }
 
@@ -30,13 +33,28 @@ class MemoryConsolidationJob:
             stats["old_memories_summarized"] = await self._summarize_old_memories(session)
             await session.commit()
 
+        project_ids = await self._get_all_project_ids()
+        for pid in project_ids:
+            try:
+                stats["embedding_deduplicated"] += await consolidation_service.deduplicate_memories(pid)
+                stats["embedding_summaries"] += await consolidation_service.summarize_research_thread(pid)
+            except Exception as e:
+                logger.error("Embedding consolidation failed for project %s: %s", pid, e)
+
         stats["total_processed"] = (
             stats["duplicates_removed"]
             + stats["low_value_memories_removed"]
             + stats["old_memories_summarized"]
+            + stats["embedding_deduplicated"]
+            + stats["embedding_summaries"]
         )
         logger.info("Memory consolidation complete: %s", stats)
         return stats
+
+    async def _get_all_project_ids(self) -> list[str]:
+        async with async_session_factory() as session:
+            result = await session.execute(select(Project.id))
+            return [row[0] for row in result.all()]
 
     async def _remove_duplicates(self, session: AsyncSession) -> int:
         subq = (

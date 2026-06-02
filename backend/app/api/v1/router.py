@@ -2,9 +2,11 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import health
 from app.api.v1.endpoints.metrics import router as metrics_router
+from app.api.v1.endpoints.operations import router as operations_router
 from app.api.v1.endpoints.orchestration import router as orchestration_router
 from app.api.v1.endpoints.pipeline_api import router as content_pipeline_router
 from app.api.v1.endpoints.projects import router as projects_router
+from app.api.v1.endpoints.skills import router as skills_router
 from app.core.config import settings
 from app.domains.content.api import router as content_router
 from app.domains.workflow.api import router as workflow_router
@@ -58,3 +60,5 @@ api_router.include_router(content_pipeline_router, prefix="/content-pipeline")
 api_router.include_router(workflow_router, prefix="/workflows")
 api_router.include_router(content_router, prefix="/content")
 api_router.include_router(projects_router, prefix="")
+api_router.include_router(skills_router, prefix="")
+api_router.include_router(operations_router, prefix="")

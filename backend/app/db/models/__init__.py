@@ -1,5 +1,14 @@
 from app.domains.agent.models import AgentCall, AgentConfig, AgentExecution
 from app.domains.content.models import ContentItem, ContentVersion, GeneratedContent
+from app.domains.skills.models import (
+    ProjectSkill,
+    Skill,
+    SkillAgentTarget,
+    SkillAnalytics,
+    SkillConflict,
+    SkillTemplate,
+    SkillVersion,
+)
 from app.domains.workflow.models import (
     DeadLetterJob,
     ExecutionLog,
@@ -29,4 +38,6 @@ __all__ = [
     "ProjectOutput",
     "ProjectMemory",
     "PinnedProjectMemory",
+    "Skill", "SkillVersion", "ProjectSkill", "SkillAgentTarget",
+    "SkillConflict", "SkillAnalytics", "SkillTemplate",
 ]

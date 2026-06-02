@@ -5,9 +5,10 @@ import { ProjectSelector } from '@/components/projects/ProjectSelector';
 import { ProjectDashboard } from '@/components/projects/ProjectDashboard';
 import { ProjectTimeline } from '@/components/projects/ProjectTimeline';
 import { MemoryExplorer } from '@/components/projects/MemoryExplorer';
-import { Folder, LayoutDashboard, Clock, Brain } from 'lucide-react';
+import { ContextPreview } from '@/components/projects/ContextPreview';
+import { Folder, LayoutDashboard, Clock, Brain, Eye } from 'lucide-react';
 
-type Tab = 'dashboard' | 'timeline' | 'memories';
+type Tab = 'dashboard' | 'timeline' | 'memories' | 'context';
 
 export function ProjectsSection() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
@@ -17,6 +18,7 @@ export function ProjectsSection() {
     { id: 'dashboard' as Tab, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'timeline' as Tab, label: 'Timeline', icon: Clock },
     { id: 'memories' as Tab, label: 'Memories', icon: Brain },
+    { id: 'context' as Tab, label: 'Context', icon: Eye },
   ];
 
   return (
@@ -52,6 +54,7 @@ export function ProjectsSection() {
           {activeTab === 'dashboard' && <ProjectDashboard />}
           {activeTab === 'timeline' && <ProjectTimeline />}
           {activeTab === 'memories' && <MemoryExplorer />}
+          {activeTab === 'context' && <ContextPreview />}
         </div>
       </div>
     </div>

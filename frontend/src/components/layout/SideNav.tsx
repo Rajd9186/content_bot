@@ -20,6 +20,8 @@ const NAV_ITEMS: NavItem[] = [
   { id: "agents", icon: "◈", label: "Agent Monitor" },
   { id: "orchestration", icon: "⇄", label: "Orchestration" },
   { id: "metrics", icon: "◆", label: "System Metrics" },
+  { id: "skills", icon: "◇", label: "Skills Engine" },
+  { id: "operations", icon: "◉", label: "Operations" },
 ];
 
 export function SideNav() {

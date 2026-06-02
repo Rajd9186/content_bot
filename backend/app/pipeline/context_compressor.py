@@ -122,8 +122,20 @@ class ContextCompressor:
         fact_check = state.get("fact_check_results", {})
         compliance = state.get("compliance_results", {})
 
+        metadata = state.get("metadata", {})
+        memory_context = metadata.get("memory_context", "")
+        project_context = metadata.get("project_context", {})
+        relevant_memories = metadata.get("relevant_memories", [])
+        pinned_memories = metadata.get("pinned_memories", [])
+
         if agent_type == "research":
-            return core
+            return {
+                **core,
+                "memory_context": memory_context,
+                "project_context": project_context,
+                "relevant_memories": len(relevant_memories),
+                "pinned_memories": len(pinned_memories),
+            }
 
         if agent_type == "planner":
             return {

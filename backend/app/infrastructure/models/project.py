@@ -7,6 +7,8 @@ from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, Str
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from pgvector.sqlalchemy import Vector
+
 from app.infrastructure.models.base import Base, JSONBColumn, utcnow
 
 
@@ -60,6 +62,7 @@ class ProjectConversation(Base):
         nullable=False, index=True
     )
     prompt: Mapped[str] = mapped_column(Text, nullable=False)
+    response: Mapped[str | None] = mapped_column(Text, nullable=True)
     user_metadata: Mapped[dict | None] = mapped_column(JSONBColumn, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime(timezone=True), nullable=False, default=utcnow
@@ -121,6 +124,7 @@ class ProjectMemory(Base):
     )
     content: Mapped[str] = mapped_column(Text, nullable=False)
     confidence_score: Mapped[float] = mapped_column(Float, default=1.0)
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(1536), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         "created_at", DateTime(timezone=True), nullable=False, default=utcnow
     )
@@ -133,6 +137,13 @@ class ProjectMemory(Base):
     __table_args__ = (
         Index("idx_pm_project_type", "project_id", "memory_type"),
         Index("idx_pm_created", "created_at"),
+        Index(
+            "idx_pm_embedding_hnsw",
+            "embedding",
+            postgresql_using="hnsw",
+            postgresql_with={"m": 16, "ef_construction": 200},
+            postgresql_ops={"embedding": "vector_cosine_ops"},
+        ),
     )
 
 

@@ -46,7 +46,7 @@ class ProjectRepository:
             stmt = stmt.order_by(Project.updated_at.desc())
             result = await self._session.execute(stmt)
             return list(result.scalars().all())
-        except Exception as e:
+        except Exception:
             logger.exception("get_by_owner failed for owner=%s include_archived=%s", owner_id, include_archived)
             raise
 
@@ -147,6 +147,8 @@ class ProjectRepository:
         return list(result.scalars().all())
 
     async def get_dashboard(self, project_id: str) -> dict[str, Any]:
+        from app.infrastructure.models.pipeline import PipelineRun
+
         outputs_count = await self._session.scalar(
             select(func.count()).where(ProjectOutput.project_id == project_id)
         )
@@ -178,11 +180,50 @@ class ProjectRepository:
         elif last_conversation:
             last_activity = last_conversation
 
+        workflow_ids_stmt = (
+            select(ProjectOutput.workflow_execution_id)
+            .where(ProjectOutput.project_id == project_id)
+            .where(ProjectOutput.workflow_execution_id.isnot(None))
+        )
+        workflow_ids = [
+            row[0] for row in
+            (await self._session.execute(workflow_ids_stmt)).all()
+        ]
+
+        total_tokens = 0
+        recent_workflows = []
+        if workflow_ids:
+            pipe_stmt = (
+                select(PipelineRun)
+                .where(PipelineRun.workflow_id.in_(workflow_ids))
+                .order_by(PipelineRun.created_at.desc())
+            )
+            pipe_result = await self._session.execute(pipe_stmt)
+            pipeline_runs = list(pipe_result.scalars().all())
+            total_tokens = sum(
+                p.total_tokens_used or 0 for p in pipeline_runs
+            )
+            recent_workflows = [
+                {
+                    "workflow_id": p.workflow_id,
+                    "topic": p.topic,
+                    "status": p.status,
+                    "total_tokens_used": p.total_tokens_used or 0,
+                    "created_at": p.created_at.isoformat() if p.created_at else None,
+                }
+                for p in pipeline_runs[:10]
+            ]
+
+        total_cost = total_tokens * 0.000002
+
         return {
             "total_outputs": outputs_count or 0,
             "total_memories": memories_count or 0,
             "total_sources": conversations_count or 0,
+            "total_tokens_used": total_tokens,
+            "total_cost": round(total_cost, 4),
             "last_activity": last_activity,
+            "recent_workflows": recent_workflows,
         }
 
     async def get_timeline(
