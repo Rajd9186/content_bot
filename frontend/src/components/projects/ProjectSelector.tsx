@@ -13,6 +13,7 @@ export function ProjectSelector({ onSelect }: ProjectSelectorProps) {
   const [showCreate, setShowCreate] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     loadProjects();
@@ -20,7 +21,8 @@ export function ProjectSelector({ onSelect }: ProjectSelectorProps) {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjectName.trim()) return;
+    if (!newProjectName.trim() || creating) return;
+    setCreating(true);
     try {
       const project = await createProject(newProjectName.trim(), newProjectDesc.trim() || undefined);
       onSelect?.(project.id);
@@ -29,6 +31,8 @@ export function ProjectSelector({ onSelect }: ProjectSelectorProps) {
       setNewProjectDesc('');
     } catch (err) {
       console.error('Failed to create project:', err);
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -76,9 +80,10 @@ export function ProjectSelector({ onSelect }: ProjectSelectorProps) {
             <div className="flex gap-2">
               <button
                 type="submit"
-                className="flex-1 px-2 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 rounded transition-colors"
+                disabled={creating}
+                className="flex-1 px-2 py-1 text-xs bg-emerald-600 hover:bg-emerald-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Create
+                {creating ? 'Creating...' : 'Create'}
               </button>
               <button
                 type="button"
