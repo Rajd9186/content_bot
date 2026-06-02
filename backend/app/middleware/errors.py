@@ -48,8 +48,13 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
                     },
                 },
             )
-        except StarletteHTTPException:
-            raise
+        except StarletteHTTPException as exc:
+            return JSONResponse(
+                status_code=exc.status_code,
+                content={
+                    "detail": exc.detail,
+                },
+            )
         except Exception as exc:
             correlation_id = getattr(request.state, "correlation_id", "unknown")
             logger.error(
