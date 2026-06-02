@@ -18,7 +18,10 @@ from app.pipeline.state import (
 
 class PipelineRepository(BaseRepository[PipelineRun]):
     async def get_by_id(self, entity_id: str) -> PipelineRun | None:
-        return await self.session.get(PipelineRun, entity_id)
+        try:
+            return await self.session.get(PipelineRun, entity_id)
+        except Exception:
+            return None
 
     async def get_by_workflow_id(self, workflow_id: str) -> PipelineRun | None:
         stmt = select(PipelineRun).where(text("workflow_id = :workflow_id")).params(workflow_id=workflow_id)

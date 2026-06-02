@@ -33,7 +33,10 @@ class ProjectRepository:
         return project
 
     async def get_by_id(self, project_id: str) -> Project | None:
-        return await self._session.get(Project, project_id)
+        try:
+            return await self._session.get(Project, project_id)
+        except Exception:
+            return None
 
     async def get_by_owner(self, owner_id: str, include_archived: bool = False) -> list[Project]:
         try:
