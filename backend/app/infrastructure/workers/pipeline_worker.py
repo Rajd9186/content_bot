@@ -150,6 +150,26 @@ class PipelineWorker:
                         await uow.pipelines.save_pipeline_state(result_state)
                         await uow.commit()
 
+                        project_id = result_state.metadata.get("project_id", "")
+                        if project_id and not result_state.has_failures():
+                            try:
+                                from app.services.memory_ingestion import MemoryIngestionService
+                                async with async_session_factory() as mem_session:
+                                    ingestion = MemoryIngestionService(mem_session)
+                                    await ingestion.ingest_workflow_completion(
+                                        project_id=project_id,
+                                        prompt=result_state.topic,
+                                        final_content=result_state.final_content or result_state.draft_content,
+                                        research_data=result_state.research_data,
+                                        fact_check_results=result_state.fact_check_results,
+                                        workflow_execution_id=workflow_id,
+                                        content_type="article",
+                                        title=result_state.topic,
+                                    )
+                                    await mem_session.commit()
+                            except Exception as mem_err:
+                                logger.warning("Memory ingestion failed in worker: %s", mem_err)
+
                         final_status = "completed"
                         if result_state.has_failures():
                             final_status = "failed"
