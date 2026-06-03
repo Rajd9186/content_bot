@@ -37,10 +37,10 @@ class ProviderFactory:
             return OpenAIProvider(model or "gpt-4o")
         elif normalized in ("anthropic", "claude", "claude-sonnet", "claude-opus"):
             return AnthropicProvider(model or "claude-sonnet-4-20250514")
-        elif normalized in ("groq", "llama", "mixtral"):
+        elif normalized in ("groq", "llama"):
             return GroqProvider(model or "llama-3.3-70b-versatile")
-        elif normalized in ("nvidia", "nemotron"):
-            return NvidiaProvider(model or "nvidia/nemotron-3-super-120b-a12b")
+        elif normalized == "nvidia":
+            return NvidiaProvider(model or "meta/llama-3.1-70b-instruct")
         elif normalized in ("ollama", "gpt-oss"):
             default_ollama = "gpt-oss:120b"
             return OllamaProvider(model or default_ollama)

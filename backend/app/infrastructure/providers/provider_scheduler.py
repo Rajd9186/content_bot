@@ -24,7 +24,7 @@ ACTIVE_WEIGHT = 15.0
 LATENCY_WEIGHT = 7.0
 SUCCESS_RATE_WEIGHT = 3.0
 
-NVIDIA_HEAVY_MODEL = "nvidia/nemotron-3-super-120b-a12b"
+NVIDIA_HEAVY_MODEL = "meta/llama-3.3-70b-instruct"
 NVIDIA_FAST_MODEL = "meta/llama-3.1-70b-instruct"
 
 
