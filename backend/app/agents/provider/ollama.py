@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 
 class OllamaProvider(BaseProvider):
-    def __init__(self, model: str = "llama3.2") -> None:
+    def __init__(self, model: str = "deepseek-v3.1:671b-cloud") -> None:
         super().__init__("ollama")
         self._model = model
         self._api_key = os.getenv("OLLAMA_API_KEY", "")
