@@ -80,9 +80,6 @@ class ResearchAgent(PipelineAgent):
         return result
 
 def extract_research_data(output: dict[str, Any]) -> dict[str, Any]:
-
-
-def extract_research_data(output: dict[str, Any]) -> dict[str, Any]:
     return {
         "summary": output.get("summary", "Research completed."),
         "key_points": output.get("key_points", []),

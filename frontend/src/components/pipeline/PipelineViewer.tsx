@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { StreamTimeline } from "./StreamTimeline";
 import { usePipelineStore } from "@/store/pipeline-store";
 import { ErrorBoundary } from "@/components/common";
 import { PipelineGraph } from "./PipelineGraph";
@@ -59,33 +60,7 @@ export function PipelineViewer() {
         <PipelineGraph onNodeClick={setSelectedNodeId} />
       </div>
 
-      {entries.length > 0 && (
-        <div className="rounded-xl border border-border bg-card/30 p-4">
-          <h3 className="mb-3 text-xs font-semibold text-foreground">Timeline</h3>
-          <div className="space-y-2">
-            {entries.map((t, i) => (
-              <div key={i} className="flex items-center gap-3">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={cn(
-                      "h-2 w-2 rounded-full",
-                      t.status === "completed" ? "bg-emerald-400" :
-                      t.status === "running" ? "bg-blue-400 animate-pulse-soft" :
-                      t.status === "failed" ? "bg-red-400" :
-                      "bg-slate-500",
-                    )}
-                  />
-                  {i < entries.length - 1 && <div className="mt-0.5 h-4 w-px bg-border" />}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs text-foreground">{t.node}</p>
-                  <p className="text-[10px] text-muted-foreground">{t.status}{t.error ? ` — ${t.error}` : ""}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
+      <StreamTimeline />
 
       <AgentActivityPanel />
 

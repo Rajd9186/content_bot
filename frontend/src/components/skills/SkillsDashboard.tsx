@@ -7,15 +7,15 @@ import type { Skill, SkillCategory } from '@/types/skills';
 import { BookOpen, Plus, Search, Filter, Check, X, Eye, ArrowLeft, Trash2, History } from 'lucide-react';
 
 const categoryColors: Record<string, string> = {
-  writing: 'border-blue-700 bg-blue-900/10',
-  research: 'border-purple-700 bg-purple-900/10',
-  seo: 'border-green-700 bg-green-900/10',
-  fact_check: 'border-red-700 bg-red-900/10',
-  compliance: 'border-yellow-700 bg-yellow-900/10',
-  brand_voice: 'border-pink-700 bg-pink-900/10',
-  youtube: 'border-orange-700 bg-orange-900/10',
-  finance: 'border-cyan-700 bg-cyan-900/10',
-  custom: 'border-gray-700 bg-gray-900/10',
+  writing: 'border-blue-500/30 bg-blue-500/5',
+  research: 'border-violet-500/30 bg-violet-500/5',
+  seo: 'border-emerald-500/30 bg-emerald-500/5',
+  fact_check: 'border-red-500/30 bg-red-500/5',
+  compliance: 'border-amber-500/30 bg-amber-500/5',
+  brand_voice: 'border-pink-500/30 bg-pink-500/5',
+  youtube: 'border-orange-500/30 bg-orange-500/5',
+  finance: 'border-cyan-500/30 bg-cyan-500/5',
+  custom: 'border-border bg-secondary/30',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -368,8 +368,8 @@ function SkillFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+      <div className="bg-card/95 backdrop-blur-xl rounded-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4 shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white">
             {initialData ? 'Edit Skill' : 'Create Skill'}
