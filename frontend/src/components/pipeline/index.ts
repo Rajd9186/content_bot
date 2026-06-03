@@ -5,3 +5,4 @@ export { NodeStatusCard } from "./NodeStatusCard";
 export { PipelineHistory } from "./PipelineHistory";
 export { PipelineTimeline } from "./PipelineTimeline";
 export { HumanReviewModal } from "./HumanReviewModal";
+export { AgentActivityPanel } from "./AgentActivityPanel";

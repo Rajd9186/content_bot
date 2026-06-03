@@ -86,6 +86,11 @@ def _state_to_response(state: PipelineState) -> dict[str, Any]:
                 "error": v.error,
                 "tokens_used": v.tokens_used,
                 "latency_ms": v.latency_ms,
+                "actions": v.actions,
+                "output": v.output,
+                "retry_count": v.retry_count,
+                "started_at": v.started_at,
+                "completed_at": v.completed_at,
             }
             for k, v in state.node_results.items()
         },
@@ -324,6 +329,9 @@ async def stream_pipeline_events(
                     "tokens_used": result.tokens_used,
                     "latency_ms": result.latency_ms,
                     "error": result.error,
+                    "actions": result.actions,
+                    "started_at": result.started_at,
+                    "completed_at": result.completed_at,
                 }
                 yield f"data: {json.dumps(event)}\n\n"
 
@@ -411,6 +419,7 @@ async def get_pipeline_timeline(
                 "latency_ms": result.latency_ms,
                 "tokens_used": result.tokens_used,
                 "error": result.error,
+                "actions": result.actions,
             }
         )
 

@@ -22,7 +22,18 @@ export interface NodeInfo {
   error: string | null;
   tokens_used: number;
   latency_ms: number;
-  model?: string;
+  actions: AgentAction[];
+  output: Record<string, unknown>;
+  retry_count: number;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+export interface AgentAction {
+  action: string;
+  timestamp: string;
+  details: string;
+  success?: boolean;
 }
 
 export interface PipelineStatusResponse {
@@ -61,6 +72,7 @@ export interface TimelineEntry {
   latency_ms: number;
   tokens_used: number;
   error: string | null;
+  actions: AgentAction[];
 }
 
 export interface PipelineTimelineResponse {
@@ -76,7 +88,9 @@ export interface PipelineSSEEvent {
   latency_ms?: number;
   error?: string | null;
   workflow_id?: string;
-  model?: string;
+  actions?: AgentAction[];
+  started_at?: string | null;
+  completed_at?: string | null;
 }
 
 export interface WorkflowResponse {

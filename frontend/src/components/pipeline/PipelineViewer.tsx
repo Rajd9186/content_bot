@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { usePipelineStore } from "@/store/pipeline-store";
 import { ErrorBoundary } from "@/components/common";
 import { NodeStatusCard } from "./NodeStatusCard";
+import { AgentActivityPanel } from "./AgentActivityPanel";
 
 export function PipelineViewer() {
   const currentId = usePipelineStore((s) => s.currentId);
@@ -82,6 +83,8 @@ export function PipelineViewer() {
           </div>
         </div>
       )}
+
+      <AgentActivityPanel />
 
       {(finalContent || draftContent) && (
         <div className="rounded-xl border border-border bg-card/30 p-4">
