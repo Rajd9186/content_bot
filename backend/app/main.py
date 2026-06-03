@@ -1,4 +1,5 @@
 from __future__ import annotations
+# Trigger rebuild 2026-06-03-v2
 
 import logging
 from collections.abc import AsyncGenerator
