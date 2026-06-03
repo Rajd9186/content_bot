@@ -1,17 +1,17 @@
 'use client';
 import { useState } from 'react';
-import { SkillsDashboard } from '@/components/skills/SkillsDashboard';
+import { SkillsStudio } from '@/components/skills/SkillsStudio';
 import { SkillAssignment } from '@/components/skills/SkillAssignment';
 import { ComplianceDashboard } from '@/components/skills/ComplianceDashboard';
 import { BookOpen, Link, BarChart3 } from 'lucide-react';
 
-type Tab = 'dashboard' | 'assignment' | 'compliance';
+type Tab = 'studio' | 'assignment' | 'compliance';
 
 export function SkillsEngineSection() {
-  const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [activeTab, setActiveTab] = useState<Tab>('studio');
 
   const tabs = [
-    { id: 'dashboard' as Tab, label: 'Skills', icon: BookOpen },
+    { id: 'studio' as Tab, label: 'Skills', icon: BookOpen },
     { id: 'assignment' as Tab, label: 'Assignment', icon: Link },
     { id: 'compliance' as Tab, label: 'Compliance', icon: BarChart3 },
   ];
@@ -23,7 +23,7 @@ export function SkillsEngineSection() {
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500/20 to-violet-600/10 border border-violet-500/20">
             <BookOpen className="w-4 h-4 text-violet-400" />
           </div>
-          <h1 className="text-base font-bold text-foreground md:text-lg">Skills Engine</h1>
+          <h1 className="text-base font-bold text-foreground md:text-lg">Skills Studio</h1>
         </div>
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
           {tabs.map((tab) => {
@@ -45,8 +45,8 @@ export function SkillsEngineSection() {
           })}
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto">
-        {activeTab === 'dashboard' && <SkillsDashboard />}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        {activeTab === 'studio' && <SkillsStudio />}
         {activeTab === 'assignment' && <SkillAssignment />}
         {activeTab === 'compliance' && <ComplianceDashboard />}
       </div>

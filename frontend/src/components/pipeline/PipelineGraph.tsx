@@ -343,6 +343,11 @@ export function PipelineGraph({ onNodeClick }: PipelineGraphProps) {
               >
                 <button
                   onClick={() => onNodeClick?.(node.id)}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onNodeClick?.(node.id)}
+                  aria-label={`${node.label} - ${node.status}`}
+                  aria-pressed={false}
+                  role="button"
+                  tabIndex={0}
                   className={cn(
                     "w-full h-full flex flex-col items-center justify-center rounded-2xl border p-2.5 transition-all duration-300",
                     statusColors[node.status],

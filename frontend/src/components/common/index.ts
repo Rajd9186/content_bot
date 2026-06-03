@@ -5,3 +5,4 @@ export { StatusIndicatorInstance } from "./StatusIndicator";
 export { ThemeToggle } from "./ThemeToggle";
 export { ProviderWarning } from "./ProviderWarning";
 export { Modal } from "./Modal";
+export { ActivityFeed } from "./ActivityFeed";

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, memo } from "react";
 import {
   Brain, ChevronRight, Clock, Database, ExternalLink,
   FileOutput, Filter, Graph, Hash, MessageSquare, Mic2,
@@ -42,7 +42,7 @@ interface MemoryCardProps {
   showPin?: boolean;
 }
 
-function MemoryCard({ memory, onPin, onDelete, onClick, showPin = true }: MemoryCardProps) {
+const MemoryCard = memo(function MemoryCard({ memory, onPin, onDelete, onClick, showPin = true }: MemoryCardProps) {
   const style = TYPE_STYLES[memory.memory_type] || TYPE_STYLES.summary;
   const Icon = style.icon;
 
@@ -134,17 +134,10 @@ function MemoryCard({ memory, onPin, onDelete, onClick, showPin = true }: Memory
         )}
       </div>
     </div>
-  );
-}
+);
+});
 
-interface MemoryDetailModalProps {
-  memory: Memory;
-  onClose: () => void;
-  onPin: (id: string) => void;
-  onDelete: (id: string) => void;
-}
-
-function MemoryDetailModal({ memory, onClose, onPin, onDelete }: MemoryDetailModalProps) {
+const MemoryDetailModal = memo(function MemoryDetailModal({ memory, onClose, onPin, onDelete }: MemoryDetailModalProps) {
   const style = TYPE_STYLES[memory.memory_type] || TYPE_STYLES.summary;
   const Icon = style.icon;
 

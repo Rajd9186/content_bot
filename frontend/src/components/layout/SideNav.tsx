@@ -60,11 +60,13 @@ export function SideNav() {
         </div>
       </div>
 
-      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2">
+      <nav className="flex-1 space-y-0.5 overflow-y-auto p-2" aria-label="Main navigation">
         {NAV_ITEMS.map((item, i) => (
           <button
             key={item.id}
             onClick={() => handleNav(item.id)}
+            aria-label={!sidebarOpen ? item.label : undefined}
+            aria-current={section === item.id ? "page" : undefined}
             className={cn(
               "nav-item flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium",
               "transition-all duration-200 ease-smooth",
