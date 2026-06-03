@@ -8,6 +8,7 @@ const TopNav = dynamic(() => import("@/components/layout/TopNav").then((m) => ({
 const Footer = dynamic(() => import("@/components/layout/Footer").then((m) => ({ default: m.Footer })), { ssr: false });
 
 const SECTION_LABELS: Record<string, string> = {
+  commandCenter: "Command Center",
   pipeline: "Content Pipeline",
   history: "Pipeline History",
   analytics: "Analytics",

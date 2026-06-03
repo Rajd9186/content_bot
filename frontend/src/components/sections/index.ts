@@ -1,4 +1,5 @@
 export { ContentPipeline } from "./ContentPipeline";
+export { CommandCenter } from "./CommandCenter";
 export { PipelineListSection } from "./PipelineListSection";
 export { Analytics } from "./Analytics";
 export { Workspace } from "./Workspace";

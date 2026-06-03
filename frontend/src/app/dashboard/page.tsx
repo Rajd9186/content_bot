@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useUIStore } from "@/store/ui-store";
 
 const ContentPipeline = dynamic(() => import("@/components/sections/ContentPipeline").then((m) => ({ default: m.ContentPipeline })), { ssr: false });
+const CommandCenter = dynamic(() => import("@/components/sections/CommandCenter").then((m) => ({ default: m.CommandCenter })), { ssr: false });
 const PipelineListSection = dynamic(() => import("@/components/sections/PipelineListSection").then((m) => ({ default: m.PipelineListSection })), { ssr: false });
 const Analytics = dynamic(() => import("@/components/sections/Analytics").then((m) => ({ default: m.Analytics })), { ssr: false });
 const Workspace = dynamic(() => import("@/components/sections/Workspace").then((m) => ({ default: m.Workspace })), { ssr: false });
@@ -16,6 +17,7 @@ const SkillsEngineSection = dynamic(() => import("@/components/sections/SkillsEn
 const OperationsSection = dynamic(() => import("@/components/sections/Operations").then((m) => ({ default: m.OperationsSection })), { ssr: false });
 
 const SECTIONS: Record<string, React.ComponentType> = {
+  commandCenter: CommandCenter,
   pipeline: ContentPipeline,
   history: PipelineListSection,
   analytics: Analytics,

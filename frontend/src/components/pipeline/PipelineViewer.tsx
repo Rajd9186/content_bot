@@ -1,10 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { usePipelineStore } from "@/store/pipeline-store";
 import { ErrorBoundary } from "@/components/common";
-import { NodeStatusCard } from "./NodeStatusCard";
+import { PipelineGraph } from "./PipelineGraph";
 import { AgentActivityPanel } from "./AgentActivityPanel";
+import { AgentTransparencyPanel } from "./AgentTransparencyPanel";
 
 export function PipelineViewer() {
   const currentId = usePipelineStore((s) => s.currentId);
@@ -14,6 +16,7 @@ export function PipelineViewer() {
   const error = usePipelineStore((s) => s.error);
   const cancel = usePipelineStore((s) => s.cancel);
   const status = usePipelineStore((s) => s.status);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   if (!currentId) {
     return (
@@ -43,7 +46,7 @@ export function PipelineViewer() {
     <div className="flex h-full flex-col gap-4 overflow-y-auto p-1">
       <div className="rounded-xl border border-border bg-card/30 p-4">
         <div className="mb-3 flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-foreground">Pipeline DAG</h3>
+          <h3 className="text-xs font-semibold text-foreground">Pipeline Graph</h3>
           {isRunning && (
             <button
               onClick={() => cancel(currentId)}
@@ -53,7 +56,7 @@ export function PipelineViewer() {
             </button>
           )}
         </div>
-        <NodeStatusCard />
+        <PipelineGraph onNodeClick={setSelectedNodeId} />
       </div>
 
       {entries.length > 0 && (
@@ -96,6 +99,11 @@ export function PipelineViewer() {
           </div>
         </div>
       )}
+
+      <AgentTransparencyPanel
+        nodeId={selectedNodeId}
+        onClose={() => setSelectedNodeId(null)}
+      />
     </div>
   );
 }

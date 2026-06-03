@@ -43,6 +43,25 @@ class Project(Base):
     pinned_memories: Mapped[list[PinnedProjectMemory]] = relationship(
         "PinnedProjectMemory", back_populates="project", cascade="all, delete-orphan"
     )
+    instructions: Mapped[list[ProjectInstruction]] = relationship(
+        "ProjectInstruction", back_populates="project", cascade="all, delete-orphan"
+    )
+    chat_sessions: Mapped[list[ProjectChatSession]] = relationship(
+        "ProjectChatSession", back_populates="project", cascade="all, delete-orphan"
+    )
+    source_policies: Mapped[list[ProjectSourcePolicy]] = relationship(
+        "ProjectSourcePolicy", back_populates="project", cascade="all, delete-orphan"
+    )
+    allowed_sources: Mapped[list[ProjectAllowedSource]] = relationship(
+        "ProjectAllowedSource", back_populates="project", cascade="all, delete-orphan"
+    )
+    blocked_sources: Mapped[list[ProjectBlockedSource]] = relationship(
+        "ProjectBlockedSource", back_populates="project", cascade="all, delete-orphan"
+    )
+    research_preferences: Mapped[list[ProjectResearchPreference]] = relationship(
+        "ProjectResearchPreference", back_populates="project", cascade="all, delete-orphan"
+    )
+
 
     __table_args__ = (
         Index("idx_projects_owner", "owner_id"),
@@ -174,4 +193,185 @@ class PinnedProjectMemory(Base):
     __table_args__ = (
         Index("idx_ppm_project", "project_id"),
         Index("idx_ppm_priority", "project_id", "priority"),
+    )
+
+
+class ProjectInstruction(Base):
+    __tablename__ = "project_instructions"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    instruction_content: Mapped[str] = mapped_column(Text, nullable=False)
+    priority: Mapped[int] = mapped_column(Integer, default=0)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", DateTime(timezone=True), nullable=False, default=utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at", DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    project: Mapped[Project] = relationship("Project", back_populates="instructions")
+
+    __table_args__ = (
+        Index("idx_pi_project", "project_id"),
+        Index("idx_pi_priority", "project_id", "priority"),
+    )
+
+
+class ProjectChatSession(Base):
+    __tablename__ = "project_chat_sessions"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    created_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", DateTime(timezone=True), nullable=False, default=utcnow
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        "updated_at", DateTime(timezone=True), nullable=False, default=utcnow, onupdate=utcnow
+    )
+
+    project: Mapped[Project] = relationship("Project", back_populates="chat_sessions")
+    messages: Mapped[list[ProjectChatMessage]] = relationship(
+        "ProjectChatMessage", back_populates="session", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        Index("idx_pcs_project", "project_id"),
+        Index("idx_pcs_created", "created_at"),
+    )
+
+
+class ProjectChatMessage(Base):
+    __tablename__ = "project_chat_messages"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    session_id: Mapped[str] = mapped_column(
+        "session_id", UUID(as_uuid=False),
+        ForeignKey("project_chat_sessions.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    role: Mapped[str] = mapped_column(String(32), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", DateTime(timezone=True), nullable=False, default=utcnow
+    )
+
+    session: Mapped[ProjectChatSession] = relationship("ProjectChatSession", back_populates="messages")
+
+    __table_args__ = (
+        Index("idx_pcm_session", "session_id"),
+        Index("idx_pcm_created", "created_at"),
+    )
+
+
+class ProjectSourcePolicy(Base):
+    __tablename__ = "project_source_policies"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, unique=True
+    )
+    policy_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    created_at: Mapped[datetime] = mapped_column(
+        "created_at", DateTime(timezone=True), nullable=False, default=utcnow
+    )
+
+    project: Mapped[Project] = relationship("Project", back_populates="source_policies")
+
+    __table_args__ = (
+        Index("idx_psp_project", "project_id"),
+    )
+
+
+class ProjectAllowedSource(Base):
+    __tablename__ = "project_allowed_sources"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_domain: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    priority: Mapped[int] = mapped_column(Integer, default=0)
+
+    project: Mapped[Project] = relationship("Project", back_populates="allowed_sources")
+
+    __table_args__ = (
+        Index("idx_pas_project", "project_id"),
+        Index("idx_pas_domain", "source_domain"),
+    )
+
+
+class ProjectBlockedSource(Base):
+    __tablename__ = "project_blocked_sources"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    source_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    source_domain: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    project: Mapped[Project] = relationship("Project", back_populates="blocked_sources")
+
+    __table_args__ = (
+        Index("idx_pbs_project", "project_id"),
+        Index("idx_pbs_domain", "source_domain"),
+    )
+
+
+class ProjectResearchPreference(Base):
+    __tablename__ = "project_research_preferences"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    project_id: Mapped[str] = mapped_column(
+        "project_id", UUID(as_uuid=False),
+        ForeignKey("projects.id", ondelete="CASCADE"),
+        nullable=False, unique=True
+    )
+    freshness_mode: Mapped[str] = mapped_column(
+        String(64), nullable=False, default="evergreen"
+    )
+    trust_threshold: Mapped[int] = mapped_column(Integer, default=0)
+    allow_competitor_content: Mapped[bool] = mapped_column(Boolean, default=True)
+    latest_only: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    project: Mapped[Project] = relationship("Project", back_populates="research_preferences")
+
+    __table_args__ = (
+        Index("idx_prp_project", "project_id"),
     )

@@ -82,6 +82,36 @@ export function ProjectDashboard() {
       icon: Clock,
       color: 'text-gray-400',
     },
+    {
+      label: 'Instructions',
+      value: dashboard.instructions_count,
+      icon: FileText,
+      color: 'text-indigo-400',
+    },
+    {
+      label: 'Project Skills',
+      value: dashboard.skills_count,
+      icon: Brain,
+      color: 'text-pink-400',
+    },
+    {
+      label: 'Allowed Sources',
+      value: dashboard.allowed_sources_count,
+      icon: Database,
+      color: 'text-cyan-400',
+    },
+    {
+      label: 'Blocked Sources',
+      value: dashboard.blocked_sources_count,
+      icon: Database,
+      color: 'text-red-400',
+    },
+    {
+      label: 'Chat Sessions',
+      value: dashboard.chat_sessions_count,
+      icon: Hash,
+      color: 'text-yellow-400',
+    },
   ];
 
   return (

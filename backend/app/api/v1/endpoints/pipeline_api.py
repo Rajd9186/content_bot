@@ -158,8 +158,37 @@ async def start_pipeline(
         },
     )
 
+@router.get(
+    "/pipeline/project-info/{project_id}",
+    summary="Get project context summary for pipeline creation",
+)
+async def get_pipeline_project_info(
+    project_id: str,
+    service: ProjectService = Depends(get_project_service),
+) -> Any:
+    project = await service.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    dash = await service.get_dashboard(project_id)
+    allowed = await service.get_allowed_sources(project_id)
+    blocked = await service.get_blocked_sources(project_id)
+    prefs = await service.get_research_preferences(project_id)
+    instructions = await service.get_instructions(project_id)
+    skills = await service.get_project_skills(project_id)
+    
+    return {
+        "project_name": project.name,
+        "instructions_count": len(instructions),
+        "skills_count": len(skills),
+        "memories_count": dash.get("total_memories", 0),
+        "allowed_sources_count": len(allowed),
+        "blocked_sources_count": len(blocked),
+        "freshness_mode": prefs.freshness_mode if prefs else "evergreen",
+    }
 
 @router.post(
+
     "/pipeline/{workflow_id}/run",
     summary="Execute the content generation pipeline",
     operation_id="runPipeline",

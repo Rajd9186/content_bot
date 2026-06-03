@@ -36,7 +36,7 @@ function applyTheme(theme: "dark" | "light") {
 export const useUIStore = create<UIState>()(
   persist(
     (set) => ({
-      section: "pipeline",
+      section: "commandCenter",
       sidebarOpen: true,
       theme: "dark",
       mobileMenuOpen: false,

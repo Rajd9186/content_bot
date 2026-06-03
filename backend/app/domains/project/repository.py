@@ -11,8 +11,15 @@ from app.infrastructure.models.project import (
     PinnedProjectMemory,
     Project,
     ProjectConversation,
+    ProjectInstruction,
     ProjectMemory,
     ProjectOutput,
+    ProjectAllowedSource,
+    ProjectBlockedSource,
+    ProjectChatMessage,
+    ProjectChatSession,
+    ProjectResearchPreference,
+    ProjectSourcePolicy,
 )
 
 logger = logging.getLogger(__name__)
@@ -112,6 +119,47 @@ class ProjectRepository:
         await self._session.flush()
         return True
 
+    async def create_instruction(
+        self, project_id: str, title: str, content: str, 
+        priority: int = 0, created_by: str | None = None
+    ) -> ProjectInstruction:
+        instruction = ProjectInstruction(
+            project_id=project_id,
+            title=title,
+            instruction_content=content,
+            priority=priority,
+            created_by=created_by,
+        )
+        self._session.add(instruction)
+        await self._session.flush()
+        return instruction
+
+    async def get_instructions(self, project_id: str, enabled_only: bool = True) -> list[ProjectInstruction]:
+        stmt = select(ProjectInstruction).where(ProjectInstruction.project_id == project_id)
+        if enabled_only:
+            stmt = stmt.where(ProjectInstruction.enabled == True)
+        stmt = stmt.order_by(ProjectInstruction.priority.desc(), ProjectInstruction.created_at.desc())
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def update_instruction(self, instruction_id: str, **kwargs: Any) -> ProjectInstruction | None:
+        instruction = await self._session.get(ProjectInstruction, instruction_id)
+        if not instruction:
+            return None
+        for key, value in kwargs.items():
+            if value is not None and hasattr(instruction, key):
+                setattr(instruction, key, value)
+        await self._session.flush()
+        return instruction
+
+    async def delete_instruction(self, instruction_id: str) -> bool:
+        instruction = await self._session.get(ProjectInstruction, instruction_id)
+        if not instruction:
+            return False
+        await self._session.delete(instruction)
+        await self._session.flush()
+        return True
+
     async def pin_memory(
         self, project_id: str, memory_id: str, priority: int = 0,
     ) -> PinnedProjectMemory | None:
@@ -148,6 +196,7 @@ class ProjectRepository:
 
     async def get_dashboard(self, project_id: str) -> dict[str, Any]:
         from app.infrastructure.models.pipeline import PipelineRun
+        from app.infrastructure.models.project import ProjectInstruction, ProjectSkill, ProjectChatSession
 
         outputs_count = await self._session.scalar(
             select(func.count()).where(ProjectOutput.project_id == project_id)
@@ -157,6 +206,21 @@ class ProjectRepository:
         )
         conversations_count = await self._session.scalar(
             select(func.count()).where(ProjectConversation.project_id == project_id)
+        )
+        instructions_count = await self._session.scalar(
+            select(func.count()).where(ProjectInstruction.project_id == project_id)
+        )
+        skills_count = await self._session.scalar(
+            select(func.count()).where(ProjectSkill.project_id == project_id)
+        )
+        allowed_count = await self._session.scalar(
+            select(func.count()).where(ProjectAllowedSource.project_id == project_id)
+        )
+        blocked_count = await self._session.scalar(
+            select(func.count()).where(ProjectBlockedSource.project_id == project_id)
+        )
+        chat_sessions_count = await self._session.scalar(
+            select(func.count()).where(ProjectChatSession.project_id == project_id)
         )
 
         last_output = await self._session.scalar(
@@ -224,6 +288,11 @@ class ProjectRepository:
             "total_cost": round(total_cost, 4),
             "last_activity": last_activity,
             "recent_workflows": recent_workflows,
+            "instructions_count": instructions_count or 0,
+            "skills_count": skills_count or 0,
+            "allowed_sources_count": allowed_count or 0,
+            "blocked_sources_count": blocked_count or 0,
+            "chat_sessions_count": chat_sessions_count or 0,
         }
 
     async def get_timeline(
@@ -288,9 +357,131 @@ class ProjectRepository:
         entries.sort(key=lambda e: e["created_at"] or "", reverse=True)
         return entries[offset:offset + limit]
 
+    async def create_chat_session(self, project_id: str, created_by: str | None = None) -> ProjectChatSession:
+        session = ProjectChatSession(
+            project_id=project_id,
+            created_by=created_by,
+        )
+        self._session.add(session)
+        await self._session.flush()
+        return session
+
+    async def get_chat_session(self, session_id: str) -> ProjectChatSession | None:
+        return await self._session.get(ProjectChatSession, session_id)
+
+    async def get_chat_sessions(self, project_id: str, limit: int = 50, offset: int = 0) -> list[ProjectChatSession]:
+        stmt = (
+            select(ProjectChatSession)
+            .where(ProjectChatSession.project_id == project_id)
+            .order_by(ProjectChatSession.updated_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def add_chat_message(self, session_id: str, role: str, content: str) -> ProjectChatMessage:
+        message = ProjectChatMessage(
+            session_id=session_id,
+            role=role,
+            content=content,
+        )
+        self._session.add(message)
+        await self._session.flush()
+        return message
+
+    async def get_chat_messages(self, session_id: str, limit: int = 100, offset: int = 0) -> list[ProjectChatMessage]:
+        stmt = (
+            select(ProjectChatMessage)
+            .where(ProjectChatMessage.session_id == session_id)
+            .order_by(ProjectChatMessage.created_at.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def delete_chat_session(self, session_id: str) -> bool:
+        session = await self._session.get(ProjectChatSession, session_id)
+        if not session:
+            return False
+        await self._session.delete(session)
+        await self._session.flush()
+        return True
+
     async def _get_pin(self, memory_id: str) -> PinnedProjectMemory | None:
         stmt = select(PinnedProjectMemory).where(
             PinnedProjectMemory.memory_id == memory_id
         )
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_source_policy(self, project_id: str) -> ProjectSourcePolicy | None:
+        return await self._session.get(ProjectSourcePolicy, project_id) # simplified if id == project_id or use select
+
+    async def update_source_policy(self, project_id: str, **kwargs: Any) -> ProjectSourcePolicy | None:
+        policy = await self.get_source_policy(project_id)
+        if not policy:
+            policy = ProjectSourcePolicy(project_id=project_id, policy_name="Default Policy")
+            self._session.add(policy)
+        for key, value in kwargs.items():
+            if value is not None and hasattr(policy, key):
+                setattr(policy, key, value)
+        await self._session.flush()
+        return policy
+
+    async def get_allowed_sources(self, project_id: str) -> list[ProjectAllowedSource]:
+        stmt = select(ProjectAllowedSource).where(ProjectAllowedSource.project_id == project_id)
+        stmt = stmt.order_by(ProjectAllowedSource.priority.desc())
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def add_allowed_source(self, project_id: str, name: str, domain: str | None = None, priority: int = 0) -> ProjectAllowedSource:
+        source = ProjectAllowedSource(project_id=project_id, source_name=name, source_domain=domain, priority=priority)
+        self._session.add(source)
+        await self._session.flush()
+        return source
+
+    async def remove_allowed_source(self, source_id: str) -> bool:
+        source = await self._session.get(ProjectAllowedSource, source_id)
+        if not source:
+            return False
+        await self._session.delete(source)
+        await self._session.flush()
+        return True
+
+    async def get_blocked_sources(self, project_id: str) -> list[ProjectBlockedSource]:
+        stmt = select(ProjectBlockedSource).where(ProjectBlockedSource.project_id == project_id)
+        result = await self._session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def add_blocked_source(self, project_id: str, name: str, domain: str | None = None, reason: str | None = None) -> ProjectBlockedSource:
+        source = ProjectBlockedSource(project_id=project_id, source_name=name, source_domain=domain, reason=reason)
+        self._session.add(source)
+        await self._session.flush()
+        return source
+
+    async def remove_blocked_source(self, source_id: str) -> bool:
+        source = await self._session.get(ProjectBlockedSource, source_id)
+        if not source:
+            return False
+        await self._session.delete(source)
+        await self._session.flush()
+        return True
+
+    async def get_research_preferences(self, project_id: str) -> ProjectResearchPreference | None:
+        stmt = select(ProjectResearchPreference).where(ProjectResearchPreference.project_id == project_id)
+        result = await self._session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def update_research_preferences(self, project_id: str, **kwargs: Any) -> ProjectResearchPreference | None:
+        prefs = await self.get_research_preferences(project_id)
+        if not prefs:
+            prefs = ProjectResearchPreference(project_id=project_id)
+            self._session.add(prefs)
+        for key, value in kwargs.items():
+            if value is not None and hasattr(prefs, key):
+                setattr(prefs, key, value)
+        await self._session.flush()
+        return prefs
+

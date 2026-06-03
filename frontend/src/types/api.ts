@@ -226,6 +226,7 @@ export const AGENT_ORDER: AgentName[] = [
 ];
 
 export type SectionName =
+  | "commandCenter"
   | "pipeline"
   | "history"
   | "projects"

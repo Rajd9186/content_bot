@@ -6,6 +6,7 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.semantic_retrieval import SemanticRetrievalService
+from app.domains.project.repository import ProjectRepository
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ class ContextAssemblyEngine:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._retrieval = SemanticRetrievalService(session)
+        self._project_repo = ProjectRepository(session)
 
     async def assemble(
         self,
@@ -22,6 +24,7 @@ class ContextAssemblyEngine:
         top_k: int = 10,
         similarity_threshold: float = 0.0,
     ) -> dict[str, Any]:
+        instructions = await self._project_repo.get_instructions(project_id)
         memories = await self._retrieval.search_memories(
             project_id, prompt, top_k, similarity_threshold,
         )
@@ -34,7 +37,16 @@ class ContextAssemblyEngine:
         )
 
         project_context = {
+            "project_instructions": [
+                {
+                    "title": i.title,
+                    "content": i.instruction_content,
+                    "priority": i.priority,
+                }
+                for i in instructions
+            ],
             "relevant_memories": [
+
                 {
                     "type": m["memory_type"],
                     "content": m["content"],
@@ -78,13 +90,22 @@ class ContextAssemblyEngine:
     def _build_enhanced_prompt(
         self, original_prompt: str, context: dict[str, Any]
     ) -> str:
-        parts = [original_prompt]
+        parts = []
+        instructions = context.get("project_instructions", [])
+        if instructions:
+            instr_text = "\n".join(
+                f"### {i['title']}\n{i['content']}" for i in instructions
+            )
+            parts.append(f"PROJECT-LEVEL INSTRUCTIONS:\n{instr_text}")
+
+        parts.append(f"USER PROMPT: {original_prompt}")
+        
         pinned = context.get("pinned_knowledge", [])
         if pinned:
             pinned_text = "\n".join(
                 f"- [{p['type']}] {p['content']}" for p in pinned
             )
-            parts.append(f"\n\nPinned Knowledge:\n{pinned_text}")
+            parts.append(f"\nPinned Knowledge:\n{pinned_text}")
 
         memories = context.get("relevant_memories", [])
         if memories:

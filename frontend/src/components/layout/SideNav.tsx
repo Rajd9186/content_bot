@@ -12,6 +12,7 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
+  { id: "commandCenter", icon: "◈", label: "Command Center" },
   { id: "pipeline", icon: "⊞", label: "Content Pipeline" },
   { id: "history", icon: "≡", label: "Pipeline History" },
   { id: "projects", icon: "📁", label: "Projects" },
