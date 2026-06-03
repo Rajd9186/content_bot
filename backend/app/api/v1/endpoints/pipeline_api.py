@@ -17,8 +17,10 @@ from app.infrastructure.messaging.redis_client import redis_client
 from app.infrastructure.sse.manager import sse_manager
 from app.infrastructure.unit_of_work import UnitOfWork
 from app.pipeline.graph import pipeline
+from app.api.v1.endpoints.projects import get_project_service
 from app.pipeline.state import (
     HumanReview,
+
     PipelineState,
     ReviewAction,
 )
