@@ -21,26 +21,27 @@ A fixed **sidebar** (260px expanded, 72px collapsed) on the left with navigation
 ### Mobile (<768px)
 A **hamburger drawer** slides in from the left when the menu button is tapped. Closes automatically when a section is selected.
 
-### Sidebar Items (11 sections)
+### Sidebar Items (12 sections)
 | Section | Description |
 |---------|-------------|
-| Content Pipeline | Default view — create and monitor pipelines |
+| Command Center | AI OS landing page with all metrics |
+| Content Pipeline | Create and monitor pipelines |
 | Pipeline History | Past pipeline runs |
-| Projects | Project management with memory context |
+| Projects | Project management with workspace tabs |
 | Analytics | Pipeline success rates, metrics |
 | Workspace | Workspace settings |
-| Settings | User preferences |
 | Agent Monitor | Real-time agent + provider metrics |
 | Orchestration | Workflow orchestration |
 | System Metrics | Prometheus-style system metrics |
 | Skills Engine | Agent skill management |
 | Operations | Provider operations dashboard |
+| Settings | User preferences |
 
 ---
 
 ## Design System
 
-### Theme: Violet
+### Theme: Violet (AI OS Dark)
 - **Primary color**: Violet (`#7c3aed` / `hsl(262, 83%, 58%)`)
 - **Dark mode** (default): Dark slate background
 - **Light mode**: Clean white/gray background
@@ -64,86 +65,133 @@ Card (dark):        hsl(222 47% 14%)
 - **Mono**: JetBrains Mono
 - Scale: 11px captions → 14px body → 18px headings
 
-### Breakpoints
-| Breakpoint | Width | Use |
-|-----------|-------|------|
-| Mobile | <768px | Single column, hamburger nav, touch-optimized |
-| Tablet | 768–1024px | Collapsible sidebar |
-| Desktop | ≥1024px | Full sidebar, multi-column layouts |
-| Large | ≥1400px | Max container width 1400px |
-
 ### Animations
 - `bounce-in`: Modal/openings — `cubic-bezier(0.34, 1.56, 0.64, 1)`
 - `slide-in-left`: Mobile drawer
 - `fade-in`: General fade
-- `pulse-soft`: Status indicators
+- `node-pulse`: Running pipeline nodes
 - `btn-press`: Active button feedback (`scale-[0.97]`)
+
+---
+
+## Section: Command Center (NEW — Default Landing)
+
+AI OS-style landing page with real-time metrics. Shows when app loads.
+
+### Metrics Row (7 stat cards)
+- Projects count
+- Running pipelines
+- Completed pipelines
+- Memories count
+- Skills count
+- Outputs count
+- Token usage (aggregate)
+
+### Provider Health Panel
+Live provider stats from `GET /providers/stats`:
+- Status dot per provider (emerald/amber/red)
+- Success rate, latency, RPM usage
+
+### Activity Timeline
+Streaming SSE events: research completed, memory retrieved, skill applied, etc.
+
+### Latest Outputs
+Recent completed pipelines with topic and token count.
+
+### Quick Start
+New Pipeline and Browse Projects buttons.
 
 ---
 
 ## Section: Content Pipeline
 
-The default landing page after login. Has three zones:
+Has two view modes: **Pipeline View** (default) and **Content View**.
 
-### 1. Left Panel (PipelineForm + PipelineList)
-- **Create Pipeline form**: Topic input, audience, tone, provider selectors. Violet gradient submit button.
-- **Pipeline List**: Small scrollable list of recent pipelines (hidden below lg breakpoint)
+### Pipeline View
+Three main panels:
+1. **Pipeline Graph** — SVG-based DAG visualization (React Flow-style)
+2. **Stream Timeline** — Real-time SSE streaming events
+3. **Agent Activities** — Expandable per-node activity cards
 
-### 2. Center — Pipeline DAG
-A **NodeStatusCard** showing all 8 pipeline stages as a 2×4 grid (4×2 on sm, 2×2 on mobile):
-```
-Skill Retrieval | Memory Retrieval
-Research | Planner
-Writer | SEO
-Fact Checker | Compliance | Review | Finalizer
-```
-Each node card shows a status dot (emerald=completed, blue=running, red=failed, gray=pending) and latency.
+Plus the **Output Workspace** (3-column content view) via the "Content View" toggle button.
 
-### 3. Below DAG — Timeline
-Vertical list of completed nodes with status dot and status text.
+### Pipeline Graph
+SVG-rendered pipeline DAG with:
+- All 11 stages: Prompt → Skill Retrieval → Memory Retrieval → Research → Planner → Writer → SEO → Fact Check → Compliance → Review → Final Output
+- Color-coded edges (completed = emerald, running = blue, pending = dashed violet)
+- Clickable nodes → open Agent Transparency Panel
+- Live status dots and latency display
 
-### Agent Activities Panel
-**Below Timeline** — shows detailed agent activity for each pipeline node:
+### Stream Timeline
+Real-time updating vertical timeline driven by SSE events:
+- Events stream in as pipeline runs: `node_started`, `node_completed`, `pipeline_failed`, etc.
+- Shows timestamps, latency, tokens per event
+- Auto-scrolls to latest
+- Color-coded: emerald = completed, blue = running, red = failed, amber = cancelled
 
-Each node card is **expandable** (click ▶) and shows:
-- Agent start — provider/model used, timestamp
-- LLM request — when the model was called
-- LLM response — received from provider
-- Parse output — output parsed successfully
-- Retry — if agent retried
-- Error — if agent failed
+### Content View (3-column Output Workspace)
+Toggle via "Content View" button:
+- **Left**: Auto-generated outline from content headings
+- **Center**: Full generated content (final vs draft indicator, word count)
+- **Right**: Content Intelligence panel
+  - Aggregate stats (tokens, latency, success rate)
+  - Agents Used (provider/model per agent)
+  - Skills Applied
+  - Memories Retrieved
+  - Fact Checks
+  - Compliance
+  - Provider Details
 
-Actions appear **in real-time as the pipeline runs** (from SSE `node_completed` events, not just after completion).
-
-**Empty state**: "Waiting for agents to start..." shown before any data arrives.
-
-### Right Panel (≥xl only)
-Static quick-info card.
+### Agent Transparency Panel
+Slide-in drawer from right when clicking any pipeline node:
+Shows full agent details:
+- Status + provider/model
+- Latency, tokens, estimated cost, retries
+- Timestamps (started/completed)
+- Prompt Sent, LLM Request, LLM Response (expandable)
+- Generated Output (JSON view)
+- Execution Timeline with all steps
 
 ---
 
 ## Section: Agent Monitor
 
-Shows real pipeline agent metrics and live provider stats:
+Real-time agent metrics derived from `status.nodes` + live `GET /providers/stats`:
+- Agent metrics cards: status dot, provider/model, tokens, latency, retries
+- Expandable summary
+- 10s auto-refresh from providers stats
+- Color-coded success rate per provider
 
-### Agent Metrics Grid
-Cards per pipeline stage derived from `usePipelineStore().status.nodes` + SSE events:
-- Status dot (emerald/blue/red)
-- Provider + model used
-- Token count, latency, retry count
-- Expandable summary with full node stats
+---
 
-### Provider Stats Grid
-Live data from `GET /providers/stats` (auto-refreshes every 10s):
-- Calls, RPM, TPM, latency, success rate per provider
-- Color-coded success rate (emerald ≥95%, amber ≥80%, red <80%)
+## Section: Projects
 
-### Circuit Breaker + Token Budget Cards
-- Circuit breaker: worst state across all providers
-- Token budget: aggregate TPM across all providers
+Enhanced workspace with tab navigation:
 
-### Empty State
-"No agent data yet. Run a pipeline to see real-time agent metrics."
+### Tabs: Overview | Memories | Skills | Sources | Pipelines | Outputs | Analytics | Settings
+
+### Overview Tab
+- Project header with counts (memories, outputs, sources, tokens)
+- 6-stat grid (outputs, memories, sources, tokens, cost, last activity)
+- Recent pipelines list
+- New Pipeline button
+
+### Pipelines Tab
+- List of project pipelines
+- Status indicator per pipeline
+
+### Outputs Tab
+- List of generated outputs with title, content type, date
+
+### Settings Tab
+- Edit project name, description
+- Archive toggle
+- Save changes
+
+### All Projects View
+- Searchable project list
+- Inline "New project" creation
+- Project cards with: initial avatar, name, description, memory/output counts, last activity
 
 ---
 
@@ -153,27 +201,25 @@ Three tabs: **Skills**, **Assignment**, **Compliance**
 
 ### Skills Tab (default)
 - CRUD for agent skills (markdown-based)
-- Version history per skill
-- Test skill with A/B comparison
-- Filter by category (writing, research, seo, fact_check, compliance, etc.)
+- Category filter (writing, research, seo, fact_check, compliance, etc.)
+- Version history viewer
+- Search by name/description
+- Skill detail view with version badge, active/inactive status, agent targets
+- Create/Edit modal with markdown editor
 
 ### Assignment Tab
-- Assign skills to projects at priority levels (project → workflow → global)
-- Enable/disable per project
-- Conflict detection
+- Assign skills to projects at priority levels
 
 ### Compliance Tab
-- Usage analytics per skill
-- Compliance score distribution
+- Usage analytics per skill, compliance score distribution
 
 ---
 
 ## Section: Operations
 
-**ProviderDashboard** component — real-time provider metrics:
+**ProviderDashboard** — real-time provider metrics:
 - Per-provider cards: RPM/TPM usage bars, active requests, latency, success rate, circuit state badge
 - Aggregate request distribution bar
-- Target ranges: Groq 25-35%, NVIDIA 25-35%, Ollama 30-50%
 - Auto-refresh every 10 seconds
 
 ---
@@ -183,7 +229,6 @@ Three tabs: **Skills**, **Assignment**, **Compliance**
 | Section | What it shows |
 |---------|--------------|
 | Pipeline History | Past pipeline runs with status |
-| Projects | Project CRUD, memory context, timeline |
 | Analytics | Charts: bar, line, pie, metrics cards |
 | Workspace | Workspace management |
 | Settings | API base URL, refresh interval, default tone/audience |
@@ -194,30 +239,20 @@ Three tabs: **Skills**, **Assignment**, **Compliance**
 
 ## Component Library
 
-### Common
-`Badge` (variants: violet/emerald/blue/amber/red/slate), `LoadingSpinner` (violet glow), `Modal` (bounce-in, rounded-2xl), `StatusIndicator`, `ThemeToggle`, `ErrorBoundary`
-
 ### Layout
-`SideNav` (collapsible on desktop, drawer on mobile), `TopNav` (hamburger + new pipeline + theme toggle), `Footer`, `Breadcrumb`
+`SideNav` (collapsible desktop, drawer mobile), `TopNav` (hamburger + new pipeline + theme toggle)
 
 ### Pipeline
-`AgentActivityPanel` (real-time agent steps), `NodeStatusCard` (8-node grid), `PipelineForm`, `PipelineViewer`, `PipelineTimeline`, `PipelineList`, `HumanReviewModal`
+`PipelineGraph` (SVG DAG, live status, clickable nodes), `StreamTimeline` (SSE streaming), `OutputWorkspace` (3-column content view), `AgentTransparencyPanel` (slide-in agent details), `AgentActivityPanel` (expandable per-node activity cards), `PipelineForm`, `PipelineViewer`, `PipelineList`
 
 ### Providers
 `ProviderDashboard` (live RPM/TPM/latency/success per provider)
 
----
+### Command Center
+`CommandCenter` (AI OS landing: stat cards, provider health, activity timeline, outputs, quick start)
 
-## Real-Time Updates
-
-Pipelines use **SSE** (`GET /pipeline/{id}/events`) to stream:
-- `connected` — connection established
-- `node_completed` — a pipeline node finished (includes actions, tokens, latency)
-- `pipeline_completed` / `pipeline_failed` — pipeline done
-
-SSE events flow into:
-- `events[]` array in pipeline store → drives AgentActivityPanel in real-time
-- `handleEvent` calls `refresh()` → populates `status.nodes` → drives AgentMonitor and NodeStatusCard
+### Common
+`Badge`, `LoadingSpinner` (violet glow), `Modal` (bounce-in, rounded-2xl), `StatusIndicator`, `ThemeToggle`, `ErrorBoundary`
 
 ---
 
@@ -226,46 +261,37 @@ SSE events flow into:
 | Store | Manages |
 |-------|---------|
 | `pipeline-store.ts` | Pipelines list, current pipeline, status, content, timeline, SSE events |
-| `ui-store.ts` | Current section, sidebar open/closed, theme, mobile menu, modals |
+| `ui-store.ts` | Current section, sidebar open/closed, theme, mobile menu, modals, settings |
 | `auth-store.ts` | Auth tokens, user profile |
-| `project-store.ts` | Projects |
-| `skills-store.ts` | Skills |
+| `project-store.ts` | Projects, current project |
+| `skills-store.ts` | Skills, project skills, filtering |
 | `notification-store.ts` | Notifications |
 
 ---
 
-## API Integration
+## Key Hooks
 
-- All API calls go through `lib/api.ts` → `/api/v1`
-- Key endpoints:
-  - `POST /content-pipeline/pipeline/start` — create pipeline
-  - `POST /content-pipeline/pipeline/{id}/run` — run pipeline
-  - `GET /content-pipeline/pipeline/{id}` — pipeline status + nodes (includes actions)
-  - `GET /content-pipeline/pipeline/{id}/timeline` — timeline + actions
-  - `GET /content-pipeline/pipeline/{id}/events` — SSE stream
-  - `GET /providers/stats` — provider capacity/latency/success rate
-  - `GET/POST/PUT/DELETE /skills` — skills CRUD
-  - `GET /projects` — projects list
+| Hook | Purpose |
+|------|---------|
+| `useAgentNodes()` | Merges `status.nodes` + SSE `events[]` for real-time agent data |
+| `useProvidersStats()` | Polls `GET /providers/stats` every 10s |
+| `useSSE()` | Manages SSE connection for pipeline events |
+| `usePipeline()` | Pipeline operations wrapper |
 
 ---
 
-## Environment Variables
+## Real-Time Updates
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base (default: `http://localhost:8000`) |
+Pipelines use **SSE** (`GET /pipeline/{id}/events`) to stream:
+- `connected` — connection established
+- `node_started` / `node_running` — a node began
+- `node_completed` — a node finished (includes actions, tokens, latency, provider/model)
+- `pipeline_completed` / `pipeline_failed` — done
 
----
-
-## Backend Health Check
-
-Pipeline execution uses **intelligent provider scheduling** (`provider_scheduler.py`):
-- Scores providers by: circuit state, RPM remaining, TPM remaining, active requests, latency, success rate
-- NVIDIA uses `meta/llama-3.1-70b-instruct` for fast tasks, `meta/llama-3.3-70b-instruct` for heavy tasks
-- Groq is RPM-protected (preflight check before sending)
-- Fallback chain: preferred → fallback → ollama → "no provider"
-
-Working providers: **Groq** (391ms), **NVIDIA llama-3.1/3.3** (1.2–1.7s), **Ollama gpt-oss:120b** (2.3s)
+Events flow into:
+- `events[]` in pipeline store → drives `StreamTimeline` in real-time
+- `status.nodes` via `refresh()` → drives `AgentActivityPanel`, `OutputWorkspace.MetadataPanel`
+- `AgentTransparencyPanel` opens from `PipelineGraph` node click
 
 ---
 
@@ -278,3 +304,29 @@ npm run dev   # → http://localhost:3000
 
 # Backend must be running on :8000 for API to work
 ```
+
+## Playwright E2E Tests
+
+```bash
+npm install -D @playwright/test
+npx playwright install --with-deps
+npm run test:e2e          # Run all suites
+npm run test:e2e:ui      # Interactive UI mode
+npm run test:e2e:headed   # See browser
+```
+
+Test files: `tests/e2e/dashboard.spec.ts`, `projects.spec.ts`, `pipeline.spec.ts`, `sections.spec.ts`, `responsive.spec.ts`, `theme.spec.ts`
+
+Target: ≥ 80% UI coverage across all major sections.
+
+---
+
+## Backend Health Check
+
+Pipeline execution uses **intelligent provider scheduling** (`provider_scheduler.py`):
+- Scores providers by: circuit state, RPM remaining, TPM remaining, active requests, latency, success rate
+- NVIDIA uses `meta/llama-3.1-70b-instruct` for fast tasks, `meta/llama-3.3-70b-instruct` for heavy tasks
+- Groq is RPM-protected (preflight check before sending)
+- Fallback chain: preferred → fallback → ollama → "no provider"
+
+Working providers: **Groq** (391ms), **NVIDIA llama-3.1/3.3** (1.2–1.7s), **Ollama gpt-oss:120b** (2.3s)

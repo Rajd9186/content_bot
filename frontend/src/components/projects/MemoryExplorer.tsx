@@ -6,13 +6,13 @@ import { projectApi, type Memory } from '@/lib/projects-api';
 import { Brain, Pin, Trash2, Search } from 'lucide-react';
 
 const memoryTypeColors: Record<string, string> = {
-  prompt: 'border-blue-700 bg-blue-900/10',
-  output: 'border-emerald-700 bg-emerald-900/10',
-  research: 'border-purple-700 bg-purple-900/10',
-  fact: 'border-red-700 bg-red-900/10',
-  user_preference: 'border-yellow-700 bg-yellow-900/10',
-  decision: 'border-orange-700 bg-orange-900/10',
-  summary: 'border-gray-700 bg-gray-900/10',
+  prompt: 'border-blue-500/30 bg-blue-500/5',
+  output: 'border-emerald-500/30 bg-emerald-500/5',
+  research: 'border-violet-500/30 bg-violet-500/5',
+  fact: 'border-red-500/30 bg-red-500/5',
+  user_preference: 'border-amber-500/30 bg-amber-500/5',
+  decision: 'border-orange-500/30 bg-orange-500/5',
+  summary: 'border-border bg-secondary/30',
 };
 
 export function MemoryExplorer() {
