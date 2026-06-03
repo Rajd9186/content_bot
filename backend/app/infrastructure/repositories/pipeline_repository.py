@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from sqlalchemy import and_, select, text, update
+from sqlalchemy import and_, select, update
 
 from app.infrastructure.models.pipeline import PipelineRun
 from app.infrastructure.models.telemetry import Checkpoint
@@ -24,7 +24,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
             return None
 
     async def get_by_workflow_id(self, workflow_id: str) -> PipelineRun | None:
-        stmt = select(PipelineRun).where(text("workflow_id = :workflow_id")).params(workflow_id=workflow_id)
+        stmt = select(PipelineRun).where(PipelineRun.workflow_id == workflow_id)
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -54,7 +54,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
             values["current_node"] = current_node
         stmt = (
             update(PipelineRun)
-            .where(text("workflow_id = :workflow_id")).params(workflow_id=workflow_id)
+            .where(PipelineRun.workflow_id == workflow_id)
             .values(**values)
         )
         if expected_version is not None:
@@ -66,7 +66,7 @@ class PipelineRepository(BaseRepository[PipelineRun]):
     async def heartbeat(self, workflow_id: str) -> bool:
         stmt = (
             update(PipelineRun)
-            .where(text("workflow_id = :workflow_id")).params(workflow_id=workflow_id)
+            .where(PipelineRun.workflow_id == workflow_id)
             .values(heartbeat_at=datetime.now(UTC), updated_at=datetime.now(UTC))
         )
         result = await self.session.execute(stmt)

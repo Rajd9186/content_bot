@@ -22,7 +22,6 @@ ignore = [
     "SIM103",    # Needless bool — readability preference
     "SIM105",    # suppressible-exception — readability preference
     "SIM117",    # Multiple with statements — readability preference
-    "UP042",     # Replace str+Enum with StrEnum — Python 3.11+ choice
 ]
 
 [tool.ruff.format]

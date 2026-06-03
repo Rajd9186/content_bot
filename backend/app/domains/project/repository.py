@@ -40,7 +40,7 @@ class ProjectRepository:
 
     async def get_by_owner(self, owner_id: str, include_archived: bool = False) -> list[Project]:
         try:
-            stmt = select(Project).where(text("owner_id = :owner_id")).params(owner_id=owner_id)
+            stmt = select(Project).where(Project.owner_id == owner_id)
             if not include_archived:
                 stmt = stmt.where(text("archived = false"))
             stmt = stmt.order_by(Project.updated_at.desc())

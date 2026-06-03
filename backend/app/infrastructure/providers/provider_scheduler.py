@@ -43,6 +43,12 @@ class IntelligentScheduler:
     def __init__(self) -> None:
         self._request_counters: dict[str, int] = {}
 
+    def _redis_ok(self) -> bool:
+        try:
+            return redis_client._client is not None
+        except Exception:
+            return False
+
     def select_provider(
         self,
         agent_type: str,
