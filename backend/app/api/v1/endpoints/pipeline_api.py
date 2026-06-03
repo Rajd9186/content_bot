@@ -31,14 +31,18 @@ _memory_fallback: dict[str, PipelineState] = {}
 
 
 async def _load_state(workflow_id: str, db: AsyncSession) -> PipelineState | None:
+    if workflow_id in _memory_fallback:
+        return _memory_fallback[workflow_id]
     if db:
         try:
             uow = UnitOfWork(db)
             pipeline_run = await uow.pipelines.get_by_workflow_id(workflow_id)
             if pipeline_run:
-                return uow.pipelines.to_pipeline_state(pipeline_run)
-        except Exception:
-            pass
+                state = uow.pipelines.to_pipeline_state(pipeline_run)
+                _memory_fallback[workflow_id] = state
+                return state
+        except Exception as exc:
+            logger.exception("_load_state: DB lookup failed for workflow=%s: %s", workflow_id, exc)
     return _memory_fallback.get(workflow_id)
 
 
@@ -50,6 +54,7 @@ async def _save_state(state: PipelineState, db: AsyncSession | None = None) -> b
 
 
 async def _do_save_state(state: PipelineState, session: AsyncSession) -> bool:
+    _memory_fallback[state.workflow_id] = state
     try:
         uow = UnitOfWork(session)
         await uow.pipelines.save_pipeline_state(state)
@@ -59,7 +64,6 @@ async def _do_save_state(state: PipelineState, session: AsyncSession) -> bool:
         with contextlib.suppress(Exception):
             await uow.rollback()
         logger.warning("DB persistence failed, using memory fallback: %s", e)
-    _memory_fallback[state.workflow_id] = state
     return False
 
 

@@ -62,7 +62,7 @@ class PipelineState(BaseModel):
     seo_metadata: dict[str, Any] = Field(default_factory=dict)
     fact_check_results: dict[str, Any] = Field(default_factory=dict)
     compliance_results: dict[str, Any] = Field(default_factory=dict)
-    vlog_links: list[dict[str, str]] = Field(default_factory=list)  # Added for vlog/video links
+    vlog_links: list[dict[str, str] | str] = Field(default_factory=list)
     final_content: str = ""
 
     human_review: HumanReview | None = None
