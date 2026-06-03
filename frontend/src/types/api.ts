@@ -152,6 +152,12 @@ export interface AgentMetrics {
   avgLatencyMs: number;
   executions: number;
   model: string;
+  provider?: string;
+  tokens_used?: number;
+  latency_ms?: number;
+  node?: string;
+  retry_count?: number;
+  actions_count?: number;
 }
 
 export interface ProviderHealthStatus {
@@ -166,6 +172,25 @@ export interface ProviderHealthStatus {
     resetTimeoutMs: number;
   };
   uptimeMs?: number;
+}
+
+export interface ProviderStats {
+  provider: string;
+  rpm_used: number;
+  rpm_limit: number;
+  tpm_used: number;
+  tpm_limit: number;
+  active_requests: number;
+  queue_length: number;
+  capacity_remaining: number;
+  circuit_state: string;
+  average_latency: number;
+  success_rate: number;
+  total_calls: number;
+}
+
+export interface ProvidersStatsResponse {
+  [provider: string]: ProviderStats;
 }
 
 export type AgentName =
