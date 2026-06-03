@@ -9,7 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.deps import get_current_user_id
 from app.domains.project.service import ProjectService
 from app.infrastructure.database import get_db
+from app.api.v1.deps import get_project_service
 from app.jobs.memory_consolidation import memory_consolidation_job
+
 from app.services.project_instructions import ProjectInstructionService
 from app.services.context_assembly import ContextAssemblyEngine
 from app.agents.project_copilot_agent import ProjectCopilotAgent
@@ -20,12 +22,6 @@ from app.services.semantic_retrieval import SemanticRetrievalService
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["projects"])
-
-
-async def get_project_service(
-    db: AsyncSession = Depends(get_db),
-) -> ProjectService:
-    return ProjectService(db)
 
 
 @router.post(
