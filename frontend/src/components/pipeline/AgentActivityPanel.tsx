@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { usePipelineStore } from "@/store/pipeline-store";
+import { useAgentNodes } from "@/hooks/use-agent-nodes";
 import type { AgentAction } from "@/types/api";
 
 const NODE_LABELS: Record<string, string> = {
@@ -184,55 +184,53 @@ function NodeActivityCard({
 }
 
 export function AgentActivityPanel() {
-  const status = usePipelineStore((s) => s.status);
-  const events = usePipelineStore((s) => s.events);
+  const agentNodes = useAgentNodes();
 
-  const nodes = status?.nodes ?? {};
-  const nodeNames = Object.keys(nodes);
-
-  if (nodeNames.length === 0) {
+  if (agentNodes.length === 0) {
     return (
       <div className="rounded-xl border border-border bg-card/30 p-4">
         <h3 className="mb-3 text-xs font-semibold text-foreground flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
           Agent Activities
         </h3>
-        <p className="text-[11px] text-muted-foreground">No agent activity data available yet.</p>
+        <p className="text-[11px] text-muted-foreground">Waiting for agents to start...</p>
       </div>
     );
   }
+
+  const completedCount = agentNodes.filter(
+    (a) => a.status === "success" || a.status === "completed",
+  ).length;
 
   return (
     <div className="rounded-xl border border-border bg-card/30 p-4">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">
-          <span className="h-1.5 w-1.5 rounded-full bg-violet-400 animate-pulse-soft" />
+          <span className={cn(
+            "h-1.5 w-1.5 rounded-full animate-pulse-soft",
+            completedCount === agentNodes.length ? "bg-emerald-400" : "bg-violet-400",
+          )} />
           Agent Activities
         </h3>
         <span className="text-[10px] text-muted-foreground">
-          {nodeNames.filter((n) => {
-            const node = nodes[n];
-            return node.status === "success" || node.status === "completed";
-          }).length}/{nodeNames.length} complete
+          {completedCount}/{agentNodes.length} complete
         </span>
       </div>
 
       <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1 scrollbar-thin">
-        {nodeNames.map((nodeName) => {
-          const node = nodes[nodeName];
-          return (
-            <NodeActivityCard
-              key={nodeName}
-              nodeName={nodeName}
-              status={node.status}
-              latencyMs={node.latency_ms}
-              tokensUsed={node.tokens_used}
-              startedAt={node.started_at}
-              completedAt={node.completed_at}
-              actions={node.actions ?? []}
-              error={node.error}
-            />
-          );
-        })}
+        {agentNodes.map((node) => (
+          <NodeActivityCard
+            key={node.name}
+            nodeName={node.name}
+            status={node.status}
+            latencyMs={node.latency_ms}
+            tokensUsed={node.tokens_used}
+            startedAt={node.started_at}
+            completedAt={node.completed_at}
+            actions={node.actions}
+            error={node.error}
+          />
+        ))}
       </div>
     </div>
   );
