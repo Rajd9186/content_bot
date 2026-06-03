@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class NvidiaProvider(BaseProvider):
-    def __init__(self, model: str = "nvidia/nemotron-3-super-120b-a12b") -> None:
+    def __init__(self, model: str = "meta/llama-3.3-70b-instruct") -> None:
         super().__init__("nvidia")
         self._model = model
         self._api_key = os.getenv("NVIDIA_API_KEY", "")
