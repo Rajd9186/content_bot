@@ -142,7 +142,7 @@ class ProviderRouter:
             "openai": "gpt-4o",
             "anthropic": "claude-sonnet-4-20250514",
         }
-        return models.get(provider, "llama3.2")
+        return models.get(provider, "gpt-oss:120b")
 
     async def get_fallback(
         self, _agent_type: str, failed_provider: str, failed_model: str,

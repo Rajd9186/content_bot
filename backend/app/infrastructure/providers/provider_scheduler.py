@@ -57,7 +57,7 @@ class IntelligentScheduler:
         force_provider: str | None = None,
     ) -> tuple[str, str]:
         """Select the best provider for an agent task (sync wrapper)."""
-        return "ollama", "llama3.2"
+        return "ollama", "gpt-oss:120b"
 
     async def select_provider_async(
         self,
@@ -109,7 +109,7 @@ class IntelligentScheduler:
                 return provider, model
 
         logger.warning("No available provider for agent %s, falling back to ollama", agent_type)
-        return "ollama", "llama3.2"
+        return "ollama", "gpt-oss:120b"
 
     async def _compute_score(self, provider: str, estimated_tokens: int) -> float:
         """Compute a 0-100 score for a provider based on multiple factors."""
@@ -240,9 +240,9 @@ class IntelligentScheduler:
             "nvidia": NVIDIA_FAST_MODEL,
             "openai": "gpt-4o",
             "anthropic": "claude-sonnet-4-20250514",
-            "ollama": "llama3.2",
+            "ollama": "gpt-oss:120b",
         }
-        return defaults.get(provider, "llama3.2")
+        return defaults.get(provider, "gpt-oss:120b")
 
     def _increment_counter(self, provider: str) -> int:
         val = self._request_counters.get(provider, 0) + 1

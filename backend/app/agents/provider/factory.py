@@ -42,7 +42,7 @@ class ProviderFactory:
         elif normalized in ("nvidia", "nemotron"):
             return NvidiaProvider(model or "nvidia/nemotron-3-super-120b-a12b")
         elif normalized in ("ollama", "gpt-oss"):
-            default_ollama = "gpt-oss:120b" if normalized == "gpt-oss" else "llama3.2"
+            default_ollama = "gpt-oss:120b"
             return OllamaProvider(model or default_ollama)
         elif normalized in ("local", "llamacpp"):
             return LocalProvider(model or "local-model")
