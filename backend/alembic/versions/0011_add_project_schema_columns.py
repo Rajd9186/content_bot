@@ -51,11 +51,11 @@ def upgrade() -> None:
     _add_column_if_not_exists("projects", "points_to_cover", "points_to_cover JSON NOT NULL DEFAULT '[]'::json")
     _add_column_if_not_exists(
         "projects", "tone",
-        "tone VARCHAR(50) NOT NULL DEFAULT 'professional'"
+        "tone content_tone NOT NULL DEFAULT 'professional'::content_tone"
     )
     _add_column_if_not_exists(
         "projects", "content_type",
-        "content_type VARCHAR(50) NOT NULL DEFAULT 'article'"
+        "content_type content_type NOT NULL DEFAULT 'article'::content_type"
     )
     _add_column_if_not_exists("projects", "target_audience", "target_audience VARCHAR(300)")
     _add_column_if_not_exists(
@@ -64,7 +64,7 @@ def upgrade() -> None:
     )
     _add_column_if_not_exists(
         "projects", "status",
-        "status VARCHAR(50) NOT NULL DEFAULT 'draft'"
+        "status project_status NOT NULL DEFAULT 'draft'::project_status"
     )
     _add_column_if_not_exists("projects", "outline", "outline JSON")
 
