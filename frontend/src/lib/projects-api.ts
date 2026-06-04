@@ -29,6 +29,11 @@ export interface ProjectDashboard {
   total_cost: number;
   last_activity: string | null;
   recent_workflows: any[];
+  instructions_count?: number;
+  skills_count?: number;
+  allowed_sources_count?: number;
+  blocked_sources_count?: number;
+  chat_sessions_count?: number;
 }
 
 export interface Memory {
