@@ -1,4 +1,4 @@
-from app.events.event_bus import EventBus, EventStore, event_bus, event_store
+from app.events.event_bus import EventBus, event_bus
 from app.events.event_types import EVENT_REGISTRY, BaseEvent
 from app.infrastructure.database import AsyncSession, async_session_factory
 from app.infrastructure.messaging.redis_client import redis_client
@@ -25,7 +25,7 @@ __all__ = [
     "redis_client",
     "ConnectionManager", "WSMessage", "connection_manager",
     "EventBroadcaster", "event_broadcaster",
-    "EventBus", "EventStore", "event_bus", "event_store",
+    "EventBus", "event_bus",
     "BaseEvent", "EVENT_REGISTRY",
     "async_session_factory", "AsyncSession",
     "UnitOfWork", "unit_of_work",
