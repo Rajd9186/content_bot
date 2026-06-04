@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import {
   BookOpen, Check, ChevronDown, ChevronRight, Clock, Eye,
   FileText, FlaskConical, GitBranch, History, Plus, RefreshCw,
