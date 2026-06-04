@@ -154,6 +154,17 @@ async def run_migrations():
             command.upgrade(alembic_cfg, "head")
             logger.info("Alembic migrations complete")
         except Exception as e:
+            err_str = str(e)
+            if "Can't locate revision identified by" in err_str:
+                logger.warning("Migration version mismatch detected. Attempting to stamp to 0009 and retry...")
+                try:
+                    command.stamp(alembic_cfg, "0009")
+                    command.upgrade(alembic_cfg, "head")
+                    logger.info("Alembic migrations complete (after version reset)")
+                    return
+                except Exception as retry_err:
+                    logger.error("Alembic retry also failed: %s", retry_err)
+                    raise
             logger.error("Alembic migration failed: %s", e)
             raise
 
