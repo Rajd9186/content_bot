@@ -10,4 +10,3 @@ export { SystemMetrics } from "./SystemMetrics";
 export { ProjectsSection } from "./Projects";
 export { SkillsEngineSection } from "./SkillsEngine";
 export { ResearchIntelligence } from "./ResearchIntelligence";
-export { SkillsDashboard } from "./SkillsDashboard";
