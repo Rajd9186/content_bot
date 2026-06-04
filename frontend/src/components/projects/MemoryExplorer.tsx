@@ -42,6 +42,13 @@ interface MemoryCardProps {
   showPin?: boolean;
 }
 
+interface MemoryDetailModalProps {
+  memory: Memory;
+  onClose: () => void;
+  onPin: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
 const MemoryCard = memo(function MemoryCard({ memory, onPin, onDelete, onClick, showPin = true }: MemoryCardProps) {
   const style = TYPE_STYLES[memory.memory_type] || TYPE_STYLES.summary;
   const Icon = style.icon;
@@ -256,7 +263,7 @@ const MemoryDetailModal = memo(function MemoryDetailModal({ memory, onClose, onP
       </div>
     </div>
   );
-}
+});
 
 export function MemoryExplorer() {
   const { currentProjectId } = useProjectStore();
