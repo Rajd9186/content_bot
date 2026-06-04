@@ -225,11 +225,11 @@ export function ActivityFeed({ maxItems = 50, autoRefresh = true, compact = fals
               )}
             >
               <div className={cn("flex h-6 w-6 items-center justify-center rounded-lg shrink-0 mt-0.5", {
-                "bg-emerald-500/10": event.severity === "success",
-                "bg-amber-500/10": event.severity === "warning",
-                "bg-red-500/10": event.severity === "error",
-                "bg-violet-500/10": event.severity === "info",
-              }[event.severity] || "bg-secondary")}>
+                  "bg-emerald-500/10": event.severity === "success",
+                  "bg-amber-500/10": event.severity === "warning",
+                  "bg-red-500/10": event.severity === "error",
+                  "bg-violet-500/10": event.severity === "info",
+                })}>
                 <span className={cn("h-1.5 w-1.5 rounded-full shrink-0", getSeverityDot(event.severity))} />
               </div>
               <div className="flex-1 min-w-0">
