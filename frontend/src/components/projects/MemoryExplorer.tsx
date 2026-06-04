@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, memo } from "react";
 import {
   Brain, ChevronRight, Clock, Database, ExternalLink,
-  FileOutput, Filter, Graph, Hash, MessageSquare, Mic2,
+  FileOutput, Filter, Hash, MessageSquare, Mic2,
   Pin, PinOff, Plus, RefreshCw, Search, Tag, Trash2, TrendingUp,
   Lightbulb, CheckCircle2, AlertCircle, ArrowUpDown
 } from "lucide-react";
