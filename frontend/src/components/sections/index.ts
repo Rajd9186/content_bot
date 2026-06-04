@@ -1,6 +1,5 @@
 export { CommandCenter } from "./CommandCenter";
 export { ContentPipeline } from "./ContentPipeline";
-export { CommandCenter } from "./CommandCenter";
 export { PipelineListSection } from "./PipelineListSection";
 export { Analytics } from "./Analytics";
 export { Workspace } from "./Workspace";
@@ -9,3 +8,6 @@ export { AgentMonitor } from "./AgentMonitor";
 export { Orchestration } from "./Orchestration";
 export { SystemMetrics } from "./SystemMetrics";
 export { ProjectsSection } from "./Projects";
+export { SkillsEngineSection } from "./SkillsEngine";
+export { ResearchIntelligence } from "./ResearchIntelligence";
+export { SkillsDashboard } from "./SkillsDashboard";

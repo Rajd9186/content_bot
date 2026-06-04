@@ -2,9 +2,9 @@
 
 import { useState, memo } from "react";
 import {
-  Activity, AlertCircle, ArrowUpDown, BarChart3, ChevronDown,
-  ChevronRight, Database, ExternalLink, Globe, RefreshCw, Search,
-  Star, TrendingUp, TrendingDown, Wifi, Zap
+  Activity, AlertCircle, ArrowUpDown, BarChart3, BookOpen, ChevronDown,
+  ChevronRight, Clock, Database, ExternalLink, Globe, RefreshCw, Search,
+  Star, TrendingUp, TrendingDown, Users, Wifi, Zap
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +40,6 @@ const SOURCE_TYPE_ICONS: Record<string, React.ReactNode> = {
   default: <Globe className="h-3.5 w-3.5 text-muted-foreground" />,
 };
 
-const Users = (props: any) => <div {...props} />;
-void Users;
-
 function getScoreColor(score: number) {
   if (score >= 85) return "text-emerald-400";
   if (score >= 65) return "text-amber-400";
@@ -64,7 +61,84 @@ function ScoreBar({ score, label }: { score: number; label: string }) {
         />
       </div>
     </div>
-);
+  );
+}
+
+type SortField = "trust" | "freshness" | "usage" | "name" | "status";
+type SortDir = "asc" | "desc";
+
+const SourceCard = memo(function SourceCard({ source, onClick }: { source: Source; onClick?: () => void }) {
+  const Icon = SOURCE_TYPE_ICONS[source.type] || SOURCE_TYPE_ICONS.default;
+  const scoreColor = getScoreColor(source.trustScore);
+
+  return (
+    <div
+      onClick={onClick}
+      className={cn(
+        "group relative rounded-2xl border bg-card/40 p-4 cursor-pointer",
+        "hover:bg-card/60 hover:border-border transition-all duration-200",
+        source.status === "active" && "border-emerald-500/10",
+        source.status === "stale" && "border-amber-500/10 opacity-75",
+        source.status === "unknown" && "border-border",
+      )}
+    >
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary">
+            {Icon}
+          </div>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <h4 className="text-xs font-semibold text-foreground">{source.name}</h4>
+              {source.competitorRelated && (
+                <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/10 text-red-400 font-medium">Competitor</span>
+              )}
+            </div>
+            <a
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-[10px] text-muted-foreground hover:text-violet-400 transition-colors flex items-center gap-0.5"
+            >
+              <ExternalLink className="h-2.5 w-2.5" />
+              {source.type}
+            </a>
+          </div>
+        </div>
+        <div className={cn("text-xs font-bold", scoreColor)}>{source.trustScore}%</div>
+      </div>
+
+      <div className="space-y-1.5">
+        <ScoreBar score={source.trustScore} label="Trust" />
+        <ScoreBar score={source.freshnessScore} label="Freshness" />
+      </div>
+
+      <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-border/50">
+        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-0.5">
+            <Activity className="h-2.5 w-2.5" />
+            {source.timesUsed} uses
+          </span>
+          <span className="flex items-center gap-0.5">
+            <Clock className="h-2.5 w-2.5" />
+            {new Date(source.lastUsed).toLocaleDateString()}
+          </span>
+        </div>
+        <div className="flex items-center gap-1">
+          <span
+            className={cn(
+              "h-1.5 w-1.5 rounded-full",
+              source.status === "active" && "bg-emerald-400",
+              source.status === "stale" && "bg-amber-400",
+              source.status === "unknown" && "bg-slate-400",
+            )}
+          />
+          <span className="text-[10px] text-muted-foreground capitalize">{source.status}</span>
+        </div>
+      </div>
+    </div>
+  );
 });
 
 export function ResearchIntelligence() {
