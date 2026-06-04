@@ -32,6 +32,7 @@ _CONTENT_LOCK_CLEANUP_INTERVAL = 60.0  # seconds
 
 async def _cleanup_expired_locks():
     """Periodically clean up expired content locks."""
+    missing_table = False
     while True:
         try:
             await asyncio.sleep(_CONTENT_LOCK_CLEANUP_INTERVAL)
@@ -42,10 +43,16 @@ async def _cleanup_expired_locks():
                 await session.commit()
                 if result.rowcount > 0:
                     logger.info("Cleaned up %d expired content locks", result.rowcount)
+            missing_table = False
         except asyncio.CancelledError:
             break
         except Exception as e:
-            logger.warning("Content lock cleanup error: %s", e)
+            err_str = str(e)
+            if "does not exist" in err_str and not missing_table:
+                logger.warning("Content lock table not yet created; skipping cleanup. %s", err_str.split("\n")[0])
+                missing_table = True
+            elif "does not exist" not in err_str:
+                logger.warning("Content lock cleanup error: %s", e)
 
 
 @asynccontextmanager
