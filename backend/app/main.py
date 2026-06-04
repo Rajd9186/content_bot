@@ -194,13 +194,13 @@ async def api_docs_page():
 
 
 # ---------------------------------------------------------------------------
-# Health checks
+# Health checks (additional top-level shortcut)
 # ---------------------------------------------------------------------------
 from app.routes.health import HealthResponse
 
 
-@app.get("/health", response_model=HealthResponse)
-async def health_check():
+@app.get("/health", response_model=HealthResponse, include_in_schema=False)
+async def health_check_root():
     return HealthResponse(status="healthy", version=settings.project_version, database="connected")
 
 

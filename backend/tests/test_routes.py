@@ -83,7 +83,7 @@ class TestOpenAPI:
         assert response.status_code == 200
         schema = response.json()
         assert "paths" in schema
-        assert "/health" in schema["paths"]
+        assert "/api/v1/health" in schema["paths"]
         assert "/api/v1/projects" in schema["paths"]
 
 

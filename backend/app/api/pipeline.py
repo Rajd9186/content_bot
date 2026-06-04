@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_session
 from app.services.content_orchestrator import ContentOrchestrator
-from app.schemas.agent_outputs.writer import WriterOutput
+from app.schemas.agent_outputs.finalizer import FinalizerOutput
 from app.orchestration.state_machine.workflow_stage import WorkflowStage
 from app.log_config.logger import get_logger
 from app.repositories.project import ProjectRepository
@@ -98,11 +98,12 @@ async def run_pipeline(
             current_stage="PUBLISHED",
             is_complete=True,
             errors=[],
-            telemetry={
-                "word_count": output.word_count,
-                "citations": len(output.citations),
-                "quality_score": output.quality_score,
-            },
+        telemetry={
+            "word_count": output.word_count,
+            "citations": len(output.citations),
+            "quality_score": output.overall_quality,
+            "ready_for_publish": output.ready_for_publish,
+        },
         )
 
     except Exception as e:

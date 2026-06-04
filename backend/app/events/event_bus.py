@@ -1,12 +1,30 @@
+"""Unified event bus for workflow events.
+
+This module re-exports the canonical WorkflowEventBus from app.services.event_bus
+and provides backward-compatible aliases so that all agent and SSE events flow
+through a single DB-persisted + in-memory broadcast implementation.
+
+Trade-off note (Redis vs. in-memory):
+  The platform currently uses an in-process asyncio.Queue broadcast backed by
+  PostgreSQL persistence.  This means:
+    + Zero external dependencies (no Redis server required)
+    + Automatic DB-level event replay on reconnect
+    + Simple single-process deployment
+    - No horizontal scaling beyond one backend process
+    - Events are not shared across multiple backend instances
+  If multi-instance scaling is needed, introduce Redis Pub/Sub as the broadcast
+  layer and keep DB persistence for replay.  The WorkflowEventBus.publish()
+  method is the single point where a Redis fan-out would be added.
+"""
+
 from __future__ import annotations
 
 import asyncio
 import json
-import time
 import uuid
-from datetime import datetime
-from typing import Optional, Any
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
 
 from app.log_config.logger import get_logger
 
@@ -15,6 +33,12 @@ logger = get_logger(__name__)
 
 @dataclass
 class WorkflowEvent:
+    """Backward-compatible event dataclass.
+
+    Kept for test compatibility and as the in-memory representation that agents
+    push into the unified bus.  The canonical SSE/DB format lives in
+    app.schemas.sse_event.SSEEvent.
+    """
     event_id: str = ""
     workflow_id: str = ""
     project_id: str = ""
@@ -61,6 +85,13 @@ class WorkflowEvent:
 
 
 class EventBus:
+    """Local in-memory event bus with replay buffer.
+
+    Used by tests and as the internal broadcast mechanism.  The unified
+    publish_event() method below also forwards events to the DB-persisted
+    WorkflowEventBus so SSE clients receive them.
+    """
+
     def __init__(self):
         self._subscribers: dict[str, list[asyncio.Queue]] = {}
         self._persisted_events: dict[str, list[WorkflowEvent]] = {}
@@ -119,7 +150,6 @@ class EventBus:
     def get_events(self, workflow_id: str, after_event_id: Optional[str] = None) -> list[WorkflowEvent]:
         events = self._persisted_events.get(workflow_id, [])
         if after_event_id:
-            found = False
             for i, ev in enumerate(events):
                 if ev.event_id == after_event_id:
                     return events[i + 1:]
@@ -136,6 +166,7 @@ class EventBus:
         progress_percent: float = 0.0,
         payload: dict | None = None,
     ) -> WorkflowEvent:
+        """Publish event to both in-memory subscribers AND the DB-persisted bus."""
         event = WorkflowEvent(
             event_id=str(uuid.uuid4()),
             workflow_id=workflow_id,
@@ -148,6 +179,22 @@ class EventBus:
             timestamp=datetime.utcnow().isoformat(),
         )
         await self.publish(event)
+
+        try:
+            from app.services.event_bus import event_bus as _db_bus
+            await _db_bus.publish(
+                workflow_id=workflow_id,
+                event_type=event_type,
+                agent_name=agent_name,
+                status=status,
+                message=message,
+                progress_percent=progress_percent,
+                payload=payload or {},
+                project_id=payload.get("project_id") if payload else None,
+            )
+        except Exception as exc:
+            self.logger.debug("DB event bus forward skipped: %s", exc)
+
         return event
 
 

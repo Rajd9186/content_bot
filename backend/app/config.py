@@ -56,17 +56,29 @@ class Settings(BaseSettings):
     sse_recent_event_limit: int = 100
 
     # Stage weights for overall progress calculation (must sum to 100)
+    # Aligned with the 9-stage pipeline: Planning -> Research -> Synthesis ->
+    # Outlining -> Writing -> Validation -> SEO -> FactCheck -> Finalization
     stage_weights: dict[str, float] = {
-        "CREATED": 0.0,
+        "INIT": 0.0,
         "PLANNING": 10.0,
-        "RESEARCHING": 25.0,
-        "WRITING": 35.0,
-        "DRAFT_READY": 10.0,
-        "REVIEW_PENDING": 5.0,
-        "REVISING": 10.0,
-        "VERIFYING": 5.0,
-        "COMPLETED": 100.0,
+        "RESEARCH": 25.0,
+        "SYNTHESIS": 35.0,
+        "OUTLINING": 45.0,
+        "WRITING": 55.0,
+        "VALIDATION": 65.0,
+        "SEO": 75.0,
+        "FACT_CHECK": 85.0,
+        "FINALIZATION": 95.0,
+        "PUBLISHED": 100.0,
     }
+
+    # --- Event Bus Architecture ---
+    # The platform uses an in-process asyncio.Queue broadcast backed by
+    # PostgreSQL persistence (see app.events.event_bus and
+    # app.services.event_bus).  Redis is NOT used for event distribution.
+    # Trade-off: Zero external deps + DB replay, but no horizontal scaling.
+    # To add Redis: set redis_url below and install redis[hiredis].
+    redis_url: str = ""
 
     # --- Domain Trust ---
     trusted_domains: list[str] = [

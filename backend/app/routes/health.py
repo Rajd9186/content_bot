@@ -14,6 +14,12 @@ class HealthResponse(BaseModel):
     database: str
 
 
+class ReadinessResponse(BaseModel):
+    ready: bool
+    database: str
+    version: str
+
+
 @router.get("/health", response_model=HealthResponse)
 async def health_check():
     db_ok = False
@@ -28,4 +34,21 @@ async def health_check():
         status="healthy" if db_ok else "degraded",
         version=settings.project_version,
         database="connected" if db_ok else "unreachable",
+    )
+
+
+@router.get("/health/ready", response_model=ReadinessResponse)
+async def readiness_check():
+    db_ok = False
+    try:
+        async with async_session_factory() as session:
+            await session.execute(text("SELECT 1"))
+            db_ok = True
+    except Exception:
+        pass
+
+    return ReadinessResponse(
+        ready=db_ok,
+        database="connected" if db_ok else "unreachable",
+        version=settings.project_version,
     )
