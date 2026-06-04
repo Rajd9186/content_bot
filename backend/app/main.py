@@ -1,177 +1,221 @@
-from __future__ import annotations
-# Trigger rebuild 2026-06-03-v2
+import asyncio
+import sys
+import os
+import uuid
+import time
 
-import logging
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager, suppress
-from datetime import UTC
+from datetime import datetime
+from pathlib import Path
 
-from fastapi import FastAPI
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
+from sqlalchemy import delete
 
-from app.api.v1.router import api_router
-from app.core.config import settings
-from app.core.logging import setup_logging
-from app.infrastructure.events.outbox_worker import outbox_worker
-from app.infrastructure.janitor.worker import janitor_worker
-from app.infrastructure.messaging.redis_client import redis_client
-from app.infrastructure.sse.manager import sse_manager
-from app.infrastructure.websocket.manager import connection_manager
-from app.infrastructure.workers.pipeline_worker import pipeline_worker
-from app.infrastructure.workers.recovery_worker import pipeline_recovery_worker
-from app.middleware.correlation import CorrelationIdMiddleware
-from app.middleware.errors import ErrorHandlingMiddleware
-from app.middleware.logging import RequestLoggingMiddleware
-from app.orchestration.orchestrator import orchestrator
+from app.config import settings
+from app.database import init_db, dispose_engine, async_session_factory, validate_environment
+from app.models.content_version import ContentLock
+from app.routes import projects, content, evidence, verification, chat, enhance, ws, sse, sse_agents
+from app.api.pipeline import router as pipeline_router
+from app.routes.health import router as health_router, HealthResponse
+from app.routes.workflow import register_workflow_routes
+from app.log_config.logger import setup_logging, set_correlation_id
+from app.utils.datetime_utils import utc_now
 
-logger = logging.getLogger(__name__)
+logger = setup_logging(__name__)
 
-
-async def _checkpoint_persister(run) -> None:
-    from app.infrastructure.database import async_session_factory
-    from app.infrastructure.unit_of_work import UnitOfWork
-    try:
-        async with async_session_factory() as session:
-            uow = UnitOfWork(session)
-            await uow.checkpoints.save_checkpoint(
-                aggregate_id=run.id,
-                aggregate_type="workflow",
-                checkpoint_type="workflow_run",
-                state=run.model_dump(),
-                version=run.version,
-            )
-            await uow.commit()
-    except Exception as e:
-        logger.warning("Checkpoint persist failed for workflow %s: %s", run.id, e)
+_CONTENT_LOCK_CLEANUP_INTERVAL = 60.0  # seconds
 
 
-async def _dead_letter_handler(run, stage, error, retries) -> None:
-    from datetime import datetime
-
-    from app.infrastructure.database import async_session_factory
-    from app.infrastructure.models.telemetry import RetryRecord
-    from app.infrastructure.unit_of_work import UnitOfWork
-    try:
-        async with async_session_factory() as session:
-            uow = UnitOfWork(session)
-            record = RetryRecord(
-                target_type="workflow_stage",
-                target_id=run.id,
-                attempt_number=retries,
-                status="exhausted",
-                error_code="STAGE_FAILED",
-                error_message=error[:1000] if error else "",
-                executed_at=datetime.now(UTC),
-            )
-            uow.session.add(record)
-            await uow.commit()
-    except Exception as e:
-        logger.warning("Dead letter persist failed: %s", e)
+async def _cleanup_expired_locks():
+    """Periodically clean up expired content locks."""
+    while True:
+        try:
+            await asyncio.sleep(_CONTENT_LOCK_CLEANUP_INTERVAL)
+            async with async_session_factory() as session:
+                now = utc_now()
+                stmt = delete(ContentLock).where(ContentLock.expires_at < now)
+                result = await session.execute(stmt)
+                await session.commit()
+                if result.rowcount > 0:
+                    logger.info("Cleaned up %d expired content locks", result.rowcount)
+        except asyncio.CancelledError:
+            break
+        except Exception as e:
+            logger.warning("Content lock cleanup error: %s", e)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    setup_logging()
-    logger.info(
-        "Application starting",
-        extra={"environment": settings.ENVIRONMENT, "version": settings.VERSION},
-    )
-
-    if settings.REDIS_URL and settings.REDIS_URL != "redis://localhost:6379":
-        try:
-            await redis_client.connect()
-            logger.info("Redis connection established")
-        except Exception as e:
-            logger.warning("Redis connection failed (non-fatal): %s", e)
-
-    if redis_client._client is not None:
-        await outbox_worker.start()
-        await janitor_worker.start()
-        await connection_manager.start_redis_listener()
-        await pipeline_worker.start()
-        await pipeline_recovery_worker.start()
-        await sse_manager.start()
-
-    try:
-        orchestrator._checkpoint_persister = _checkpoint_persister
-        orchestrator._retry_manager._dead_letter_fn = _dead_letter_handler
-        logger.info("Orchestrator wired with checkpoint persister and dead letter handler")
-    except Exception as e:
-        logger.warning("Failed to wire orchestrator: %s", e)
-
-    logger.info("Orchestration engine initialized (singleton)")
-
-    from app.infrastructure.workers.recovery_worker import recovery_service
-    try:
-        recovered = await recovery_service.recover_on_startup()
-        if recovered > 0:
-            logger.info("Recovered %d incomplete workflows on startup", recovered)
-    except Exception as e:
-        logger.warning("Startup recovery failed: %s", e)
-
+async def lifespan(app: FastAPI):
+    logger.info("Starting Verified AI Research Writer API")
+    validate_environment()
+    await init_db()
+    logger.info("Database initialized")
+    cleanup_task = asyncio.create_task(_cleanup_expired_locks())
     yield
-
-    await pipeline_worker.stop()
-    await pipeline_recovery_worker.stop()
-    await sse_manager.stop()
-    await outbox_worker.stop()
-    await janitor_worker.stop()
-    await connection_manager.stop_redis_listener()
-
-    with suppress(Exception):
-        await redis_client.disconnect()
-    logger.info("Application shutting down")
+    cleanup_task.cancel()
+    try:
+        await cleanup_task
+    except asyncio.CancelledError:
+        pass
+    logger.info("Shutting down Verified AI Research Writer API")
+    await dispose_engine()
 
 
-def create_app() -> FastAPI:
-    app = FastAPI(
-        title=settings.PROJECT_NAME,
-        version=settings.VERSION,
-        description="AI Content Intelligence Platform API Gateway",
-        docs_url=f"{settings.API_V1_STR}/docs",
-        redoc_url=f"{settings.API_V1_STR}/redoc",
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
-        lifespan=lifespan,
-        contact={
-            "name": "Platform Engineering",
-            "url": "https://github.com/ai-content-intel",
-        },
-        license_info={
-            "name": "Proprietary",
-        },
+app = FastAPI(
+    title=settings.project_name,
+    version=settings.project_version,
+    lifespan=lifespan,
+)
+
+
+# ---------------------------------------------------------------------------
+# Request tracing middleware
+# ---------------------------------------------------------------------------
+@app.middleware("http")
+async def request_tracing_middleware(request: Request, call_next):
+    cid = request.headers.get("X-Correlation-ID") or str(uuid.uuid4())
+    set_correlation_id(cid)
+    start = time.time()
+    response = await call_next(request)
+    elapsed_ms = round((time.time() - start) * 1000, 2)
+    response.headers["X-Correlation-ID"] = cid
+    response.headers["X-Response-Time-Ms"] = str(elapsed_ms)
+    logger.info(
+        "%s %s -> %s (%.2fms)",
+        request.method, request.url.path, response.status_code, elapsed_ms,
+    )
+    return response
+
+
+# ---------------------------------------------------------------------------
+# Global exception handlers
+# ---------------------------------------------------------------------------
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Sanitize error details to ensure they are JSON serializable.
+    # Pydantic v2 errors can contain non-serializable objects (like ValueErrors) in 'ctx'.
+    raw_errors = exc.errors()
+    error_details = []
+    for error in raw_errors:
+        sanitized = error.copy()
+        if "ctx" in sanitized:
+            ctx = sanitized["ctx"]
+            new_ctx = {}
+            for k, v in ctx.items():
+                if isinstance(v, (str, int, float, bool, type(None))):
+                    new_ctx[k] = v
+                else:
+                    new_ctx[k] = str(v)
+            sanitized["ctx"] = new_ctx
+        error_details.append(sanitized)
+
+    logger.error(
+        "Validation error for %s %s: %s",
+        request.method, request.url.path, error_details,
+        extra={"body": str(exc.body)},
+    )
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"detail": error_details, "body": str(exc.body)},
     )
 
-    origins = [str(origin).rstrip("/") for origin in settings.BACKEND_CORS_ORIGINS]
-    if settings.DEBUG and "null" not in origins:
-        origins.append("null")
-    app.add_middleware(CorrelationIdMiddleware)
-    app.add_middleware(RequestLoggingMiddleware)
-    app.add_middleware(ErrorHandlingMiddleware)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-        expose_headers=["X-Correlation-ID", "X-Process-Time-Ms"],
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    logger.error(
+        "Unhandled error for %s %s: %s",
+        request.method, request.url.path, str(exc),
+        exc_info=True,
+    )
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"detail": "Internal server error", "error": str(exc)},
     )
 
-    app.include_router(api_router, prefix=settings.API_V1_STR)
 
-    @app.get("/", include_in_schema=False)
-    async def root() -> JSONResponse:
-        return JSONResponse(
-            content={
-                "service": settings.PROJECT_NAME,
-                "version": settings.VERSION,
-                "docs": f"{settings.API_V1_STR}/docs",
-                "openapi": f"{settings.API_V1_STR}/openapi.json",
-            }
-        )
+# ---------------------------------------------------------------------------
+# CORS middleware
+# ---------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "https://verified-ai-research-writer-frontend.onrender.com",
+        "http://localhost:3000",        
+        "https://verified-ai-research-writer.onrender.com",
+        "null",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-    return app
+# ---------------------------------------------------------------------------
+# Register routes
+# ---------------------------------------------------------------------------
+register_workflow_routes(projects.router)
+
+app.include_router(health_router, prefix=settings.api_v1_prefix)
+app.include_router(projects.router, prefix=settings.api_v1_prefix)
+app.include_router(content.router, prefix=settings.api_v1_prefix)
+app.include_router(evidence.router, prefix=settings.api_v1_prefix)
+app.include_router(verification.router, prefix=settings.api_v1_prefix)
+app.include_router(chat.router, prefix=settings.api_v1_prefix)
+app.include_router(enhance.router, prefix=settings.api_v1_prefix)
+app.include_router(ws.router)
+app.include_router(sse_agents.router, prefix=settings.api_v1_prefix)
+app.include_router(sse.router, prefix=settings.api_v1_prefix)
+
+# ---------------------------------------------------------------------------
+# V3 Pipeline routes (new typed architecture)
+# ---------------------------------------------------------------------------
+app.include_router(pipeline_router, prefix=settings.api_v1_prefix)
+
+# ---------------------------------------------------------------------------
+# Static files & root endpoint
+# ---------------------------------------------------------------------------
+_static_dir = Path(__file__).resolve().parent / "static"
+_static_dir.mkdir(exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(_static_dir)), name="static")
 
 
-app = create_app()
+@app.get("/", response_class=HTMLResponse)
+async def api_docs_page():
+    index_path = _static_dir / "index.html"
+    if index_path.exists():
+        html = index_path.read_text(encoding="utf-8")
+        return HTMLResponse(content=html)
+    return HTMLResponse(
+        content="<h1>Verified AI Research Writer API</h1><p>See <a href='/docs'>/docs</a> for Swagger UI.</p>"
+    )
 
+
+# ---------------------------------------------------------------------------
+# Health checks (additional top-level shortcut)
+# ---------------------------------------------------------------------------
+from app.routes.health import HealthResponse
+
+
+@app.get("/health", response_model=HealthResponse, include_in_schema=False)
+async def health_check_root():
+    return HealthResponse(status="healthy", version=settings.project_version, database="connected")
+
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=port,
+        reload=False,
+        log_level=settings.log_level.lower(),
+        access_log=True,
+    )

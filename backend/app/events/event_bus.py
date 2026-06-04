@@ -1,129 +1,201 @@
+"""Unified event bus for workflow events.
+
+This module re-exports the canonical WorkflowEventBus from app.services.event_bus
+and provides backward-compatible aliases so that all agent and SSE events flow
+through a single DB-persisted + in-memory broadcast implementation.
+
+Trade-off note (Redis vs. in-memory):
+  The platform currently uses an in-process asyncio.Queue broadcast backed by
+  PostgreSQL persistence.  This means:
+    + Zero external dependencies (no Redis server required)
+    + Automatic DB-level event replay on reconnect
+    + Simple single-process deployment
+    - No horizontal scaling beyond one backend process
+    - Events are not shared across multiple backend instances
+  If multi-instance scaling is needed, introduce Redis Pub/Sub as the broadcast
+  layer and keep DB persistence for replay.  The WorkflowEventBus.publish()
+  method is the single point where a Redis fan-out would be added.
+"""
+
 from __future__ import annotations
 
-import logging
-from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any
+import asyncio
+import json
+import uuid
+from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Optional
 
-from app.events.event_types import EVENT_REGISTRY, BaseEvent
-from app.infrastructure.models.event import StoredEvent
+from app.log_config.logger import get_logger
 
-if TYPE_CHECKING:
-    from app.infrastructure.unit_of_work import UnitOfWork
-
-logger = logging.getLogger(__name__)
-
-EventHandler = Callable[[BaseEvent], Coroutine[Any, Any, None]]
+logger = get_logger(__name__)
 
 
-class EventStore:
-    async def save(self, uow: UnitOfWork, event: BaseEvent) -> StoredEvent:
-        stored = StoredEvent(**event.to_stored_dict())
-        await uow.events.store(stored)
-        logger.info(
-            "Event stored: %s [%s]",
-            event.type, event.subject,
-            extra={"correlation_id": event.correlation_id},
-        )
-        return stored
+@dataclass
+class WorkflowEvent:
+    """Backward-compatible event dataclass.
 
-    async def get_by_type(
-        self, uow: UnitOfWork, event_type: str, limit: int = 100, offset: int = 0,
-    ) -> list[StoredEvent]:
-        return await uow.events.get_by_type(event_type, limit, offset)
+    Kept for test compatibility and as the in-memory representation that agents
+    push into the unified bus.  The canonical SSE/DB format lives in
+    app.schemas.sse_event.SSEEvent.
+    """
+    event_id: str = ""
+    workflow_id: str = ""
+    project_id: str = ""
+    event_type: str = ""
+    agent_name: str = ""
+    status: str = ""
+    message: str = ""
+    progress_percent: float = 0.0
+    payload: dict = field(default_factory=dict)
+    timestamp: str = ""
+    duration_ms: float = 0.0
 
-    async def get_by_aggregate(
-        self, uow: UnitOfWork, aggregate_type: str, aggregate_id: str, limit: int = 100,
-    ) -> list[StoredEvent]:
-        return await uow.events.get_by_aggregate(aggregate_type, aggregate_id, limit)
+    def to_dict(self) -> dict:
+        return {
+            "event_id": self.event_id,
+            "workflow_id": self.workflow_id,
+            "project_id": self.project_id,
+            "event_type": self.event_type,
+            "agent_name": self.agent_name,
+            "status": self.status,
+            "message": self.message,
+            "progress_percent": self.progress_percent,
+            "payload": self.payload,
+            "timestamp": self.timestamp,
+            "duration_ms": self.duration_ms,
+        }
 
-    async def get_by_correlation_id(
-        self, uow: UnitOfWork, correlation_id: str, limit: int = 100,
-    ) -> list[StoredEvent]:
-        return await uow.events.get_by_correlation_id(correlation_id, limit)
-
-    async def replay(
-        self,
-        uow: UnitOfWork,
-        event_type: str | None = None,
-        aggregate_type: str | None = None,
-        aggregate_id: str | None = None,
-        limit: int = 100,
-    ) -> list[BaseEvent]:
-        if event_type:
-            stored_events = await self.get_by_type(uow, event_type, limit)
-        elif aggregate_type and aggregate_id:
-            stored_events = await self.get_by_aggregate(
-                uow, aggregate_type, aggregate_id, limit
-            )
-        else:
-            return []
-
-        deserialized: list[BaseEvent] = []
-        for se in stored_events:
-            event_class = EVENT_REGISTRY.get(se.event_type)
-            if event_class:
-                try:
-                    event = event_class(
-                        id=se.id,
-                        source=se.source,
-                        type=se.event_type,
-                        subject=se.subject,
-                        correlation_id=se.correlation_id,
-                        data=se.data or {},
-                        extra_metadata=se.extra_metadata or {},
-                    )
-                    deserialized.append(event)
-                except Exception as e:
-                    logger.warning("Failed to deserialize event %s: %s", se.id, e)
-            else:
-                logger.warning("Unknown event type: %s", se.event_type)
-
-        return deserialized
+    def to_sse_dict(self) -> dict:
+        return {
+            "id": self.event_id,
+            "event": self.event_type,
+            "data": json.dumps({
+                "workflow_id": self.workflow_id,
+                "project_id": self.project_id,
+                "event_type": self.event_type,
+                "agent_name": self.agent_name,
+                "status": self.status,
+                "message": self.message,
+                "progress_percent": self.progress_percent,
+                "payload": self.payload,
+                "timestamp": self.timestamp,
+            }),
+        }
 
 
 class EventBus:
-    def __init__(self) -> None:
-        self._subscribers: dict[str, list[EventHandler]] = {}
+    """Local in-memory event bus with replay buffer.
 
-    def subscribe(self, event_type: str, handler: EventHandler) -> None:
-        if event_type not in self._subscribers:
-            self._subscribers[event_type] = []
-        self._subscribers[event_type].append(handler)
-        logger.debug("Subscribed to %s: %s", event_type, handler.__name__)
+    Used by tests and as the internal broadcast mechanism.  The unified
+    publish_event() method below also forwards events to the DB-persisted
+    WorkflowEventBus so SSE clients receive them.
+    """
 
-    def subscribe_all(self, handler: EventHandler) -> None:
-        for event_type in EVENT_REGISTRY:
-            self.subscribe(event_type, handler)
+    def __init__(self):
+        self._subscribers: dict[str, list[asyncio.Queue]] = {}
+        self._persisted_events: dict[str, list[WorkflowEvent]] = {}
+        self.logger = get_logger(self.__class__.__name__)
 
-    async def publish(self, event: BaseEvent) -> None:
-        handlers = self._subscribers.get(event.type, []) + self._subscribers.get("*", [])
-        for handler in handlers:
-            try:
-                await handler(event)
-            except Exception as e:
-                logger.error(
-                    "Handler %s failed for %s: %s",
-                    handler.__name__, event.type, e,
-                    extra={"correlation_id": event.correlation_id},
-                )
+    def subscribe(self, workflow_id: str) -> asyncio.Queue:
+        if workflow_id not in self._subscribers:
+            self._subscribers[workflow_id] = []
+        queue: asyncio.Queue = asyncio.Queue()
+        self._subscribers[workflow_id].append(queue)
 
-    async def publish_and_store(
-        self, uow: UnitOfWork, event: BaseEvent,
-    ) -> StoredEvent:
-        stored = await EventStore().save(uow, event)
+        if workflow_id in self._persisted_events:
+            for event in self._persisted_events[workflow_id]:
+                queue.put_nowait(event)
+
+        return queue
+
+    def unsubscribe(self, workflow_id: str, queue: asyncio.Queue) -> None:
+        if workflow_id in self._subscribers:
+            self._subscribers[workflow_id] = [
+                q for q in self._subscribers[workflow_id] if q is not queue
+            ]
+
+    async def publish(self, event: WorkflowEvent) -> None:
+        if not event.event_id:
+            event.event_id = str(uuid.uuid4())
+        if not event.timestamp:
+            event.timestamp = datetime.utcnow().isoformat()
+
+        wf_id = event.workflow_id
+        if wf_id not in self._persisted_events:
+            self._persisted_events[wf_id] = []
+        self._persisted_events[wf_id].append(event)
+
+        max_events = 500
+        if len(self._persisted_events[wf_id]) > max_events:
+            self._persisted_events[wf_id] = self._persisted_events[wf_id][-max_events:]
+
+        if wf_id in self._subscribers:
+            dead_queues = []
+            for queue in self._subscribers[wf_id]:
+                try:
+                    queue.put_nowait(event)
+                except asyncio.QueueFull:
+                    dead_queues.append(queue)
+            for q in dead_queues:
+                self._subscribers[wf_id].remove(q)
+
+        self.logger.debug("Event published", extra={
+            "workflow_id": wf_id,
+            "event_type": event.event_type,
+            "agent": event.agent_name,
+            "status": event.status,
+        })
+
+    def get_events(self, workflow_id: str, after_event_id: Optional[str] = None) -> list[WorkflowEvent]:
+        events = self._persisted_events.get(workflow_id, [])
+        if after_event_id:
+            for i, ev in enumerate(events):
+                if ev.event_id == after_event_id:
+                    return events[i + 1:]
+            return []
+        return events
+
+    async def publish_event(
+        self,
+        workflow_id: str,
+        event_type: str,
+        agent_name: str = "",
+        status: str = "",
+        message: str = "",
+        progress_percent: float = 0.0,
+        payload: dict | None = None,
+    ) -> WorkflowEvent:
+        """Publish event to both in-memory subscribers AND the DB-persisted bus."""
+        event = WorkflowEvent(
+            event_id=str(uuid.uuid4()),
+            workflow_id=workflow_id,
+            event_type=event_type,
+            agent_name=agent_name,
+            status=status,
+            message=message,
+            progress_percent=progress_percent,
+            payload=payload or {},
+            timestamp=datetime.utcnow().isoformat(),
+        )
         await self.publish(event)
-        return stored
 
-    async def store_atomic(
-        self, uow: UnitOfWork, event: BaseEvent,
-    ) -> StoredEvent:
-        """Atomically store an event within a UOW transaction."""
-        stored = await EventStore().save(uow, event)
-        return stored
+        try:
+            from app.services.event_bus import event_bus as _db_bus
+            await _db_bus.publish(
+                workflow_id=workflow_id,
+                event_type=event_type,
+                agent_name=agent_name,
+                status=status,
+                message=message,
+                progress_percent=progress_percent,
+                payload=payload or {},
+                project_id=payload.get("project_id") if payload else None,
+            )
+        except Exception as exc:
+            self.logger.debug("DB event bus forward skipped: %s", exc)
 
-    def clear(self) -> None:
-        self._subscribers.clear()
+        return event
 
 
 event_bus = EventBus()
-event_store = EventStore()

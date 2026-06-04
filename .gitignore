@@ -1,54 +1,51 @@
-# ── Python ──
+# Python
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
 *.egg-info/
-.venv/
-venv/
-*.egg
-.ruff_cache/
-.pytest_cache/
-
-# ── Node ──
-node_modules/
-.pnpm-store/
-.next/
-
-# ── Build ──
 dist/
 build/
-*.tsbuildinfo
-.next/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
 
-# ── Environment ──
+# Node
+node_modules/
+.next/
+out/
+dist/
+.npm/
+.npm-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment
 .env
 .env.local
 .env.*.local
-.env.production
 
-# ── IDE ──
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 
-# ── OS ──
+# OS
 .DS_Store
 Thumbs.db
 
-# ── Logs ──
+# Docker
+docker-data/
+
+# Database
+*.db
+
+# Logs
 *.log
 logs/
-
-# ── Docker ──
-docker-compose.override.yml
-
-# ── Coverage ──
-coverage/
-htmlcov/
-
-# ── Prisma ──
-packages/database/generated/
-
-# ── Generated Types ──
-frontend/src/types/generated.ts

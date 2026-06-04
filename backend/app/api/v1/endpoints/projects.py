@@ -4,7 +4,9 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
+
 
 from app.core.deps import get_current_user_id
 from app.domains.project.service import ProjectService
@@ -301,8 +303,24 @@ async def update_research_preferences(
         latest_only=latest_only,
     )
 
+@router.post(
+    "/projects/migrate-fix",
+    summary="TEMPORARY: Fix Alembic version mismatch",
+    tags=["maintenance"],
+)
+async def fix_migration_version(
+    db: AsyncSession = Depends(get_db),
+) -> Any:
+    try:
+        await db.execute(text("UPDATE alembic_version SET version_num = '0009'"))
+        await db.commit()
+        return {"status": "success", "message": "Version reset to 0009. Please redeploy."}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @router.get(
     "/projects/{project_id}/timeline",
+
 
     response_model=list[TimelineEntry],
     summary="Get project timeline",
