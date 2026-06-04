@@ -329,7 +329,7 @@ export function MemoryExplorer() {
     } else {
       loadMemories();
     }
-  }, [loadMemories, loadPinnedMemories]);
+  }, [activeTab, loadMemories, loadPinnedMemories]);
 
   const handleSearch = async () => {
     if (!searchQuery.trim() || !currentProjectId) return;

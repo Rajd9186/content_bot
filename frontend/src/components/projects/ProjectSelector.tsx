@@ -17,7 +17,7 @@ export function ProjectSelector({ onSelect }: ProjectSelectorProps) {
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [loadProjects]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

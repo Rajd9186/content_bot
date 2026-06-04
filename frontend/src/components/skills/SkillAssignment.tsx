@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useProjectStore } from '@/store/project-store';
 import { skillsApi } from '@/lib/skills-api';
 import type { Skill, ProjectSkill } from '@/types/skills';
@@ -41,7 +41,7 @@ export function SkillAssignment() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [showAddPanel]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!currentProjectId) return;
     setLoading(true);
     try {
@@ -57,7 +57,7 @@ export function SkillAssignment() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentProjectId]);
 
   const handleAssign = async (skillId: string, priority?: number) => {
     if (!currentProjectId) return;

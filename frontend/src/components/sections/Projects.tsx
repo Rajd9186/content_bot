@@ -396,7 +396,7 @@ export function ProjectsSection() {
 
   useEffect(() => {
     loadProjects();
-  }, []);
+  }, [loadProjects]);
 
   useEffect(() => {
     if (currentProjectId) {
