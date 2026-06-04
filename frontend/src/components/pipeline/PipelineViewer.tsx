@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BookOutput, Network } from "lucide-react";
+import { BookOpen, Network } from "lucide-react";
 import { usePipelineStore } from "@/store/pipeline-store";
 import { ErrorBoundary } from "@/components/common";
 import { PipelineGraph } from "./PipelineGraph";
@@ -54,7 +54,7 @@ export function PipelineViewer() {
                     onClick={() => setViewMode("content")}
                     className="flex items-center gap-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 px-3 py-1 text-[11px] font-medium text-violet-400 hover:bg-violet-500/20 transition-colors"
                   >
-                    <BookOutput className="h-3 w-3" />
+                    <BookOpen className="h-3 w-3" />
                     Content View
                   </button>
                 )}

@@ -237,9 +237,7 @@ function AgentNodeDetail({ node }: AgentNodeDetailProps) {
         <DetailRow
           icon={<Cpu className="h-3.5 w-3.5" />}
           label="Provider"
-          value={node.provider ? (
-            <span className="capitalize">{node.provider}</span>
-          ) : undefined}
+          value={node.provider ? node.provider.charAt(0).toUpperCase() + node.provider.slice(1) : undefined}
           accent="violet"
         />
         <DetailRow
