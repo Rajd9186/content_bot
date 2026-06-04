@@ -24,14 +24,14 @@ const TAB_CONFIG: { id: Tab; label: string; icon: React.ElementType; color: stri
   { id: "pinned", label: "Pinned", icon: Pin, color: "text-yellow-400" },
 ];
 
-const TYPE_STYLES: Record<string, { border: string; bg: string; icon: React.ElementType; label: string }> = {
-  prompt: { border: "border-blue-500/30", bg: "bg-blue-500/5", icon: MessageSquare, label: "Prompt" },
-  output: { border: "border-emerald-500/30", bg: "bg-emerald-500/5", icon: FileOutput, label: "Output" },
-  research: { border: "border-violet-500/30", bg: "bg-violet-500/5", icon: Database, label: "Research" },
-  fact: { border: "border-red-500/30", bg: "bg-red-500/5", icon: AlertCircle, label: "Fact" },
-  user_preference: { border: "border-amber-500/30", bg: "bg-amber-500/5", icon: Hash, label: "Preference" },
-  decision: { border: "border-orange-500/30", bg: "bg-orange-500/5", icon: Lightbulb, label: "Decision" },
-  summary: { border: "border-border", bg: "bg-secondary/30", icon: TrendingUp, label: "Summary" },
+const TYPE_STYLES: Record<string, { border: string; bg: string; icon: React.ElementType; label: string; color: string }> = {
+  prompt: { border: "border-blue-500/30", bg: "bg-blue-500/5", icon: MessageSquare, label: "Prompt", color: "text-blue-400" },
+  output: { border: "border-emerald-500/30", bg: "bg-emerald-500/5", icon: FileOutput, label: "Output", color: "text-emerald-400" },
+  research: { border: "border-violet-500/30", bg: "bg-violet-500/5", icon: Database, label: "Research", color: "text-violet-400" },
+  fact: { border: "border-red-500/30", bg: "bg-red-500/5", icon: AlertCircle, label: "Fact", color: "text-red-400" },
+  user_preference: { border: "border-amber-500/30", bg: "bg-amber-500/5", icon: Hash, label: "Preference", color: "text-amber-400" },
+  decision: { border: "border-orange-500/30", bg: "bg-orange-500/5", icon: Lightbulb, label: "Decision", color: "text-orange-400" },
+  summary: { border: "border-border", bg: "bg-secondary/30", icon: TrendingUp, label: "Summary", color: "text-muted-foreground" },
 };
 
 interface MemoryCardProps {
