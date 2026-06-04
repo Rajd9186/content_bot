@@ -263,7 +263,7 @@ export function PipelineGraph({ onNodeClick }: PipelineGraphProps) {
           width={svgW}
           height={svgH}
           viewBox={`0 0 ${svgW} ${svgH}`}
-          className="hidden sm:block"
+          className="hidden lg:block"
           style={{ minWidth: svgW }}
         >
           <defs>
@@ -391,7 +391,7 @@ export function PipelineGraph({ onNodeClick }: PipelineGraphProps) {
           })}
         </svg>
 
-        <div className="sm:hidden flex flex-col gap-2">
+        <div className="lg:hidden flex flex-col gap-2">
           {nodes.map((node) => (
             <div key={node.id} className="flex items-center gap-2">
               {node.id !== "prompt" && (

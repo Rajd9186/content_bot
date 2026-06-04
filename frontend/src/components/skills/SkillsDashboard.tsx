@@ -350,6 +350,12 @@ function SkillFormModal({
   const [agentTargets, setAgentTargets] = useState<string[]>(initialData?.agent_targets || []);
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !content.trim()) return;
@@ -368,10 +374,15 @@ function SkillFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="skill-form-title"
+    >
       <div className="bg-card/95 backdrop-blur-xl rounded-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4 shadow-2xl">
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
-          <h3 className="text-lg font-semibold text-white">
+          <h3 id="skill-form-title" className="text-lg font-semibold text-white">
             {initialData ? 'Edit Skill' : 'Create Skill'}
           </h3>
           <button onClick={onClose} className="text-gray-500 hover:text-white">

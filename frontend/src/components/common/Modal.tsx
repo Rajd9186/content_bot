@@ -39,6 +39,9 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       ref={overlayRef}
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in"
       onClick={(e) => e.target === overlayRef.current && onClose()}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={title ? "modal-title" : undefined}
     >
       <div
         className={cn(
@@ -48,7 +51,7 @@ export function Modal({ open, onClose, title, children, className }: ModalProps)
       >
         {title && (
           <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+            <h2 id="modal-title" className="text-lg font-semibold text-foreground">{title}</h2>
             <button
               onClick={onClose}
               className="rounded-xl p-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-all btn-press"

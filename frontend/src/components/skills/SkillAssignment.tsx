@@ -34,6 +34,13 @@ export function SkillAssignment() {
     loadData();
   }, [currentProjectId]);
 
+  useEffect(() => {
+    if (!showAddPanel) return;
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAddPanel(false); };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [showAddPanel]);
+
   const loadData = async () => {
     if (!currentProjectId) return;
     setLoading(true);
@@ -195,10 +202,14 @@ export function SkillAssignment() {
       )}
 
       {showAddPanel && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="add-skill-title"
+        >
           <div className="bg-gray-900 rounded-lg border border-gray-700 w-full max-w-lg max-h-[80vh] overflow-y-auto mx-4">
             <div className="flex items-center justify-between p-4 border-b border-gray-700">
-              <h3 className="text-lg font-semibold text-white">Add Skill</h3>
+              <h3 id="add-skill-title" className="text-lg font-semibold text-white">Add Skill</h3>
               <button onClick={() => setShowAddPanel(false)} className="text-gray-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>

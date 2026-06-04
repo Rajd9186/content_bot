@@ -141,8 +141,22 @@ const MemoryDetailModal = memo(function MemoryDetailModal({ memory, onClose, onP
   const style = TYPE_STYLES[memory.memory_type] || TYPE_STYLES.summary;
   const Icon = style.icon;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="memory-detail-title"
+    >
       <div
         onClick={(e) => e.stopPropagation()}
         className="bg-card/95 backdrop-blur-xl rounded-2xl border border-border w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl animate-bounce-in mx-4"
@@ -153,7 +167,7 @@ const MemoryDetailModal = memo(function MemoryDetailModal({ memory, onClose, onP
               <Icon className={cn("h-4 w-4", style.color)} />
             </div>
             <div>
-              <h2 className="text-sm font-bold text-foreground">{style.label}</h2>
+              <h2 id="memory-detail-title" className="text-sm font-bold text-foreground">{style.label}</h2>
               <p className="text-[10px] text-muted-foreground">Memory Detail</p>
             </div>
           </div>

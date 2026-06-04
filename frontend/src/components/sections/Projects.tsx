@@ -177,7 +177,7 @@ function ProjectOverviewTab({ dashboard, loading }: ProjectOverviewTabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map((s) => (
           <div key={s.label} className="rounded-2xl border border-border bg-card/40 p-3">
             <div className={cn(
@@ -446,7 +446,7 @@ export function ProjectsSection() {
                 placeholder="Search projects..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 w-48"
+                className="pl-8 pr-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 w-full min-w-[120px] max-w-xs"
               />
             </div>
             <div className="flex items-center gap-1.5 rounded-xl bg-secondary/60 border border-border px-2 py-1.5">
@@ -456,7 +456,7 @@ export function ProjectsSection() {
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleCreateProject()}
-                className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground w-32 focus:outline-none"
+                className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground w-24 min-w-[80px] focus:outline-none"
               />
               <button
                 onClick={handleCreateProject}
@@ -552,7 +552,7 @@ export function ProjectsSection() {
                   value={newProjectName}
                   onChange={(e) => setNewProjectName(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleCreateProject()}
-                  className="px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 w-48"
+                  className="px-3 py-2 rounded-xl bg-secondary/60 border border-border text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-violet-500 w-full min-w-[120px] max-w-xs"
                 />
                 <button
                   onClick={handleCreateProject}

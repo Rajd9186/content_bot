@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   AlertTriangle, ArrowDownToLine, BookOpen, Brain, ChevronDown,
   ChevronRight, Clock, Cpu, Database, FileOutput, Hash, Layers,
@@ -360,6 +360,16 @@ export function AgentTransparencyPanel({ nodeId, onClose }: AgentTransparencyPan
   const agentNodes = useAgentNodes();
   const node = agentNodes.find((n) => n.name === nodeId);
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === "Escape") onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!nodeId) return;
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [nodeId, handleKeyDown]);
+
   return (
     <>
       {nodeId && (
@@ -373,6 +383,9 @@ export function AgentTransparencyPanel({ nodeId, onClose }: AgentTransparencyPan
           "fixed right-0 top-0 z-40 h-full w-full sm:w-[480px] bg-card/95 backdrop-blur-xl border-l border-border transform transition-transform duration-300 ease-out overflow-hidden",
           nodeId ? "translate-x-0" : "translate-x-full",
         )}
+        role="complementary"
+        aria-label="Agent details"
+        aria-hidden={!nodeId}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between border-b border-border px-4 py-3 shrink-0">

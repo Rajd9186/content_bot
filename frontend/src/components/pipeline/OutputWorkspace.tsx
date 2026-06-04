@@ -256,7 +256,7 @@ export function OutputWorkspace() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-4 h-full min-h-0">
+    <div className="grid grid-cols-1 md:grid-cols-[180px_1fr_220px] lg:grid-cols-[220px_1fr_260px] gap-4 h-full min-h-0">
       <div className="rounded-2xl border border-border bg-card/40 h-full overflow-y-auto">
         <div className="p-3 border-b border-border sticky top-0 bg-card/80 backdrop-blur-sm z-10">
           <h3 className="text-xs font-semibold text-foreground flex items-center gap-2">

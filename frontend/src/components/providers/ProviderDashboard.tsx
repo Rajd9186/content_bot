@@ -139,7 +139,7 @@ const ProviderCard = memo(function ProviderCard({ name, stat }: { name: string; 
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div className="rounded-xl bg-secondary/40 p-2 text-center">
             <div className="flex items-center justify-center gap-0.5">
               {getLatencyTrend(stat.average_latency)}
@@ -265,7 +265,7 @@ export function ProviderDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         <div className="rounded-2xl border border-border bg-card/40 p-3">
           <div className="flex items-center gap-2 mb-1">
             <span className={cn(
