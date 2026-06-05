@@ -1,6 +1,6 @@
 from app.domains.agent.models import AgentCall, AgentConfig, AgentExecution
 from app.domains.content.models import ContentItem, ContentVersion, GeneratedContent
-from app.domains.skills.models import (
+from app.infrastructure.models.skills import (
     ProjectSkill,
     Skill,
     SkillAgentTarget,

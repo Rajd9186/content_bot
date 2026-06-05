@@ -7,7 +7,7 @@ from typing import Any
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.skills.models import (
+from app.infrastructure.models.skills import (
     ProjectSkill,
     Skill,
     SkillAgentTarget,

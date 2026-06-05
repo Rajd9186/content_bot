@@ -196,7 +196,8 @@ class ProjectRepository:
 
     async def get_dashboard(self, project_id: str) -> dict[str, Any]:
         from app.infrastructure.models.pipeline import PipelineRun
-        from app.infrastructure.models.project import ProjectInstruction, ProjectSkill, ProjectChatSession
+        from app.infrastructure.models.project import ProjectInstruction, ProjectChatSession
+        from app.infrastructure.models.skills import ProjectSkill
 
         outputs_count = await self._session.scalar(
             select(func.count()).where(ProjectOutput.project_id == project_id)

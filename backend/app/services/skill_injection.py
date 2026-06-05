@@ -5,7 +5,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domains.skills.models import Skill
+from app.infrastructure.models.skills import Skill
 from app.domains.skills.repository import SkillRepository
 
 logger = logging.getLogger(__name__)
