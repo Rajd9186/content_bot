@@ -75,7 +75,9 @@ class ProjectStatusUpdate(BaseModel):
     status: str
 
 
-class ProjectWorkflowStatus(BaseModel):
+class PinMemoryRequest(BaseModel):
+    memory_id: str
+    priority: int = 0
     """Lightweight workflow status returned with project info."""
 
     workflow_status: str | None = None

@@ -24,6 +24,7 @@ from app.schemas.project import (
     ConversationResponse,
     MemoryResponse,
     OutputResponse,
+    PinMemoryRequest,
     ProjectCreate,
     ProjectDashboard,
     ProjectResponse,
