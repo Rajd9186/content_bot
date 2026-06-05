@@ -18,6 +18,7 @@ from app.services.project_instructions import ProjectInstructionService
 from app.services.context_assembly import ContextAssemblyEngine
 from app.agents.project_copilot_agent import ProjectCopilotAgent
 
+from app.schemas.project import ProjectResponse
 from app.services.retrieval_metrics import retrieval_metrics
 from app.services.semantic_retrieval import SemanticRetrievalService
 
