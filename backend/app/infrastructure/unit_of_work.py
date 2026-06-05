@@ -51,13 +51,6 @@ class UnitOfWork:
         return self._events
 
     @property
-    def projects(self) -> ProjectRepository:
-        from app.domains.project.repository import ProjectRepository
-        if not hasattr(self, "_projects"):
-            self._projects = ProjectRepository(self._session)
-        return self._projects
-
-    @property
     def pipelines(self) -> PipelineRepository:
         from app.infrastructure.repositories.pipeline_repository import PipelineRepository
         if not hasattr(self, "_pipelines"):

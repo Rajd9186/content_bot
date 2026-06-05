@@ -14,7 +14,6 @@ from app.pipeline.agents.planner_agent import PlannerAgent, extract_plan
 from app.pipeline.agents.research_agent import ResearchAgent, extract_research_data
 from app.pipeline.agents.seo_agent import SEOAgent, extract_seo_output
 from app.pipeline.agents.writer_agent import WriterAgent, extract_writer_output
-from app.pipeline.memory_retrieval_agent import MemoryRetrievalAgent
 from app.pipeline.state import NodeResult, NodeStatus, PipelineState
 
 logger = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ NodeHandler = Callable[[PipelineState], Coroutine[Any, Any, PipelineState]]
 
 
 class WorkflowPipeline:
-    def __init__(self, uow: UnitOfWork = None) -> None:
+    def __init__(self) -> None:
         self._research_agent = ResearchAgent()
         self._planner_agent = PlannerAgent()
         self._writer_agent = WriterAgent()
@@ -31,10 +30,6 @@ class WorkflowPipeline:
         self._fact_checker_agent = FactCheckerAgent()
         self._compliance_agent = ComplianceAgent()
         self._finalizer_agent = FinalizerAgent()
-        
-        # Intelligence Layer: Memory Retrieval Agent
-        self._memory_agent = MemoryRetrievalAgent(uow=uow) if uow else None
-        
         self._progress_callbacks: list[Callable[[str, NodeResult], None]] = []
 
     def on_progress(self, callback: Callable[[str, NodeResult], None]) -> None:
@@ -176,13 +171,6 @@ class WorkflowPipeline:
         skip_human_review: bool = False,
     ) -> PipelineState:
         start_time = time.monotonic()
-        
-        # 1. Memory Retrieval Step ( intelligence layer )
-        if self._memory_agent:
-            state = await self._memory_agent.execute(state)
-            if state.current_node == "memory_retrieval" and state.has_failures():
-                logger.warning("Intelligence retrieval failed, proceeding without project context")
-
         steps = [
             self.run_skill_retrieval,
             self.run_memory_retrieval,
