@@ -18,7 +18,18 @@ from app.services.project_instructions import ProjectInstructionService
 from app.services.context_assembly import ContextAssemblyEngine
 from app.agents.project_copilot_agent import ProjectCopilotAgent
 
-from app.schemas.project import ProjectCreate, ProjectResponse
+from app.schemas.project import (
+    ContextAssemblyRequest,
+    ContextAssemblyResponse,
+    ConversationResponse,
+    MemoryResponse,
+    OutputResponse,
+    ProjectCreate,
+    ProjectDashboard,
+    ProjectResponse,
+    ProjectSummary,
+    TimelineEntry,
+)
 from app.services.retrieval_metrics import retrieval_metrics
 from app.services.semantic_retrieval import SemanticRetrievalService
 
@@ -165,6 +176,7 @@ async def update_instruction(
 @router.delete(
     "/projects/{project_id}/instructions/{instruction_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def delete_instruction(
     instruction_id: str,
@@ -228,6 +240,7 @@ async def add_allowed_source(
 @router.delete(
     "/projects/{project_id}/allowed-sources/{source_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def remove_allowed_source(
     source_id: str,
@@ -263,6 +276,7 @@ async def add_blocked_source(
 @router.delete(
     "/projects/{project_id}/blocked-sources/{source_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def remove_blocked_source(
     source_id: str,
@@ -434,6 +448,7 @@ async def get_chat_history(
 @router.delete(
     "/projects/{project_id}/chat/sessions/{session_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    response_model=None,
 )
 async def delete_chat_session(
     session_id: str,
