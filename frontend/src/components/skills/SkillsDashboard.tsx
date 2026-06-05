@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSkillsStore } from '@/store/skills-store';
 import { skillsApi } from '@/lib/skills-api';
 import type { Skill, SkillCategory } from '@/types/skills';
@@ -47,7 +47,7 @@ export function SkillsDashboard() {
     loadSkills();
   }, [filterCategory]);
 
-  const loadSkills = async () => {
+  const loadSkills = useCallback(async () => {
     setLoading(true);
     try {
       const data = await skillsApi.list(
@@ -59,7 +59,7 @@ export function SkillsDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterCategory]);
 
   const filteredSkills = skills.filter((s) =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||

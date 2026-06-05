@@ -46,9 +46,10 @@ class ProjectCopilotAgent:
         if memories:
             context_parts.append("RELEVANT MEMORIES:\n" + "\n".join([m["content"] for m in memories]))
         if outputs:
-            context_parts.append("PREVIOUS OUTPUTS:\n" + "\n".join([f"Title: {o.title}\\nContent: {o.content[:500]}..." for o in outputs]))
+            context_parts.append("PREVIOUS OUTPUTS:\n" + "\n".join([f"Title: {o.title}\nContent: {o.content[:500]}..." for o in outputs]))
             
-        user_prompt = f"Project Context:\n{Vocabulary = '\\n'.join(context_parts)}\n\nUser Query: {query}"
+        context_text = '\n'.join(context_parts)
+        user_prompt = f"Project Context:\n{context_text}\n\nUser Query: {query}"
         
         # 3. Execute via LLM
         provider = self._provider_factory.get_or_create("openai", "gpt-4o")
