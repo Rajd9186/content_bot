@@ -191,7 +191,7 @@ async def approve_workflow(
             detail=f"Cannot approve from stage '{current_stage.value}'",
         )
 
-    workflow.status = WorkflowStatus.completed
+    workflow.status = WorkflowStatus.COMPLETED
     workflow.current_node = WorkflowStage.PUBLISHED.value
     workflow.completed_at = utc_now()
     await session.flush()

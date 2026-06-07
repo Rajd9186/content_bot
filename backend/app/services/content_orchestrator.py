@@ -125,7 +125,7 @@ class ContentOrchestrator:
         wf = WorkflowExecution(
             id=UUID(wf_id),
             project_id=UUID(project_id),
-            status=WorkflowStatus.running,
+            status=WorkflowStatus.RUNNING,
             current_node=WorkflowStage.INIT.value,
         )
         session.add(wf)
@@ -281,7 +281,7 @@ class ContentOrchestrator:
             session.add(cv)
 
             wf.current_node = WorkflowStage.PUBLISHED.value
-            wf.status = WorkflowStatus.completed
+            wf.status = WorkflowStatus.COMPLETED
             wf.completed_at = utc_now()
             await session.commit()
 
@@ -301,7 +301,7 @@ class ContentOrchestrator:
                 wf_id, WorkflowStage.FAILED, StageStatus.FAILED, error=str(e),
             )
             wf.current_node = WorkflowStage.FAILED.value
-            wf.status = WorkflowStatus.failed
+            wf.status = WorkflowStatus.FAILED
             wf.error = str(e)[:2000]
             await session.commit()
 

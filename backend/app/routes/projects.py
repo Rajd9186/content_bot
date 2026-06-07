@@ -32,13 +32,13 @@ def _auto_generate_fields(topic: str) -> dict:
         "climate": "informative",
         "security": "professional",
     }
-    tone = "professional"
+    tone = "PROFESSIONAL"
     for key, val in tones_by_topic.items():
         if key in topic_lower:
-            tone = val
+            tone = val.upper()
             break
 
-    content_type = "article"
+    content_type = "ARTICLE"
     type_keywords = {
         "research_paper": ["research", "study", "analysis", "survey", "investigation"],
         "report": ["report", "quarterly", "annual", "review", "summary"],
@@ -48,7 +48,7 @@ def _auto_generate_fields(topic: str) -> dict:
     }
     for ctype, keywords in type_keywords.items():
         if any(kw in topic_lower for kw in keywords):
-            content_type = ctype
+            content_type = ctype.upper()
             break
 
     audience_map = {
