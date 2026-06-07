@@ -4,7 +4,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -25,10 +25,7 @@ from app.schemas.project import (
     MemoryResponse,
     OutputResponse,
     PinMemoryRequest,
-    ProjectCreate,
     ProjectDashboard,
-    ProjectResponse,
-    ProjectSummary,
     TimelineEntry,
 )
 from app.services.retrieval_metrics import retrieval_metrics
@@ -38,93 +35,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["projects"])
 
-
-@router.post(
-    "/projects",
-    response_model=ProjectResponse,
-    summary="Create a new project",
-    operation_id="createProject",
-    status_code=status.HTTP_201_CREATED,
-)
-async def create_project(
-    body: ProjectCreate,
-    service: ProjectService = Depends(get_project_service),
-    user_id: str | None = Depends(get_current_user_id),
-) -> Any:
-    owner_id = user_id or "00000000-0000-0000-0000-000000000000"
-    project = await service.create_project(body.name, owner_id, body.description)
-    return ProjectResponse(
-        id=project.id,
-        name=project.name,
-        description=project.description,
-        archived=project.archived,
-        owner_id=project.owner_id,
-        created_at=project.created_at,
-        updated_at=project.updated_at,
-    )
-
-
-@router.get(
-    "/projects",
-    response_model=list[ProjectSummary],
-    summary="List all projects",
-    operation_id="listProjects",
-)
-async def list_projects(
-    include_archived: bool = Query(False),
-    service: ProjectService = Depends(get_project_service),
-    user_id: str | None = Depends(get_current_user_id),
-) -> Any:
-    owner_id = user_id or "00000000-0000-0000-0000-000000000000"
-    try:
-        projects = await service.get_projects(owner_id, include_archived)
-    except Exception as e:
-        logger.exception("list_projects: get_projects failed for owner=%s", owner_id)
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to list projects: {e}",
-        )
-    result = []
-    for p in projects:
-        try:
-            dash = await service.get_dashboard(p.id)
-        except Exception:
-            logger.exception("list_projects: get_dashboard failed for project=%s", p.id)
-            dash = {"total_outputs": 0, "total_memories": 0, "last_activity": None}
-        result.append(ProjectSummary(
-            id=p.id,
-            name=p.name,
-            description=p.description,
-            archived=p.archived,
-            total_outputs=dash.get("total_outputs", 0),
-            total_memories=dash.get("total_memories", 0),
-            last_activity=dash.get("last_activity"),
-        ))
-    return result
-
-
-@router.get(
-    "/projects/{project_id}",
-    response_model=ProjectResponse,
-    summary="Get project details",
-    operation_id="getProject",
-)
-async def get_project(
-    project_id: str,
-    service: ProjectService = Depends(get_project_service),
-) -> Any:
-    project = await service.get_project(project_id)
-    if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
-    return ProjectResponse(
-        id=project.id,
-        name=project.name,
-        description=project.description,
-        archived=project.archived,
-        owner_id=project.owner_id,
-        created_at=project.created_at,
-        updated_at=project.updated_at,
-    )
 
 @router.post(
     "/projects/{project_id}/instructions",
@@ -336,8 +246,6 @@ async def fix_migration_version(
 
 @router.get(
     "/projects/{project_id}/timeline",
-
-
     response_model=list[TimelineEntry],
     summary="Get project timeline",
     operation_id="getProjectTimeline",
