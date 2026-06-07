@@ -49,30 +49,35 @@ export function ProjectDashboard() {
       value: dashboard.total_outputs,
       icon: FileText,
       color: 'text-emerald-400',
+      description: 'Generated content items',
     },
     {
       label: 'Total Memories',
       value: dashboard.total_memories,
       icon: Brain,
       color: 'text-blue-400',
+      description: 'Stored knowledge items',
     },
     {
       label: 'Total Sources',
       value: dashboard.total_sources,
       icon: Database,
       color: 'text-purple-400',
+      description: 'Research sources used',
     },
     {
       label: 'Tokens Used',
       value: dashboard.total_tokens_used.toLocaleString(),
       icon: Hash,
       color: 'text-orange-400',
+      description: 'LLM tokens consumed',
     },
     {
       label: 'Estimated Cost',
       value: `$${dashboard.total_cost.toFixed(2)}`,
       icon: DollarSign,
       color: 'text-green-400',
+      description: 'Estimated API cost',
     },
     {
       label: 'Last Activity',
@@ -81,36 +86,42 @@ export function ProjectDashboard() {
         : 'N/A',
       icon: Clock,
       color: 'text-gray-400',
+      description: 'Most recent action',
     },
     {
       label: 'Instructions',
       value: dashboard.instructions_count,
       icon: FileText,
       color: 'text-indigo-400',
+      description: 'Custom instructions',
     },
     {
       label: 'Project Skills',
       value: dashboard.skills_count,
       icon: Brain,
       color: 'text-pink-400',
+      description: 'Active skills',
     },
     {
       label: 'Allowed Sources',
       value: dashboard.allowed_sources_count,
       icon: Database,
       color: 'text-cyan-400',
+      description: 'Permitted sources',
     },
     {
       label: 'Blocked Sources',
       value: dashboard.blocked_sources_count,
       icon: Database,
       color: 'text-red-400',
+      description: 'Blocked sources',
     },
     {
       label: 'Chat Sessions',
       value: dashboard.chat_sessions_count,
       icon: Hash,
       color: 'text-yellow-400',
+      description: 'Copilot sessions',
     },
   ];
 
@@ -125,18 +136,20 @@ export function ProjectDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {stats.map((stat) => (
-          <div
+          <button
             key={stat.label}
-            className="bg-gray-800 rounded-lg p-4 border border-gray-700"
+            onClick={() => {/* future: navigate or show details */}}
+            className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-500 hover:bg-gray-750 transition-all cursor-pointer text-left group"
           >
             <div className="flex items-center gap-3">
               <stat.icon className={`w-6 h-6 ${stat.color}`} />
               <div>
                 <p className="text-sm text-gray-400">{stat.label}</p>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <p className="text-xs text-gray-500 mt-0.5 opacity-0 group-hover:opacity-100 transition-opacity">{stat.description}</p>
               </div>
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -145,12 +158,16 @@ export function ProjectDashboard() {
           <h2 className="text-lg font-semibold text-white mb-4">Recent Workflows</h2>
           <div className="space-y-2">
             {dashboard.recent_workflows.slice(0, 5).map((workflow: any, idx: number) => (
-              <div key={idx} className="flex items-center justify-between p-2 bg-gray-900 rounded">
-                <span className="text-sm text-gray-300">{workflow.topic || 'Untitled'}</span>
-                <span className="text-xs text-gray-500">
+              <button
+                key={idx}
+                onClick={() => {/* future: open workflow details */}}
+                className="w-full flex items-center justify-between p-2 bg-gray-900 rounded hover:bg-gray-850 transition-colors cursor-pointer text-left"
+              >
+                <span className="text-sm text-gray-300 truncate max-w-[200px]">{workflow.topic || 'Untitled'}</span>
+                <span className="text-xs text-gray-500 flex-shrink-0">
                   {new Date(workflow.created_at).toLocaleDateString()}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>

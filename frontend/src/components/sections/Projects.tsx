@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import {
-  Activity, Archive, BookOpen, Brain, Clock, Database, FileOutput,
-  FolderOpen, Layers, Plus, Projector, RefreshCw, Search, Settings,
+  Activity, Brain, Clock, Database, FileOutput,
+  FolderOpen, Layers, Plus, Projector, Search, Settings,
   Sparkles, TrendingUp, Workflow
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -72,9 +72,10 @@ interface ProjectWorkspaceHeaderProps {
   project: Project | null;
   dashboard: ProjectDashboard | null;
   loading: boolean;
+  onStatClick?: (tab: Tab) => void;
 }
 
-function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspaceHeaderProps) {
+function ProjectWorkspaceHeader({ project, dashboard, loading, onStatClick }: ProjectWorkspaceHeaderProps) {
   const setSection = useUIStore((s) => s.setSection);
   const openModal = useUIStore((s) => s.openModal);
   const selectProject = useProjectStore((s) => s.selectProject);
@@ -84,6 +85,10 @@ function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspac
 
   const handleBack = () => {
     selectProject(null);
+  };
+
+  const handleStatClick = (tab: Tab) => {
+    onStatClick?.(tab);
   };
 
   if (!project && !loading) {
@@ -114,27 +119,27 @@ function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspac
               <p className="text-xs text-muted-foreground mb-3">{project.topic}</p>
             )}
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <button onClick={() => handleStatClick("memories")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                 <Brain className="h-3.5 w-3.5 text-violet-400" />
                 <span className="font-medium text-foreground">{dashboard?.total_memories ?? 0}</span> memories
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              </button>
+              <button onClick={() => handleStatClick("outputs")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                 <FileOutput className="h-3.5 w-3.5 text-emerald-400" />
                 <span className="font-medium text-foreground">{dashboard?.total_outputs ?? 0}</span> outputs
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              </button>
+              <button onClick={() => handleStatClick("sources")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                 <Database className="h-3.5 w-3.5 text-blue-400" />
                 <span className="font-medium text-foreground">{dashboard?.total_sources ?? 0}</span> sources
-              </div>
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              </button>
+              <button onClick={() => handleStatClick("analytics")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                 <Layers className="h-3.5 w-3.5 text-amber-400" />
                 <span className="font-medium text-foreground">{dashboard?.total_tokens_used?.toLocaleString() ?? 0}</span> tokens
-              </div>
+              </button>
               {dashboard?.last_activity && (
-                <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <button onClick={() => handleStatClick("analytics")} className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
                   <Clock className="h-3.5 w-3.5 text-muted-foreground/60" />
                   <span>Last activity {new Date(dashboard.last_activity).toLocaleDateString()}</span>
-                </div>
+                </button>
               )}
             </div>
           </div>
@@ -163,23 +168,28 @@ function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspac
 interface ProjectOverviewTabProps {
   dashboard: ProjectDashboard | null;
   loading: boolean;
+  setActiveTab: (tab: Tab) => void;
 }
 
-function ProjectOverviewTab({ dashboard, loading }: ProjectOverviewTabProps) {
+function ProjectOverviewTab({ dashboard, loading, setActiveTab }: ProjectOverviewTabProps) {
   const stats = dashboard ? [
-    { label: "Total Outputs", value: dashboard.total_outputs, icon: FileOutput, accent: "emerald" },
-    { label: "Total Memories", value: dashboard.total_memories, icon: Brain, accent: "blue" },
-    { label: "Total Sources", value: dashboard.total_sources, icon: Database, accent: "violet" },
-    { label: "Tokens Used", value: dashboard.total_tokens_used.toLocaleString(), icon: Layers, accent: "amber" },
-    { label: "Est. Cost", value: `$${dashboard.total_cost.toFixed(2)}`, icon: Activity, accent: "emerald" },
-    { label: "Last Activity", value: dashboard.last_activity ? new Date(dashboard.last_activity).toLocaleDateString() : "N/A", icon: Clock, accent: "muted" },
+    { label: "Total Outputs", value: dashboard.total_outputs, icon: FileOutput, accent: "emerald", tab: "outputs" as Tab },
+    { label: "Total Memories", value: dashboard.total_memories, icon: Brain, accent: "blue", tab: "memories" as Tab },
+    { label: "Total Sources", value: dashboard.total_sources, icon: Database, accent: "violet", tab: "sources" as Tab },
+    { label: "Tokens Used", value: dashboard.total_tokens_used.toLocaleString(), icon: Layers, accent: "amber", tab: "analytics" as Tab },
+    { label: "Est. Cost", value: `$${dashboard.total_cost.toFixed(2)}`, icon: Activity, accent: "emerald", tab: "analytics" as Tab },
+    { label: "Last Activity", value: dashboard.last_activity ? new Date(dashboard.last_activity).toLocaleDateString() : "N/A", icon: Clock, accent: "muted", tab: "analytics" as Tab },
   ] : [];
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6">
         {stats.map((s) => (
-          <div key={s.label} className="rounded-2xl border border-border bg-card/40 p-3">
+          <button
+            key={s.label}
+            onClick={() => setActiveTab(s.tab)}
+            className="rounded-2xl border border-border bg-card/40 p-3 text-left hover:bg-card/60 hover:border-border-light transition-all cursor-pointer group"
+          >
             <div className={cn(
               "flex h-8 w-8 items-center justify-center rounded-xl mb-2",
               s.accent === "emerald" && "bg-emerald-500/10 text-emerald-400",
@@ -191,16 +201,28 @@ function ProjectOverviewTab({ dashboard, loading }: ProjectOverviewTabProps) {
               <s.icon className="h-4 w-4" />
             </div>
             <div className="text-lg font-bold text-foreground">{loading ? "—" : s.value}</div>
-            <div className="text-[10px] text-muted-foreground">{s.label}</div>
-          </div>
+            <div className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{s.label}</div>
+          </button>
         ))}
       </div>
       {dashboard?.recent_workflows && dashboard.recent_workflows.length > 0 && (
         <div className="rounded-2xl border border-border bg-card/40 p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3">Recent Pipelines</h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground">Recent Pipelines</h3>
+            <button
+              onClick={() => setActiveTab("pipelines")}
+              className="text-[10px] text-violet-400 hover:text-violet-300 font-medium transition-colors cursor-pointer"
+            >
+              View all
+            </button>
+          </div>
           <div className="space-y-2">
             {(dashboard.recent_workflows as any[]).slice(0, 5).map((w: any, i: number) => (
-              <div key={i} className="flex items-center justify-between rounded-xl bg-secondary/40 p-2.5">
+              <button
+                key={i}
+                onClick={() => setActiveTab("pipelines")}
+                className="w-full flex items-center justify-between rounded-xl bg-secondary/40 p-2.5 hover:bg-secondary/60 transition-colors cursor-pointer text-left"
+              >
                 <div className="flex items-center gap-2">
                   <Projector className="h-3.5 w-3.5 text-violet-400" />
                   <span className="text-xs font-medium text-foreground truncate max-w-[200px]">{w.topic || "Untitled"}</span>
@@ -208,7 +230,7 @@ function ProjectOverviewTab({ dashboard, loading }: ProjectOverviewTabProps) {
                 <span className="text-[10px] text-muted-foreground flex-shrink-0">
                   {new Date(w.created_at).toLocaleDateString()}
                 </span>
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -246,13 +268,17 @@ function ProjectPipelinesTab({ projectId }: ProjectPipelinesTabProps) {
           <p className="text-xs text-muted-foreground text-center py-6">No pipelines in this project yet</p>
         ) : (
           pipelines.filter((p) => !("workflow_id" in p)).slice(0, 10).map((p: any) => (
-            <div key={p.id} className="flex items-center justify-between rounded-xl bg-secondary/40 p-2.5">
+            <button
+              key={p.id}
+              onClick={() => handleRunPipeline(p.id)}
+              className="w-full flex items-center justify-between rounded-xl bg-secondary/40 p-2.5 hover:bg-secondary/60 transition-colors cursor-pointer text-left"
+            >
               <div className="flex items-center gap-2">
                 <span className={cn("status-dot", p.archived ? "skipped" : "success")} />
                 <span className="text-xs font-medium text-foreground truncate max-w-[200px]">{p.name}</span>
               </div>
               <span className="text-[10px] text-muted-foreground">{new Date(p.created_at).toLocaleDateString()}</span>
-            </div>
+            </button>
           ))
         )}
       </div>
@@ -289,14 +315,18 @@ function ProjectOutputsTab({ projectId }: ProjectOutputsTabProps) {
       ) : (
         <div className="space-y-2">
           {outputs.slice(0, 10).map((o) => (
-            <div key={o.id} className="flex items-center gap-2.5 rounded-xl bg-secondary/40 p-2.5">
+            <button
+              key={o.id}
+              onClick={() => {/* future: open output detail */}}
+              className="w-full flex items-center gap-2.5 rounded-xl bg-secondary/40 p-2.5 hover:bg-secondary/60 transition-colors cursor-pointer text-left"
+            >
               <FileOutput className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-medium text-foreground truncate">{o.title || "Untitled"}</div>
                 <div className="text-[10px] text-muted-foreground">{o.content_type}</div>
               </div>
               <span className="text-[10px] text-muted-foreground flex-shrink-0">{new Date(o.created_at).toLocaleDateString()}</span>
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -477,6 +507,7 @@ export function ProjectsSection() {
             project={currentProject as any}
             dashboard={dashboard}
             loading={dashboardLoading}
+            onStatClick={setActiveTab}
           />
 
           <div className="border-b border-border">
@@ -500,7 +531,7 @@ export function ProjectsSection() {
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {activeTab === "overview" && <ProjectOverviewTab dashboard={dashboard} loading={dashboardLoading} />}
+            {activeTab === "overview" && <ProjectOverviewTab dashboard={dashboard} loading={dashboardLoading} setActiveTab={setActiveTab} />}
             {activeTab === "memories" && currentProjectId && (
               <div className="rounded-2xl border border-border bg-card/40 p-4">
                 <h3 className="text-sm font-semibold text-foreground mb-4">Memories</h3>
