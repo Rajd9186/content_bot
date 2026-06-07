@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useProjectStore } from "@/store/project-store";
-import { projectApi, type ProjectDashboard, type ProjectSummary } from "@/lib/projects-api";
+import { projectApi, type Project, type ProjectDashboard, type ProjectSummary } from "@/lib/projects-api";
 import type { SectionName } from "@/types/api";
 import { useUIStore } from "@/store/ui-store";
 
@@ -69,7 +69,7 @@ function ProjectCard({ project, onSelect }: { project: ProjectSummary; onSelect:
 }
 
 interface ProjectWorkspaceHeaderProps {
-  project: ProjectSummary | null;
+  project: Project | null;
   dashboard: ProjectDashboard | null;
   loading: boolean;
 }
@@ -77,6 +77,7 @@ interface ProjectWorkspaceHeaderProps {
 function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspaceHeaderProps) {
   const setSection = useUIStore((s) => s.setSection);
   const selectProject = useProjectStore((s) => s.selectProject);
+  const projectName = project?.title || project?.topic || "";
 
   const handleCreatePipeline = () => {
     setSection("pipeline");
@@ -103,24 +104,24 @@ function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspac
       ) : (
         <div className="flex items-start gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/20 to-violet-600/10 text-lg font-bold text-violet-400 shadow-lg shadow-violet-500/10 shrink-0">
-            {project!.name.charAt(0).toUpperCase()}
+            {projectName.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <h2 className="text-lg font-bold text-foreground">{project!.name}</h2>
+              <h2 className="text-lg font-bold text-foreground">{projectName}</h2>
               <span className="status-dot success" />
             </div>
-            {project!.description && (
-              <p className="text-xs text-muted-foreground mb-3">{project!.description}</p>
+            {project?.topic && (
+              <p className="text-xs text-muted-foreground mb-3">{project.topic}</p>
             )}
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Brain className="h-3.5 w-3.5 text-violet-400" />
-                <span className="font-medium text-foreground">{dashboard?.total_memories ?? project!.total_memories}</span> memories
+                <span className="font-medium text-foreground">{dashboard?.total_memories ?? 0}</span> memories
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <FileOutput className="h-3.5 w-3.5 text-emerald-400" />
-                <span className="font-medium text-foreground">{dashboard?.total_outputs ?? project!.total_outputs}</span> outputs
+                <span className="font-medium text-foreground">{dashboard?.total_outputs ?? 0}</span> outputs
               </div>
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
                 <Database className="h-3.5 w-3.5 text-blue-400" />
