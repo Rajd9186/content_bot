@@ -117,7 +117,7 @@ export function ProjectDashboard() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">{dashboard.project.name}</h1>
+        <h1 className="text-2xl font-bold text-white">{dashboard.project.title || dashboard.project.topic || dashboard.project.name}</h1>
         {dashboard.project.description && (
           <p className="text-gray-400 mt-1">{dashboard.project.description}</p>
         )}

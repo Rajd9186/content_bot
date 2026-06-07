@@ -434,7 +434,7 @@ export function ProjectsSection() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Projects</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {showProjectWorkspace ? currentProject?.name : `${projects.length} workspace${projects.length !== 1 ? "s" : ""}`}
+            {showProjectWorkspace ? (currentProject?.title || currentProject?.topic) : `${projects.length} workspace${projects.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         {!showProjectWorkspace && (

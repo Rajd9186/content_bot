@@ -2,10 +2,30 @@ import api from './api';
 
 export interface Project {
   id: string;
-  name: string;
-  description: string | null;
-  archived: boolean;
-  owner_id: string;
+  topic: string;
+  title: string;
+  points_to_cover: string[];
+  tone: string;
+  content_type: string;
+  target_audience: string | null;
+  seo_keywords: string[];
+  status: string;
+  outline: Record<string, unknown> | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ProjectResponse {
+  id: string;
+  topic: string;
+  title: string;
+  points_to_cover: string[];
+  tone: string;
+  content_type: string;
+  target_audience: string | null;
+  seo_keywords: string[];
+  status: string;
+  outline: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -20,8 +40,20 @@ export interface ProjectSummary {
   last_activity: string | null;
 }
 
+function toProjectSummary(r: ProjectResponse): ProjectSummary {
+  return {
+    id: r.id,
+    name: r.title || r.topic,
+    description: r.topic,
+    archived: false,
+    total_outputs: 0,
+    total_memories: 0,
+    last_activity: r.updated_at,
+  };
+}
+
 export interface ProjectDashboard {
-  project: Project;
+  project: Record<string, any>;
   total_outputs: number;
   total_memories: number;
   total_sources: number;
@@ -83,8 +115,8 @@ export interface ContextAssembly {
 export const projectApi = {
   async list(includeArchived = false): Promise<ProjectSummary[]> {
     const params = new URLSearchParams({ include_archived: String(includeArchived) });
-    const response = await api.get<ProjectSummary[]>(`/projects?${params}`);
-    return response.data;
+    const response = await api.get<ProjectResponse[]>(`/projects?${params}`);
+    return (response.data ?? []).map(toProjectSummary);
   },
 
   async get(projectId: string): Promise<Project> {
@@ -93,7 +125,7 @@ export const projectApi = {
   },
 
   async create(name: string, description?: string): Promise<Project> {
-    const response = await api.post<Project>('/projects', { name, description });
+    const response = await api.post<ProjectResponse>('/projects', { topic: name, title: name, points_to_cover: [] });
     return response.data;
   },
 

@@ -62,8 +62,8 @@ export const useProjectStore = create<ProjectState>()(
             set({ projects });
           } catch {
             const summary: ProjectSummary = {
-              id: project.id, name: project.name, description: project.description,
-              archived: project.archived, total_outputs: 0, total_memories: 0, last_activity: null,
+              id: project.id, name: project.title || project.topic, description: project.topic,
+              archived: false, total_outputs: 0, total_memories: 0, last_activity: null,
             };
             set((state) => ({
               projects: [summary, ...state.projects.filter((p) => p.id !== project.id)],
