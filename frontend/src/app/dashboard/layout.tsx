@@ -6,6 +6,7 @@ import { useUIStore } from "@/store/ui-store";
 const SideNav = dynamic(() => import("@/components/layout/SideNav").then((m) => ({ default: m.SideNav })), { ssr: false });
 const TopNav = dynamic(() => import("@/components/layout/TopNav").then((m) => ({ default: m.TopNav })), { ssr: false });
 const Footer = dynamic(() => import("@/components/layout/Footer").then((m) => ({ default: m.Footer })), { ssr: false });
+const PipelineCreateModal = dynamic(() => import("@/components/pipeline/PipelineCreateModal").then((m) => ({ default: m.PipelineCreateModal })), { ssr: false });
 
 const SECTION_LABELS: Record<string, string> = {
   commandCenter: "Command Center",
@@ -25,6 +26,8 @@ const SECTION_LABELS: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const section = useUIStore((s) => s.section);
   const mobileMenuOpen = useUIStore((s) => s.mobileMenuOpen);
+  const modal = useUIStore((s) => s.modal);
+  const closeModal = useUIStore((s) => s.closeModal);
 
   return (
     <div className="flex h-screen bg-background overflow-hidden">
@@ -43,6 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Footer />
         </div>
       </div>
+      <PipelineCreateModal open={modal === "pipeline-create"} onClose={closeModal} />
     </div>
   );
 }

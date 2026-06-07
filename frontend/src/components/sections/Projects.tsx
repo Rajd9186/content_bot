@@ -76,12 +76,11 @@ interface ProjectWorkspaceHeaderProps {
 
 function ProjectWorkspaceHeader({ project, dashboard, loading }: ProjectWorkspaceHeaderProps) {
   const setSection = useUIStore((s) => s.setSection);
+  const openModal = useUIStore((s) => s.openModal);
   const selectProject = useProjectStore((s) => s.selectProject);
   const projectName = project?.title || project?.topic || "";
 
-  const handleCreatePipeline = () => {
-    setSection("pipeline");
-  };
+  const handleCreatePipeline = () => openModal("pipeline-create");
 
   const handleBack = () => {
     selectProject(null);

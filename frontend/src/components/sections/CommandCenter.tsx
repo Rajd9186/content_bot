@@ -319,16 +319,9 @@ export function CommandCenter() {
   }, []);
 
   const setSection = useUIStore((s) => s.setSection);
-  const create = usePipelineStore((s) => s.create);
-  const run = usePipelineStore((s) => s.run);
+  const openModal = useUIStore((s) => s.openModal);
 
-  const handleCreatePipeline = async () => {
-    try {
-      const id = await create("AI Research on Emerging Technologies", "technical", "professional");
-      await run(id);
-      setSection("pipeline");
-    } catch {}
-  };
+  const handleCreatePipeline = () => openModal("pipeline-create");
 
   const handleViewPipeline = (id: string) => {
     usePipelineStore.getState().select(id);
