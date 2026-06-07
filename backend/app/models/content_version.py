@@ -9,11 +9,11 @@ from app.utils.datetime_utils import utc_now
 
 
 class ContentVersionStatus(str, enum.Enum):
-    DRAFT = "draft"
-    REVIEWING = "reviewing"
-    REVISED = "revised"
-    FINAL = "final"
-    ARCHIVED = "archived"
+    DRAFT = "DRAFT"
+    REVIEWING = "REVIEWING"
+    REVISED = "REVISED"
+    FINAL = "FINAL"
+    ARCHIVED = "ARCHIVED"
 
 
 class ContentVersion(Base):

@@ -8,31 +8,31 @@ from app.database import Base
 
 
 class ProjectStatus(str, enum.Enum):
-    DRAFT = "draft"
-    PLANNING = "planning"
-    RESEARCHING = "researching"
-    VERIFYING = "verifying"
-    GENERATING = "generating"
-    SELF_VERIFYING = "self_verifying"
-    COMPLETED = "completed"
-    FAILED = "failed"
+    DRAFT = "DRAFT"
+    PLANNING = "PLANNING"
+    RESEARCHING = "RESEARCHING"
+    VERIFYING = "VERIFYING"
+    GENERATING = "GENERATING"
+    SELF_VERIFYING = "SELF_VERIFYING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
 
 
 class ContentTone(str, enum.Enum):
-    PROFESSIONAL = "professional"
-    ACADEMIC = "academic"
-    CONVERSATIONAL = "conversational"
-    PERSUASIVE = "persuasive"
-    INFORMATIVE = "informative"
+    PROFESSIONAL = "PROFESSIONAL"
+    ACADEMIC = "ACADEMIC"
+    CONVERSATIONAL = "CONVERSATIONAL"
+    PERSUASIVE = "PERSUASIVE"
+    INFORMATIVE = "INFORMATIVE"
 
 
 class ContentType(str, enum.Enum):
-    BLOG_POST = "blog_post"
-    ARTICLE = "article"
-    RESEARCH_PAPER = "research_paper"
-    REPORT = "report"
-    WHITE_PAPER = "white_paper"
-    CASE_STUDY = "case_study"
+    BLOG_POST = "BLOG_POST"
+    ARTICLE = "ARTICLE"
+    RESEARCH_PAPER = "RESEARCH_PAPER"
+    REPORT = "REPORT"
+    WHITE_PAPER = "WHITE_PAPER"
+    CASE_STUDY = "CASE_STUDY"
 
 
 class Project(Base):

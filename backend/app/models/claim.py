@@ -8,10 +8,10 @@ from app.database import Base
 
 
 class ClaimStatus(str, enum.Enum):
-    VERIFIED = "verified"
-    UNVERIFIED = "unverified"
-    CONTRADICTED = "contradicted"
-    UNSUPPORTED = "unsupported"
+    VERIFIED = "VERIFIED"
+    UNVERIFIED = "UNVERIFIED"
+    CONTRADICTED = "CONTRADICTED"
+    UNSUPPORTED = "UNSUPPORTED"
 
 
 class Claim(Base):

@@ -52,7 +52,7 @@ class PipelineState(BaseModel):
 
     topic: str = ""
     audience: str = "general"
-    tone: str = "professional"
+    tone: str = "PROFESSIONAL"
     goals: str = ""
 
     research_data: dict[str, Any] = Field(default_factory=dict)

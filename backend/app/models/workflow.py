@@ -10,12 +10,12 @@ from app.utils.datetime_utils import utc_now
 
 
 class WorkflowStatus(str, enum.Enum):
-    pending = "pending"
-    running = "running"
-    completed = "completed"
-    failed = "failed"
-    cancelled = "cancelled"
-    waiting_user = "waiting_user"
+    PENDING = "PENDING"
+    RUNNING = "RUNNING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    CANCELLED = "CANCELLED"
+    WAITING_USER = "WAITING_USER"
 
 
 class WorkflowExecution(Base):
@@ -28,7 +28,7 @@ class WorkflowExecution(Base):
         Uuid, ForeignKey("projects.id", ondelete="CASCADE"), nullable=False
     )
     status: Mapped[WorkflowStatus] = mapped_column(
-        SAEnum(WorkflowStatus, name="workflow_status"), default=WorkflowStatus.running
+        SAEnum(WorkflowStatus, name="workflow_status"), default=WorkflowStatus.RUNNING
     )
     current_node: Mapped[str] = mapped_column(String(100), default="planner")
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
